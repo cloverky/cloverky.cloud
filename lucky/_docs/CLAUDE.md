@@ -1,0 +1,1 @@
+C:/Users/hi/Documents/cloud.cloverky/lucky/CLAUDE.md

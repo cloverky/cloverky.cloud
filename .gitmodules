@@ -1,0 +1,9 @@
+[submodule "clover"]
+	path = clover
+	url = https://github.com/cloverky/com.cloverky.api.git
+[submodule "lucky"]
+	path = lucky
+	url = https://github.com/cloverky/com.cloverky.www.git
+[submodule "vault"]
+	path = vault
+	url = https://github.com/cloverky/com.cloverky.docs.git

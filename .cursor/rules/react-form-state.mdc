@@ -1,0 +1,31 @@
+---
+description: React 폼은 useState 단일 객체 + FormData 제출 패턴 사용
+globs: frontend/**/*.tsx
+alwaysApply: false
+---
+
+# React 폼 상태 (압축 useState)
+
+`useState`를 필드마다 여러 개 두지 말 것. 로그인·회원가입·설정 폼은 **객체 하나**로 묶는다.
+
+## 제출 핸들러 (필수 패턴)
+
+```tsx
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  const formData = new FormData(e.currentTarget);
+  const formProps = Object.fromEntries(formData.entries()) as Record<string, string>;
+  // formProps에서 파싱 → patchForm / API
+};
+```
+
+## 상태
+
+- `useState<FormState>(INITIAL)` 한 개
+- `patchForm(patch: Partial<FormState>)` 로 부분 갱신
+- `resetForm()` 으로 초기화
+- 입력: `name` + `value={form.xxx}` + `onChange` → `patchForm`
+
+체크박스: `hidden name="..." value={on|off}` 또는 `onCheckedChange` → `patchForm`.
+
+상세·예시: `docs/DevOps/Frontend/REACT_RULES.md` · 참고: `frontend/components/login-dialog.tsx`

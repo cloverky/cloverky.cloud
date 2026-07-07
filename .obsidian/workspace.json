@@ -1,0 +1,218 @@
+{
+  "main": {
+    "id": "a47f7981e8bdee5c",
+    "type": "split",
+    "children": [
+      {
+        "id": "c548c33acb44b737",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b07de216f4d25e2f",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "그래프 뷰"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "45d52f709ea6e086",
+    "type": "split",
+    "children": [
+      {
+        "id": "e7a4fc26cd8f77a4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1cbd5a5fd2293ae7",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "파일 탐색기"
+            }
+          },
+          {
+            "id": "583fe0357819feed",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "검색"
+            }
+          },
+          {
+            "id": "064f36b0b533b9fb",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "북마크"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "994ed21dc71411b7",
+    "type": "split",
+    "children": [
+      {
+        "id": "f07a84439dde4f66",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b2081bc584f8c2ac",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "백링크"
+            }
+          },
+          {
+            "id": "0a84d7ec3f820640",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "나가는 링크"
+            }
+          },
+          {
+            "id": "d7d1b7b7c4b82ecf",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "태그"
+            }
+          },
+          {
+            "id": "bbe6ba4ab2b4d5b4",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "모든 속성"
+            }
+          },
+          {
+            "id": "f13bbd64255e4a39",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "개요"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:빠른 전환기 열기": false,
+      "graph:그래프 뷰 열기": false,
+      "canvas:새 캔버스 만들기": false,
+      "daily-notes:오늘의 일일 노트 열기": false,
+      "templates:템플릿 삽입": false,
+      "command-palette:명령어 팔레트 열기": false,
+      "bases:새 베이스 생성하기": false
+    }
+  },
+  "active": "1cbd5a5fd2293ae7",
+  "lastOpenFiles": [
+    "lucky/_claude/REACT_RULES.md",
+    "lucky/_claude/CLAUDE.md",
+    "lucky/_claude",
+    "clover/apps/titanic/_docs/TITANIC_ERD.md",
+    "clover/apps/fridge/_docs/FRIDGE_ERD.md",
+    "clover/apps/fridge/_docs/260506_fridge_project_plan.md",
+    "clover/apps/fridge/_docs/260506_fridge_simple.md",
+    "clover/apps/fridge/_docs/260506_fridge_UI.md",
+    "clover/apps/fridge/_docs/260520_fridge.md",
+    "vault/Backend/FRIDGE_ERD.md",
+    "vault/프리지개발/260506_fridge_project_plan.md",
+    "vault/프리지개발/260506_fridge_simple.md",
+    "vault/프리지개발/260506_fridge_UI.md",
+    "vault/프리지개발/260520_fridge.md",
+    "clover/apps/fridge/_docs",
+    "clover/apps/titanic/_docs/260507_타이타닉.md",
+    "vault/Frontend/REACT_RULES.md",
+    "vault/Frontend",
+    "vault/Backend/TITANIC_ERD.md",
+    "vault/Backend",
+    "clover/_claude/ENTITY_RULE.md",
+    "clover/_claude/CLAUDE.md",
+    "clover/_claude",
+    "clover/CLAUDE.md",
+    "vault/수업 메모/옵시디언 컬러그래프.md",
+    "vault/수업 메모/무제.md",
+    "lucky/CLAUDE.md",
+    "CLAUDE.md",
+    "clover/apps/titanic/_docs/CLAUDE.md",
+    "clover/README.md",
+    "lucky/node_modules/@radix-ui/react-focus-scope/README.md",
+    "clover/apps/titanic/_docs/CLAUDE.md.tmp.2176.65cb078661a1",
+    "lucky/CLAUDE.md.tmp.2176.26e9609de701",
+    "clover/CLAUDE.md.tmp.2176.c9e5639a1eec",
+    "CLAUDE.md.tmp.2176.1b517f4484f7",
+    "clover/apps/titanic/app/use_cases/crew_smith_captain_interactor.py.tmp.2176.caae41e97838"
+  ]
+}

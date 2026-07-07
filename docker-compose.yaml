@@ -1,0 +1,94 @@
+services:
+  # 백엔드 서비스 설정
+  backend:
+    build:
+      context: ./clover    # clover 폴더 안에 있는 Dockerfile을 빌드합니다
+    ports:
+      - "8000:8000"        # 내 컴퓨터의 8000포트 : 컨테이너의 8000포트 연결
+    env_file:
+      - ./clover/.env      # 기존에 사용하시던 .env 환경변수 파일 연동
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    depends_on:
+      - pgvector
+      - redis
+      - neo4j
+    restart: always
+
+  pgvector:
+    image: pgvector/pgvector:pg17
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=cloverky
+      - POSTGRES_PASSWORD=aacloverky04
+      - POSTGRES_DB=cloverky
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  # 프론트엔드 서비스 설정
+  frontend:
+    build:
+      context: ./lucky     # lucky 폴더 안에 있는 Dockerfile을 빌드합니다
+    ports:
+      - "3000:3000"        # 내 컴퓨터의 3000포트 : 컨테이너의 3000포트 연결
+    restart: always
+
+  # n8n 워크플로우 자동화
+  n8n:
+    image: n8nio/n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_ENCRYPTION_KEY=wajXovWyoOvtUhtV2Gdax1LQGxguLxFT
+      - GENERIC_TIMEZONE=Asia/Seoul
+      - N8N_DEFAULT_LOCALE=ko
+    volumes:
+      - C:/Users/hi/.n8n:/home/node/.n8n
+    restart: always
+
+  neo4j:
+    image: neo4j:5-community
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/aacloverky04
+    volumes:
+      - neo4j_data:/data
+    restart: always
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=hisoyeon04@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=aacloverky04
+    depends_on:
+      - pgvector
+    restart: always
+
+volumes:
+  pgvector_data:
+  redis_data:
+  neo4j_data:
+  qdrant_data:
