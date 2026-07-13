@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from silicon_valley.adapter.inbound.api.schemas.piper_bighetti_hr_schema import (
+from admin.adapter.inbound.api.schemas.piper_bighetti_hr_schema import (
     BighettiHrSchema,
 )
 
-from clover.apps.silicon_valley.app.dtos.piper_bighetti_hr_dto import BighettiHrResponse
+from admin.app.dtos.piper_bighetti_hr_dto import BighettiHrResponse
 
 
 class BighettiHrUseCase(ABC):

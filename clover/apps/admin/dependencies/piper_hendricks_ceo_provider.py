@@ -1,10 +1,10 @@
-from silicon_valley.adapter.outbound.repositories.piper_hendricks_ceo_repository import (
+from admin.adapter.outbound.repositories.piper_hendricks_ceo_repository import (
     HendricksCeoPgRepository,
 )
-from silicon_valley.app.ports.input.piper_hendricks_ceo_use_case import (
+from admin.app.ports.input.piper_hendricks_ceo_use_case import (
     HendricksCeoUseCase,
 )
-from silicon_valley.app.use_cases.piper_hendricks_ceo_interactor import (
+from admin.app.use_cases.piper_hendricks_ceo_interactor import (
     HendricksCeoInteractor,
 )
 

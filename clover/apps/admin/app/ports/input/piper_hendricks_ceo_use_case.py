@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from silicon_valley.adapter.inbound.api.schemas.piper_hendricks_ceo_schema import (
+from admin.adapter.inbound.api.schemas.piper_hendricks_ceo_schema import (
     HendricksCeoSchema,
 )
 
-from clover.apps.silicon_valley.app.dtos.piper_hendricks_ceo_dto import (
+from admin.app.dtos.piper_hendricks_ceo_dto import (
     HendricksCeoResponse,
 )
 

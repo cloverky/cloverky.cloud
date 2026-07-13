@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from clover.apps.silicon_valley.app.dtos.piper_hendricks_ceo_dto import (
+from admin.app.dtos.piper_hendricks_ceo_dto import (
     HendricksCeoQuery,
     HendricksCeoResponse,
 )

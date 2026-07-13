@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from silicon_valley.app.dtos.piper_hendricks_ceo_dto import (
+from admin.app.dtos.piper_hendricks_ceo_dto import (
     HendricksCeoQuery,
     HendricksCeoResponse,
 )
-from silicon_valley.app.ports.output.piper_hendricks_ceo_port import HendricksCeoPort
+from admin.app.ports.output.piper_hendricks_ceo_port import HendricksCeoPort
 
 
 class HendricksCeoPgRepository(HendricksCeoPort):

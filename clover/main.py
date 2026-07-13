@@ -30,7 +30,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from messenger.adapter.inbound.api import messenger_router
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from silicon_valley.adapter.inbound.api import silicon_valley_router
+from admin.adapter.inbound.api import silicon_valley_router
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.sessions import SessionMiddleware

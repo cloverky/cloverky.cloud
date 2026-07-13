@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from silicon_valley.app.dtos.piper_dunn_coo_dto import DunnCooQuery, DunnCooResponse
-from silicon_valley.app.ports.output.piper_dunn_coo_port import DunnCooPort
+from admin.app.dtos.piper_dunn_coo_dto import DunnCooQuery, DunnCooResponse
+from admin.app.ports.output.piper_dunn_coo_port import DunnCooPort
 
 
 class DunnCooPgRepository(DunnCooPort):

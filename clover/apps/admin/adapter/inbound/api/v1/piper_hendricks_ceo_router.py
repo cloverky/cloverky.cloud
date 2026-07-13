@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
-from silicon_valley.adapter.inbound.api.schemas.piper_hendricks_ceo_schema import (
+from admin.adapter.inbound.api.schemas.piper_hendricks_ceo_schema import (
     HendricksCeoSchema,
 )
-from silicon_valley.app.dtos.piper_hendricks_ceo_dto import HendricksCeoResponse
-from silicon_valley.app.ports.input.piper_hendricks_ceo_use_case import (
+from admin.app.dtos.piper_hendricks_ceo_dto import HendricksCeoResponse
+from admin.app.ports.input.piper_hendricks_ceo_use_case import (
     HendricksCeoUseCase,
 )
-from silicon_valley.dependencies.piper_hendricks_ceo_provider import (
+from admin.dependencies.piper_hendricks_ceo_provider import (
     get_hendricks_ceo_use_case,
 )
 

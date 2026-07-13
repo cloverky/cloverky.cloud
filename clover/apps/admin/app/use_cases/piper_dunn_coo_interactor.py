@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from silicon_valley.adapter.inbound.api.schemas.piper_dunn_coo_schema import (
+from admin.adapter.inbound.api.schemas.piper_dunn_coo_schema import (
     DunnCooSchema,
 )
-from silicon_valley.app.dtos.piper_dunn_coo_dto import DunnCooQuery, DunnCooResponse
-from silicon_valley.app.ports.input.piper_dunn_coo_use_case import DunnCooUseCase
-from silicon_valley.app.ports.output.piper_dunn_coo_port import DunnCooPort
+from admin.app.dtos.piper_dunn_coo_dto import DunnCooQuery, DunnCooResponse
+from admin.app.ports.input.piper_dunn_coo_use_case import DunnCooUseCase
+from admin.app.ports.output.piper_dunn_coo_port import DunnCooPort
 
 
 class DunnCooInteractor(DunnCooUseCase):

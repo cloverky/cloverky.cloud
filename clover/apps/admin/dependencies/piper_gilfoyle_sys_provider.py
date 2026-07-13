@@ -1,10 +1,10 @@
-from silicon_valley.adapter.outbound.repositories.piper_gilfoyle_sys_repository import (
+from admin.adapter.outbound.repositories.piper_gilfoyle_sys_repository import (
     GilfoyleSysPgRepository,
 )
-from silicon_valley.app.ports.input.piper_gilfoyle_sys_use_case import (
+from admin.app.ports.input.piper_gilfoyle_sys_use_case import (
     GilfoyleSysUseCase,
 )
-from silicon_valley.app.use_cases.piper_gilfoyle_sys_interactor import (
+from admin.app.use_cases.piper_gilfoyle_sys_interactor import (
     GilfoyleSysInteractor,
 )
 

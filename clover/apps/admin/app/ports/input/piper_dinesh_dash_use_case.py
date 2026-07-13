@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from silicon_valley.adapter.inbound.api.schemas.piper_dinesh_dash_schema import (
+from admin.adapter.inbound.api.schemas.piper_dinesh_dash_schema import (
     DineshDashSchema,
 )
 
-from clover.apps.silicon_valley.app.dtos.piper_dinesh_dash_dto import DineshDashResponse
+from admin.app.dtos.piper_dinesh_dash_dto import DineshDashResponse
 
 
 class DineshDashUseCase(ABC):
