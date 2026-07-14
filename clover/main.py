@@ -267,15 +267,15 @@ app.add_middleware(
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 
-@app.get("/login", include_in_schema=False, response_model=None)
+@app.get("/admin-login", include_in_schema=False, response_model=None)
 async def login_page(request: Request):
     if request.session.get("authenticated"):
         return RedirectResponse(url="/docs")
     return HTMLResponse(content=get_login_html())
 
 
-@app.post("/login", include_in_schema=False, response_model=None)
-async def login(
+@app.post("/admin-login", include_in_schema=False, response_model=None)
+async def admin_login(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
@@ -289,13 +289,13 @@ async def login(
 @app.get("/logout", include_in_schema=False, response_model=None)
 async def logout(request: Request):
     request.session.clear()
-    return RedirectResponse(url="/login")
+    return RedirectResponse(url="/admin-login")
 
 
 @app.get("/docs", include_in_schema=False, response_model=None)
 async def custom_docs(request: Request):
     if not request.session.get("authenticated"):
-        return RedirectResponse(url="/login")
+        return RedirectResponse(url="/admin-login")
     return get_swagger_ui_html(openapi_url="/openapi.json", title="cloverky API")
 
 

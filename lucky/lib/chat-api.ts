@@ -53,3 +53,23 @@ export async function postSmithChat(message: string): Promise<string> {
 
   return data.reply?.trim() ?? "";
 }
+
+/** 백엔드 POST /api/fridge/assistant/chat — 냉장고 재고·레시피 질문(EXAONE) */
+export async function postFridgeAssistantChat(
+  message: string,
+  userEmail: string,
+): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/fridge/assistant/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-User-Email": userEmail },
+    body: JSON.stringify({ message }),
+  });
+
+  const data = (await res.json()) as ChatApiResponse & FastApiErrorBody;
+
+  if (!res.ok) {
+    throw new Error(parseApiError(data, res.status));
+  }
+
+  return data.reply?.trim() ?? "";
+}
