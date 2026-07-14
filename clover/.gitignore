@@ -168,3 +168,6 @@ auth.txt
 # YOLO 테스트 스크래치 파일
 bus.jpg
 yolo11n.pt
+
+# EXAONE 모델 파일 (용량 큼, GitHub 업로드 금지)
+exaone/
