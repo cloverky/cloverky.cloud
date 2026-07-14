@@ -103,7 +103,7 @@ export default function LessonPage() {
               </CollapsibleContent>
             </Collapsible>
 
-            <Collapsible defaultOpen>
+            <Collapsible>
               <CollapsibleTrigger className="group flex w-full items-center justify-between rounded-md py-1 text-left font-semibold text-foreground transition-colors hover:text-accent">
                 <span>이미지 분석</span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
@@ -123,6 +123,13 @@ export default function LessonPage() {
                 </ul>
               </CollapsibleContent>
             </Collapsible>
+
+            <a
+              className="block rounded-md py-1 text-left font-semibold text-foreground transition-colors hover:text-accent"
+              href="/chat"
+            >
+              대화창
+            </a>
             </nav>
           </div>
         </aside>
