@@ -14,10 +14,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const EXPECTED_FILENAME = "titanic.csv";
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(
-  /\/$/,
-  "",
-);
+const API_BASE = (
+  process.env.NEXT_PUBLIC_API_URL ?? "https://api.cloverky.cloud"
+).replace(/\/$/, "");
 
 type UploadOk = {
   kind: "ok";
