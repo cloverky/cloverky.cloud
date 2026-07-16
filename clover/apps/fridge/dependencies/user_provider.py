@@ -1,7 +1,9 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from clover.apps.fridge.adapter.outbound.pg.user_pg_repository import UserPgRepository
+from clover.apps.fridge.adapter.outbound.repositories.user_pg_repository import (
+    UserPgRepository,
+)
 from clover.apps.fridge.app.ports.input.user_use_case import UserUseCase
 from clover.apps.fridge.app.ports.output.user_repository import UserRepository
 from clover.apps.fridge.app.use_cases.user_interactor import UserInteractor

@@ -52,7 +52,8 @@
     └── database.py       # (fridge만) DB compat re-export — 옮기지 말 것
 ```
 
-**`domain/` 폴더는 사용하지 않는다.** 순수 보조 로직은 `app/use_cases/_*.py` (예: `_shelf_life.py`)에 둔다.
+**`domain/` 폴더는 기본적으로 사용하지 않는다.** 순수 보조 로직은 `app/use_cases/_*.py`에 둔다.
+(예외: fridge는 `domain/value_objects/shelf_life.py`를 사용 — [fridge 도메인 결정 사항](#fridge-도메인-결정-사항) 참고)
 
 ---
 
@@ -245,12 +246,13 @@ def get_inventory_use_case(
 - `ingredient_manager` 단일 테이블 방식 **폐기** (모델·마이그레이션·API 모두 제거)
 - `InventoryInteractor`가 `FoodRepository`로 `food_id` resolve/create
 
-### 보조 로직 `_shelf_life.py`
+### 보조 로직 `domain/value_objects/shelf_life.py`
 
-유통기한 추정·재고 상태(`양호`/`임박`/`긴급`/`부족`) 순수 함수.
+유통기한 추정·재고 상태(`ok`/`expiring_soon`/`expired`) 순수 함수 (`shelf_life_days`, `compute_status`).
 
-- 위치: `app/use_cases/_shelf_life.py`
-- 사용처: `inventory_interactor`, `receipt_scan_interactor`, `schemas/mappers.py`
+- 위치: `domain/value_objects/shelf_life.py`
+- 사용처: `adapter/outbound/repositories/inventory_pg_repository.py`, `app/use_cases/inventory_interactor.py`
+- fridge는 `dumb_and_dumber` 스캐폴드 구조를 따르며 `domain/entities/`, `domain/value_objects/`를 사용한다 (§헥사고날 아키텍처의 일반 규칙에 대한 예외)
 
 ### 삭제된 레거시 (재도입 금지)
 
@@ -259,7 +261,6 @@ fridge/controllers/
 fridge/services/
 fridge/repositories/
 fridge/schemas/          # → adapter/inbound/api/schemas/
-fridge/domain/           # → use_cases/_shelf_life.py
 fridge/models/category.py 등 re-export
 models/ingredient_manager.py
 ```
@@ -284,7 +285,7 @@ secom을 fridge/titanic 구조로 옮기는 작업은 **별도 요청 시** 진�
 
 | 실수 | 올바른 방향 |
 |------|------------|
-| `app/domain/` 또는 `fridge/domain/` 생성 | `app/use_cases/_*.py` 사용 |
+| titanic 등 다른 앱에 임의로 `domain/` 생성 | `app/use_cases/_*.py` 사용 (fridge는 예외, 위 §fridge 도메인 결정 사항 참고) |
 | `__init__.py`에 라우터·re-export | 명명된 `.py` 모듈로 분리 |
 | 라우터에서 `PgRepository` 직접 사용 | `Depends(get_*_use_case)` + 포트 타입 |
 | Interactor에서 ORM import | Repository 포트만 의존 |
@@ -344,8 +345,8 @@ Client
       InventoryPgRepository + InventoryInteractor 조립
   → InventoryInteractor       [app/use_cases]
       InventoryRepository, FoodRepository 포트 호출
-      _shelf_life 순수 함수
-  → InventoryPgRepository     [adapter/outbound/pg]
+      shelf_life 순수 함수      [domain/value_objects]
+  → InventoryPgRepository     [adapter/outbound/repositories]
       InventoryOrm + FoodOrm  [adapter/outbound/orm]
   → mappers.to_*_response     [adapter/inbound/schemas]
   → JSON Response

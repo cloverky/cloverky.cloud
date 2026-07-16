@@ -9,4 +9,7 @@ class OllamaAssistantGateway(AssistantGatewayPort):
         self._orchestrator = orchestrator
 
     async def chat(self, messages: list[dict[str, str]]) -> str:
+        print(
+            f"[OllamaAssistantGateway] -> orchestrator.achat ({len(messages)} messages)"
+        )
         return await self._orchestrator.achat(messages)

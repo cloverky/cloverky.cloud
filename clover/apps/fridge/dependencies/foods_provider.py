@@ -1,7 +1,9 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from clover.apps.fridge.adapter.outbound.pg.foods_pg_repository import FoodsPgRepository
+from clover.apps.fridge.adapter.outbound.repositories.foods_pg_repository import (
+    FoodsPgRepository,
+)
 from clover.apps.fridge.app.ports.input.foods_use_case import FoodsUseCase
 from clover.apps.fridge.app.ports.output.foods_repository import FoodsRepository
 from clover.apps.fridge.app.use_cases.foods_interactor import FoodsInteractor

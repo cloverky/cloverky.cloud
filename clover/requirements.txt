@@ -22,6 +22,7 @@ numpy==2.2.6
 kiwipiepy==0.23.1
 ollama==0.6.2
 httpx>=0.27.0
+redis>=5.0.0
 pywebpush==2.0.0
 pgvector==0.3.6
 sqlmodel==0.0.38
@@ -34,3 +35,14 @@ ultralytics>=8.3.0
 boto3>=1.34.0
 pytest>=8.0
 pytest-asyncio>=0.23
+
+# QLoRA 파인튜닝 (fridge assistant SFT, clover/apps/fridge/_training)
+# transformers/trl 하한은 EXAONE modeling 코드(kernels-hub 통합)와
+# SFTTrainer(quantization_config=, peft_config=, assistant_only_loss=) API가
+# 요구하는 버전으로 맞춤 (train_qlora.py로 검증됨).
+transformers>=5.0.0
+accelerate>=1.0.0
+peft>=0.13.0
+bitsandbytes>=0.44.0
+trl>=1.8.0
+datasets>=3.0.0

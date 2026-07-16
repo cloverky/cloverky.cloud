@@ -2,7 +2,9 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
-from fridge.adapter.outbound.pg.inventory_pg_repository import InventoryPgRepository
+from fridge.adapter.outbound.repositories.inventory_pg_repository import (
+    InventoryPgRepository,
+)
 from fridge.app.ports.input.inventory_use_case import InventoryUseCase
 from fridge.app.ports.output.inventory_repository import InventoryRepository
 from fridge.app.use_cases.inventory_interactor import InventoryInteractor

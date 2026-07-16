@@ -9,6 +9,8 @@ services:
       - ./clover/.env      # 기존에 사용하시던 .env 환경변수 파일 연동
     environment:
       - OLLAMA_HOST=http://host.docker.internal:11434
+      - EXAONE_BASE_URL=http://host.docker.internal:8001/v1
+      - EXAONE_MODEL=exaone
     depends_on:
       - pgvector
       - redis

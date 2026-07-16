@@ -1,7 +1,7 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from clover.apps.fridge.adapter.outbound.pg.receipt_pg_repository import (
+from clover.apps.fridge.adapter.outbound.repositories.receipt_pg_repository import (
     ReceiptPgRepository,
 )
 from clover.apps.fridge.app.ports.input.receipt_use_case import ReceiptUseCase

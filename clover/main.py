@@ -24,18 +24,23 @@ if sys.platform.startswith("win"):
 import os
 from contextlib import asynccontextmanager
 
+from admin.adapter.inbound.api import silicon_valley_router
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from messenger.adapter.inbound.api import messenger_router
+from messenger.adapter.inbound.api.v1.push_router import push_router
+from messenger.adapter.outbound.orm.juso_orm import ContactOrm  # noqa: F401
+from messenger.adapter.outbound.orm.mail_orm import MailInboxOrm  # noqa: F401
+from messenger.adapter.outbound.orm.push_orm import PushSubscriptionOrm  # noqa: F401
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from admin.adapter.inbound.api import silicon_valley_router
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.sessions import SessionMiddleware
 from users.adapter.user import User, UserRole  # noqa: F401 — create_all 에 테이블 등록
 from users.db_health_adapter import DbHealthAdapter
+from vision.adapter.inbound.api.v1.vision_router import vision_router
 from weather_provider import fetch_seoul_weather
 
 from core.admin_auth import SESSION_SECRET, check_credentials, get_login_html
@@ -49,6 +54,7 @@ from fridge.adapter.outbound.orm.receipt_orm import ReceiptOrm  # noqa: F401
 from fridge.models.database import Base, dispose_engine, engine, get_db
 from secom.app.controllers.user_controller import UserController
 from secom.app.schemas.user_schema import LoginSchema, UserSchema
+from star_craft.adapter.inbound.api.star_craft_router import star_craft_router
 from titanic.adapter.inbound.api import titanic_router
 from titanic.adapter.outbound.orm.passenger_jack_trainer_orm import (
     JackTrainerOrm,  # noqa: F401
@@ -56,11 +62,6 @@ from titanic.adapter.outbound.orm.passenger_jack_trainer_orm import (
 from titanic.adapter.outbound.orm.passenger_rose_model_strategies_orm import (
     BookingOrm,  # noqa: F401
 )
-from messenger.adapter.outbound.orm.juso_orm import ContactOrm  # noqa: F401
-from messenger.adapter.outbound.orm.mail_orm import MailInboxOrm  # noqa: F401
-from messenger.adapter.outbound.orm.push_orm import PushSubscriptionOrm  # noqa: F401
-from messenger.adapter.inbound.api.v1.push_router import push_router
-from vision.adapter.inbound.api.v1.vision_router import vision_router
 
 keymaker = get_keymaker()
 logger = logging.getLogger(__name__)
@@ -259,6 +260,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://cloverky.cloud",
+        "https://www.cloverky.cloud",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -312,6 +315,7 @@ app.include_router(silicon_valley_router)
 app.include_router(messenger_router)
 app.include_router(push_router, prefix="/messenger")
 app.include_router(vision_router)
+app.include_router(star_craft_router)
 
 
 @app.get("/", include_in_schema=False, response_model=None)

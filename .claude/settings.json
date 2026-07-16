@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /home/hi/projects/cloverky.cloud branch -vv)",
+      "Bash(git -C /home/hi/projects/cloverky.cloud status -sb)",
+      "Bash(git fetch *)",
+      "Bash(ssh -T git@github.com -o BatchMode=yes -o ConnectTimeout=5)",
+      "Bash(gh auth *)",
+      "Bash(git -C /home/hi/projects/cloverky.cloud fetch origin)",
+      "Bash(git -C /home/hi/projects/cloverky.cloud merge origin/main -m \"Merge main into hi: bring in fridge _datasets\")",
+      "Bash(git -C /home/hi/projects/cloverky.cloud push origin hi)",
+      "Bash(docker exec *)",
+      "Bash(python3 -c \"import psycopg; print\\(psycopg.__version__\\)\")",
+      "Bash(python3 -c \"import psycopg2\")",
+      "Bash(/home/hi/projects/cloverky.cloud/.venv/bin/python -c \"import psycopg; print\\('ok'\\)\")",
+      "Bash(python3 -c ' *)",
+      "Bash(docker cp *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(grep -rl -i \"ollama\\\\|Failed to connect to Ollama\" /home/hi/projects/cloverky.cloud/lucky --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.json\" -not -path \"*/node_modules/*\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/chat --max-time 3)",
+      "Bash(curl -s http://localhost:3000/ --max-time 3)",
+      "Bash(git -C /home/hi/projects/cloverky.cloud fetch origin soyeon:soyeon)",
+      "Bash(git -C /home/hi/projects/cloverky.cloud branch -a)",
+      "Bash(nvidia-smi)",
+      "Bash(nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv)",
+      "Bash(ps -p 30182 -o pid,ppid,cmd)",
+      "Bash(/home/hi/miniconda3/envs/vllm/bin/python -c \"import vllm; print\\(vllm.__version__\\)\")",
+      "Bash(curl -s http://localhost:8001/v1/models)",
+      "Bash(git merge *)",
+      "Bash(docker compose *)",
+      "Bash(ruff check *)",
+      "Bash(ruff format *)",
+      "Bash(/home/hi/projects/cloverky.cloud/.venv/bin/ruff --version)",
+      "Bash(python3 -m pip show ruff)",
+      "Bash(pip install *)",
+      "Bash(~/.local/bin/ruff --version)",
+      "Bash(python -c \"import main\")",
+      "Bash(/home/hi/projects/cloverky.cloud/.venv/bin/python -c ' *)",
+      "Bash(~/.local/bin/mypy --version)",
+      "Bash(~/.local/bin/ruff check *)",
+      "Bash(~/.local/bin/ruff format *)",
+      "Bash(~/.local/bin/mypy --config-file pyproject.toml core/lol/t1_mid_faker_orchestrator.py apps/fridge/adapter/inbound/api/v1/assistant_router.py apps/fridge/adapter/outbound/ollama/assistant_gateway.py apps/fridge/app/use_cases/assistant_interactor.py)",
+      "Bash(cd /home/hi/projects/cloverky.cloud/clover *)",
+      "Bash(~/.local/bin/mypy . --config-file pyproject.toml)",
+      "Bash(git mv *)"
+    ],
+    "additionalDirectories": [
+      "/home/hi/projects/cloverky.cloud/clover/.mypy_cache"
+    ]
+  }
+}

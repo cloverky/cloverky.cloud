@@ -14,8 +14,8 @@ class MailTemplate:
     instruction: str
     tone: str
     salutation: str  # 인사말 스타일
-    intro: str       # 도입부 안내
-    closing: str     # 맺음말 스타일
+    intro: str  # 도입부 안내
+    closing: str  # 맺음말 스타일
 
 
 MAIL_TEMPLATES: dict[EmailType, MailTemplate] = {

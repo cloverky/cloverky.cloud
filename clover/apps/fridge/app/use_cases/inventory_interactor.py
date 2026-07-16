@@ -15,33 +15,7 @@ from fridge.app.dtos.inventory_dto import (
 )
 from fridge.app.ports.input.inventory_use_case import InventoryUseCase
 from fridge.app.ports.output.inventory_repository import InventoryRepository
-
-_SHELF_LIFE: dict[str, dict[str, int]] = {
-    "우유": {"냉장": 7, "냉동": 30, "실온": 1},
-    "계란": {"냉장": 21, "냉동": 60, "실온": 7},
-    "두부": {"냉장": 5, "냉동": 30, "실온": 1},
-    "돼지고기": {"냉장": 3, "냉동": 90, "실온": 0},
-    "소고기": {"냉장": 3, "냉동": 90, "실온": 0},
-    "닭고기": {"냉장": 2, "냉동": 60, "실온": 0},
-    "양파": {"냉장": 30, "냉동": 90, "실온": 30},
-    "당근": {"냉장": 14, "냉동": 60, "실온": 7},
-    "감자": {"냉장": 30, "냉동": 90, "실온": 14},
-    "대파": {"냉장": 7, "냉동": 30, "실온": 2},
-    "시금치": {"냉장": 5, "냉동": 30, "실온": 1},
-    "배추": {"냉장": 14, "냉동": 60, "실온": 3},
-    "상추": {"냉장": 5, "냉동": 14, "실온": 1},
-    "토마토": {"냉장": 7, "냉동": 30, "실온": 3},
-    "오이": {"냉장": 7, "냉동": 30, "실온": 2},
-    "버섯": {"냉장": 5, "냉동": 30, "실온": 1},
-}
-_DEFAULT = {"냉장": 7, "냉동": 30, "실온": 3}
-
-
-def _shelf_days(name: str, storage: str) -> int:
-    for key, val in _SHELF_LIFE.items():
-        if key in name:
-            return val.get(storage, _DEFAULT.get(storage, 7))
-    return _DEFAULT.get(storage, 7)
+from fridge.domain.value_objects.shelf_life import shelf_life_days as _shelf_days
 
 
 class InventoryInteractor(InventoryUseCase):

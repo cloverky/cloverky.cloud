@@ -34,6 +34,7 @@ class AssistantInteractor(AssistantUseCase):
 
     async def chat(self, cmd: AssistantChatCommand) -> AssistantChatResultDto:
         inventory_list = await self.inventory.list_inventory(cmd.user_email)
+        print(f"[AssistantInteractor] inventory items={len(inventory_list.items)}")
         messages = [
             {
                 "role": "system",
@@ -44,5 +45,7 @@ class AssistantInteractor(AssistantUseCase):
             },
             {"role": "user", "content": cmd.message},
         ]
+        print(f"[AssistantInteractor] -> gateway.chat messages={messages}")
         reply = await self.gateway.chat(messages)
+        print(f"[AssistantInteractor] <- gateway reply={reply!r}")
         return AssistantChatResultDto(reply=reply.strip())

@@ -20,10 +20,15 @@ async def chat(
     x_user_email: str = Header(...),
     use_case: AssistantUseCase = Depends(get_assistant_use_case),
 ):
+    print(
+        f"[assistant_router] POST /assistant/chat user={x_user_email!r} message={body.message!r}"
+    )
     try:
         result = await use_case.chat(
             AssistantChatCommand(user_email=x_user_email, message=body.message)
         )
     except Exception as e:
+        print(f"[assistant_router] error: {e!r}")
         raise HTTPException(status_code=502, detail=str(e)) from e
+    print(f"[assistant_router] reply={result.reply!r}")
     return {"reply": result.reply}
