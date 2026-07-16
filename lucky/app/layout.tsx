@@ -21,7 +21,7 @@ const jua = Jua({
   variable: '--font-jua',
 })
 
-
+/** metadata 정리하기 */
 export const metadata: Metadata = {
   title: 'FridgeAI - AI 냉장고 관리·맞춤 레시피',
   description: 'AI가 재고를 챙기고 취향에 맞는 레시피를 추천하는 냉장고 관리 서비스',
