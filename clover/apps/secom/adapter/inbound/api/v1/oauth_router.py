@@ -28,25 +28,27 @@ _NAVER_REDIRECT = f'{_BACKEND_URL}/auth/naver/callback'
 async def _upsert_oauth_user(db, provider, provider_id, email, name):
     result = await db.execute(select(User).where(User.email == email).limit(1))
     user = result.scalar_one_or_none()
-    if user is None:
+    is_new = user is None
+    if is_new:
         username = f'{provider}_{provider_id[:12]}'
         user = User(username=username, name=name, email=email, password_hash=f'oauth:{provider}', role='user')
         db.add(user)
         await db.commit()
         await db.refresh(user)
         logger.info('OAuth 신규 사용자 — %s %r', provider, email)
-    return user
+    return user, is_new
 
 
 async def _issue_token_and_redirect(provider, provider_id, email, name):
     async with AsyncSession(engine) as db:
-        user = await _upsert_oauth_user(db, provider, provider_id, email, name)
+        user, is_new = await _upsert_oauth_user(db, provider, provider_id, email, name)
     token, jti = create_access_token(str(user.id), email, user.role)
     store = get_token_store()
     await store.save(jti, str(user.id))
     logger.info('JWT Redis 저장 jti=%s %s', jti, email)
+    path = '/signup/consent' if is_new else '/oauth/callback'
     redirect_url = (
-        f'{_FRONTEND_URL}/oauth/callback'
+        f'{_FRONTEND_URL}{path}'
         f'?token={urllib.parse.quote(token)}'
         f'&name={urllib.parse.quote(name)}'
         f'&email={urllib.parse.quote(email)}'
@@ -71,7 +73,7 @@ async def google_callback(code: str = Query(...), state: str = Query(default='')
                   'client_secret': _GOOGLE_CLIENT_SECRET, 'redirect_uri': _GOOGLE_REDIRECT, 'grant_type': 'authorization_code'})
         tr.raise_for_status()
         ur = await c.get('https://www.googleapis.com/oauth2/v2/userinfo',
-                         headers={'Authorization': f'Bearer {tr.json()["access_token"]}'})
+                         headers={'Authorization': f'Bearer {tr.json()[access_token]}'})
         ur.raise_for_status()
         info = ur.json()
     return await _issue_token_and_redirect('google', info['id'], info['email'], info.get('name', info['email']))
@@ -93,11 +95,11 @@ async def kakao_callback(code: str = Query(...)):
                   'redirect_uri': _KAKAO_REDIRECT, 'code': code})
         tr.raise_for_status()
         ur = await c.get('https://kapi.kakao.com/v2/user/me',
-                         headers={'Authorization': f'Bearer {tr.json()["access_token"]}'})
+                         headers={'Authorization': f'Bearer {tr.json()[access_token]}'})
         ur.raise_for_status()
         info = ur.json()
     acct = info.get('kakao_account', {})
-    email = acct.get('email', f'kakao_{info["id"]}@kakao.local')
+    email = acct.get('email', f'kakao_{info[id]}@kakao.local')
     name = acct.get('profile', {}).get('nickname', '카카오 사용자')
     return await _issue_token_and_redirect('kakao', str(info['id']), email, name)
 
@@ -119,8 +121,8 @@ async def naver_callback(code: str = Query(...), state: str = Query(default=''))
                     'client_secret': _NAVER_CLIENT_SECRET, 'code': code, 'state': state})
         tr.raise_for_status()
         ur = await c.get('https://openapi.naver.com/v1/nid/me',
-                         headers={'Authorization': f'Bearer {tr.json()["access_token"]}'})
+                         headers={'Authorization': f'Bearer {tr.json()[access_token]}'})
         ur.raise_for_status()
         info = ur.json()['response']
     return await _issue_token_and_redirect('naver', info['id'],
-        info.get('email', f'naver_{info["id"]}@naver.local'), info.get('name', '네이버 사용자'))
+        info.get('email', f'naver_{info['id']}@naver.local'), info.get('name', '네이버 사용자'))
