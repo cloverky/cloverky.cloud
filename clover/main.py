@@ -53,6 +53,7 @@ from fridge.adapter.outbound.orm.receipt_line_orm import ReceiptLineOrm  # noqa:
 from fridge.adapter.outbound.orm.receipt_orm import ReceiptOrm  # noqa: F401
 from fridge.models.database import Base, dispose_engine, engine, get_db
 from secom.app.controllers.user_controller import UserController
+from secom.adapter.inbound.api.v1.oauth_router import oauth_router
 from secom.app.schemas.user_schema import LoginSchema, UserSchema
 from star_craft.adapter.inbound.api.star_craft_router import star_craft_router
 from titanic.adapter.inbound.api import titanic_router
@@ -316,6 +317,7 @@ app.include_router(messenger_router)
 app.include_router(push_router, prefix="/messenger")
 app.include_router(vision_router)
 app.include_router(star_craft_router)
+app.include_router(oauth_router)
 
 
 @app.get("/", include_in_schema=False, response_model=None)
