@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 receipt_router = APIRouter(prefix="/receipt", tags=["receipt"])
 
+_MODEL = "gemini-2.0-flash"
 _PROMPT = """이 영수증 이미지에서 구매 정보를 추출하세요.
 반드시 아래 JSON 형식만 출력하고 다른 설명은 하지 마세요.
 {
@@ -57,14 +58,21 @@ async def scan_receipt(image: UploadFile = File(...)) -> ReceiptScanResponse:
         raise HTTPException(status_code=413, detail="이미지 크기는 10MB 이하여야 합니다.")
 
     from core.matrix.wault_keymaker_serect_manager import get_keymaker
+    from google.genai import types as genai_types
 
     keymaker = get_keymaker()
     if not keymaker.is_gemini_ready():
         raise HTTPException(status_code=503, detail="GEMINI_API_KEY가 설정되지 않았습니다.")
 
-    model = keymaker.get_gemini_model()
+    client = keymaker.get_gemini_client()
     try:
-        response = model.generate_content([{"mime_type": mime, "data": data}, _PROMPT])
+        response = client.models.generate_content(
+            model=_MODEL,
+            contents=[
+                genai_types.Part.from_bytes(data=data, mime_type=mime),
+                _PROMPT,
+            ],
+        )
         raw = (response.text or "").strip()
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"영수증 인식 실패: {e!s}") from e
@@ -92,7 +100,7 @@ async def scan_receipt(image: UploadFile = File(...)) -> ReceiptScanResponse:
         items.append(ParsedItem(name=name, quantity=qty, unit=unit))
 
     store = parsed.get("store_name")
-    store_name = str(store).strip() if store and str(store).strip() != "null" else None
+    store_name = str(store).strip() if store and str(store).strip() not in ("null", "") else None
 
     raw_date = parsed.get("purchased_date")
     purchased_date: str | None = None
