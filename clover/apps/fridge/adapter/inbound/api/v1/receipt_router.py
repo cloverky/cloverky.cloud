@@ -1,28 +1,44 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
+from pydantic import BaseModel
+from typing import Optional
+from datetime import date
 
-from clover.apps.fridge.app.dtos.receipt_dto import ReceiptUploadResponse
-from clover.apps.fridge.app.ports.input.receipt_use_case import ReceiptUseCase
-from clover.apps.fridge.dependencies.receipt_provider import get_receipt_use_case
-from fridge.adapter.inbound.api.schemas.receipt_schema import ReceiptUploadSchema
-
-"""
-영수증 업로드 (Receipt Upload)
-AI OCR이 영수증 이미지를 인식하기 전 사용자가 제출하는
-메타데이터를 처리한다. 매장명·구매일자·처리상태를 관리하며
-영수증 상세 품목(ReceiptLine) 파싱의 진입점 역할을 담당한다.
-"""
+from clover.apps.fridge.adapter.outbound.gemini.receipt_parser import GeminiReceiptParser
 
 receipt_router = APIRouter(prefix="/receipt", tags=["receipt"])
 
 
-@receipt_router.get("/status")
-async def get_status(
-    receipt: ReceiptUseCase = Depends(get_receipt_use_case),
-) -> ReceiptUploadResponse:
-    return await receipt.get_status(
-        ReceiptUploadSchema(
-            user_id=1,
-            store_name="이마트",
-            status="pending",
-        )
+class ParsedReceiptItem(BaseModel):
+    name: str
+    quantity: int
+    unit: str
+
+
+class ReceiptScanResponse(BaseModel):
+    store_name: Optional[str]
+    purchased_date: Optional[str]
+    items: list[ParsedReceiptItem]
+
+
+@receipt_router.post("/scan", response_model=ReceiptScanResponse)
+async def scan_receipt(image: UploadFile = File(...)) -> ReceiptScanResponse:
+    allowed = {"image/jpeg", "image/png", "image/webp", "image/heic"}
+    mime = image.content_type or "image/jpeg"
+    if mime not in allowed:
+        raise HTTPException(status_code=415, detail=f"지원하지 않는 이미지 형식입니다: {mime}")
+
+    data = await image.read()
+    if len(data) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="이미지 크기는 10MB 이하여야 합니다.")
+
+    parser = GeminiReceiptParser()
+    result = parser.parse(data, mime)
+
+    return ReceiptScanResponse(
+        store_name=result.store_name,
+        purchased_date=result.purchased_date.isoformat() if result.purchased_date else None,
+        items=[
+            ParsedReceiptItem(name=i.name, quantity=i.quantity, unit=i.unit)
+            for i in result.items
+        ],
     )

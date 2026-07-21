@@ -237,3 +237,29 @@ export function quantityStep(_unit: string): number {
 
 export const INVENTORY_UNITS = ["개", "근", "팩", "통", "봉", "g", "ml"] as const;
 export const INVENTORY_STORAGE = ["냉장", "냉동", "실온"] as const;
+
+export type ReceiptScanItem = {
+  name: string;
+  quantity: number;
+  unit: string;
+};
+
+export type ReceiptScanResult = {
+  store_name: string | null;
+  purchased_date: string | null;
+  items: ReceiptScanItem[];
+};
+
+export async function scanReceipt(imageFile: File): Promise<ReceiptScanResult> {
+  const form = new FormData();
+  form.append("image", imageFile);
+  const res = await fetch(`${API_BASE}/api/fridge/receipt/scan`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as FastApiErrorBody;
+    throw new Error(parseApiError(data, res.status));
+  }
+  return res.json() as Promise<ReceiptScanResult>;
+}

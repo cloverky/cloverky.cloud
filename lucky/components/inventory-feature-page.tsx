@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Camera,
   Loader2,
   Minus,
   Package,
   Plus,
+  ScanLine,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -58,9 +60,11 @@ import {
   packStyleFromUnit,
   suggestUnitForName,
   unitForPackStyle,
+  scanReceipt,
   type InventoryItem,
   type InventoryStats,
   type PackCountStyle,
+  type ReceiptScanResult,
 } from "@/lib/inventory-api";
 import { cn } from "@/lib/utils";
 
@@ -100,7 +104,10 @@ type InventoryPageState = {
   error: string | null;
 };
 
+type AddMode = "manual" | "receipt";
+
 type InventoryAddFormState = {
+  addMode: AddMode;
   name: string;
   quantity: string;
   unit: string;
@@ -124,6 +131,7 @@ const INITIAL_PAGE: InventoryPageState = {
 
 function createInitialAddForm(): InventoryAddFormState {
   return {
+    addMode: "manual",
     name: "",
     quantity: "1",
     unit: "개",
@@ -143,7 +151,13 @@ export function InventoryFeaturePage() {
   const openLogin = useOpenLogin();
   const { setInput } = useGeminiChat();
 
-  const [page, setPage] = useState<InventoryPageState>(INITIAL_PAGE);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptScanning, setReceiptScanning] = useState(false);
+  const [receiptResult, setReceiptResult] = useState<ReceiptScanResult | null>(null);
+  const [receiptSelected, setReceiptSelected] = useState<Set<number>>(new Set());
+  const [receiptAdding, setReceiptAdding] = useState(false);
+
+    const [page, setPage] = useState<InventoryPageState>(INITIAL_PAGE);
   const [form, setForm] = useState<InventoryAddFormState>(createInitialAddForm);
 
   const patchPage = useCallback(
@@ -158,6 +172,7 @@ export function InventoryFeaturePage() {
 
   const { items, stats, loading, submitting, adjustingId, error } = page;
   const {
+    addMode,
     name,
     quantity,
     unit,
@@ -224,6 +239,56 @@ export function InventoryFeaturePage() {
     }, 400);
     return () => clearTimeout(timer);
   }, [dateMode, name, purchasedDate, storage]);
+
+  const handleScanReceipt = async (file: File) => {
+    setReceiptFile(file);
+    setReceiptResult(null);
+    setReceiptSelected(new Set());
+    setReceiptScanning(true);
+    try {
+      const result = await scanReceipt(file);
+      setReceiptResult(result);
+      setReceiptSelected(new Set(result.items.map((_, i) => i)));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "영수증 인식에 실패했습니다.");
+    } finally {
+      setReceiptScanning(false);
+    }
+  };
+
+  const handleAddFromReceipt = async () => {
+    if (!user?.email || !receiptResult) return;
+    const purchasedDate = receiptResult.purchased_date ?? todayIso();
+    const toAdd = receiptResult.items.filter((_, i) => receiptSelected.has(i));
+    if (toAdd.length === 0) {
+      toast.error("추가할 품목을 선택해 주세요.");
+      return;
+    }
+    setReceiptAdding(true);
+    let added = 0;
+    for (const item of toAdd) {
+      try {
+        await createInventoryItem(user.email, {
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          storage: "냉장",
+          purchased_date: purchasedDate,
+          expiry_date: null,
+          min_quantity: 1,
+        });
+        added++;
+      } catch {
+        // continue
+      }
+    }
+    setReceiptAdding(false);
+    toast.success(`${added}개 품목을 냉장고에 추가했습니다.`);
+    setReceiptResult(null);
+    setReceiptFile(null);
+    patchForm({ addMode: "manual" });
+    await load();
+  };
 
   const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -459,11 +524,110 @@ export function InventoryFeaturePage() {
                   <Plus className="h-5 w-5" />
                   식재료 추가
                 </CardTitle>
-                <CardDescription>
-                  입력한 내용은 바로 나만의냉장고에 저장됩니다.
-                </CardDescription>
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    type="button"
+                    variant={addMode === "manual" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => patchForm({ addMode: "manual" })}
+                  >
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    직접 입력
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={addMode === "receipt" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => patchForm({ addMode: "receipt" })}
+                  >
+                    <Camera className="mr-1.5 h-4 w-4" />
+                    영수증 스캔
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
+                {addMode === "receipt" ? (
+                  <div className="space-y-4">
+                    <label
+                      htmlFor="receipt-upload"
+                      className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border py-10 text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+                    >
+                      {receiptScanning ? (
+                        <>
+                          <Loader2 className="h-8 w-8 animate-spin" />
+                          <span className="text-sm">영수증 인식 중…</span>
+                        </>
+                      ) : receiptFile ? (
+                        <>
+                          <ScanLine className="h-8 w-8" />
+                          <span className="text-sm font-medium">{receiptFile.name}</span>
+                          <span className="text-xs">다른 파일을 선택하려면 클릭</span>
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-8 w-8" />
+                          <span className="text-sm font-medium">영수증 사진 선택 또는 촬영</span>
+                          <span className="text-xs">JPG · PNG · WEBP 지원</span>
+                        </>
+                      )}
+                    </label>
+                    <input
+                      id="receipt-upload"
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void handleScanReceipt(file);
+                      }}
+                    />
+                    {receiptResult && (
+                      <div className="space-y-3">
+                        {receiptResult.store_name && (
+                          <p className="text-sm text-muted-foreground">
+                            매장: <span className="font-medium text-foreground">{receiptResult.store_name}</span>
+                            {receiptResult.purchased_date && (
+                              <> · 구매일: <span className="font-medium text-foreground">{receiptResult.purchased_date}</span></>
+                            )}
+                          </p>
+                        )}
+                        <p className="text-sm font-medium">인식된 품목 ({receiptResult.items.length}개)</p>
+                        <div className="divide-y divide-border rounded-md border">
+                          {receiptResult.items.map((item, i) => (
+                            <label key={i} className="flex cursor-pointer items-center gap-3 px-4 py-2.5 hover:bg-muted/50">
+                              <input
+                                type="checkbox"
+                                checked={receiptSelected.has(i)}
+                                onChange={(e) => {
+                                  const next = new Set(receiptSelected);
+                                  if (e.target.checked) next.add(i); else next.delete(i);
+                                  setReceiptSelected(next);
+                                }}
+                                className="h-4 w-4 accent-foreground"
+                              />
+                              <span className="flex-1 text-sm">{item.name}</span>
+                              <span className="text-sm text-muted-foreground">{item.quantity}{item.unit}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <Button
+                          type="button"
+                          disabled={receiptAdding || receiptSelected.size === 0}
+                          onClick={() => void handleAddFromReceipt()}
+                          className="w-full"
+                        >
+                          {receiptAdding ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Plus className="mr-2 h-4 w-4" />
+                          )}
+                          선택한 {receiptSelected.size}개 냉장고에 추가
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
                 <form
                   onSubmit={(e) => void handleAdd(e)}
                   className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
@@ -622,6 +786,7 @@ export function InventoryFeaturePage() {
                     </Button>
                   </div>
                 </form>
+                )}
               </CardContent>
             </Card>
 
