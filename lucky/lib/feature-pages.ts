@@ -200,6 +200,56 @@ export const FEATURE_PAGES: Partial<Record<FeatureSlug, FeaturePageConfig>> = {
     geminiPrompt:
       "나는 한식·간단요리를 좋아하고 조리 시간은 30분 이하를 선호해. 이 취향으로 레시피를 추천해줘.",
   },
+  receipt: {
+    slug: "receipt",
+    icon: Package,
+    title: "영수증 스캔",
+    subtitle: "영수증 사진 한 장으로 냉장고를 채우세요.",
+    tagline: "구매 영수증을 촬영하면 AI가 식재료를 자동으로 인식해 냉장고에 추가합니다.",
+    agentName: "영수증 AI",
+    highlights: [
+      {
+        title: "자동 인식",
+        description: "영수증 사진 한 장으로 식재료를 자동 추출합니다.",
+      },
+      {
+        title: "선택 추가",
+        description: "인식된 품목 중 원하는 것만 골라서 추가할 수 있습니다.",
+      },
+      {
+        title: "구매일 반영",
+        description: "영수증의 구매일을 기준으로 유통기한을 추정합니다.",
+      },
+    ],
+    stats: [],
+    sections: [],
+    geminiPrompt: "영수증으로 등록한 식재료로 오늘 뭘 해먹을 수 있어?",
+  },
+  shopping: {
+    slug: "shopping",
+    icon: BarChart3,
+    title: "쇼핑 연결",
+    subtitle: "부족한 재료를 바로 주문하세요.",
+    tagline: "냉장고에 부족한 재료를 파악해 쇼핑몰과 연결합니다.",
+    agentName: "쇼핑 AI",
+    highlights: [
+      {
+        title: "부족 재료 감지",
+        description: "재고가 기준 이하로 내려가면 자동으로 감지합니다.",
+      },
+      {
+        title: "쇼핑몰 연결",
+        description: "쿠팡·마켓컬리 등 주요 쇼핑몰로 바로 이동합니다.",
+      },
+      {
+        title: "장바구니 목록",
+        description: "필요한 재료를 한 번에 정리해 드립니다.",
+      },
+    ],
+    stats: [],
+    sections: [],
+    geminiPrompt: "냉장고 재고가 부족한 재료 목록을 알려줘.",
+  },
 };
 
 export const FEATURE_SLUGS = Object.keys(FEATURE_PAGES) as FeatureSlug[];
