@@ -206,14 +206,6 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
             </Badge>
           </div>
           <div className="flex shrink-0 flex-wrap gap-3">
-            <Button
-              type="button"
-              onClick={askGemini}
-              className="bg-foreground text-background hover:bg-foreground/90"
-            >
-              <CloverIcon className="mr-2 h-4 w-4" />
-              Gemini에 물어보기
-            </Button>
             <Button variant="outline" asChild>
               <Link href="/">홈으로</Link>
             </Button>
