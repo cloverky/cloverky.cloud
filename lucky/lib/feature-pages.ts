@@ -90,35 +90,8 @@ export const FEATURE_PAGES: Partial<Record<FeatureSlug, FeaturePageConfig>> = {
         description: "냉장·냉동·실온 구역별로 목록을 관리합니다.",
       },
     ],
-    stats: [
-      { label: "등록 품목", value: "24", hint: "데모 데이터" },
-      { label: "유통기한 임박", value: "3", hint: "3일 이내" },
-      { label: "재고 부족", value: "2", hint: "기준 이하" },
-    ],
-    sections: [
-      {
-        type: "table",
-        title: "식재료 목록",
-        description: "수동 등록·수정 기능은 추후 연동 예정입니다.",
-        columns: ["품목", "수량", "유통기한", "보관", "상태"],
-        rows: [
-          ["우유", "2팩", "D-1", "냉장", "임박"],
-          ["달걀", "10개", "D-7", "냉장", "양호"],
-          ["양파", "3개", "D-14", "실온", "양호"],
-          ["냉동 만두", "1봉", "D-30", "냉동", "부족"],
-          ["상추", "1통", "D-2", "냉장", "임박"],
-        ],
-      },
-      {
-        type: "list",
-        title: "다음에 할 일",
-        items: [
-          "사진으로 식재료 추가하기",
-          "유통기한 임박 품목으로 레시피 보기",
-          "장보기 리스트에 부족 품목 담기",
-        ],
-      },
-    ],
+    stats: [],
+    sections: [],
     geminiPrompt: "냉장고에 우유 2팩, 달걀 10개, 상추 1통이 있을 때 오늘 저녁 메뉴를 추천해줘.",
   },
   recipes: {
@@ -143,34 +116,8 @@ export const FEATURE_PAGES: Partial<Record<FeatureSlug, FeaturePageConfig>> = {
         description: "없는 재료는 비슷한 대안을 안내합니다.",
       },
     ],
-    stats: [
-      { label: "오늘 추천", value: "6", hint: "레시피" },
-      { label: "즐겨찾기", value: "12", hint: "저장됨" },
-      { label: "평균 조리", value: "25분", hint: "예상" },
-    ],
-    sections: [
-      {
-        type: "table",
-        title: "추천 레시피",
-        description: "Gemini 채팅으로 더 많은 레시피를 요청할 수 있습니다.",
-        columns: ["레시피", "시간", "난이도", "사용 재료"],
-        rows: [
-          ["계란 프라이 덮밥", "15분", "쉬움", "달걀, 밥"],
-          ["우유 스크램블", "20분", "쉬움", "우유, 달걀"],
-          ["상추 쌈밥", "25분", "보통", "상추, 밥, 고기"],
-          ["만두 국물 요리", "30분", "보통", "만두, 대파"],
-        ],
-      },
-      {
-        type: "list",
-        title: "취향 필터 (데모)",
-        items: [
-          "조리 시간 30분 이하",
-          "매운맛 보통",
-          "채식 옵션 포함",
-        ],
-      },
-    ],
+    stats: [],
+    sections: [],
     geminiPrompt:
       "우유, 달걀, 상추로 만들 수 있는 한식 레시피 3가지를 단계별로 알려줘.",
   },
@@ -196,35 +143,8 @@ export const FEATURE_PAGES: Partial<Record<FeatureSlug, FeaturePageConfig>> = {
         description: "임박 재료로 만들 수 있는 요리를 함께 제안합니다.",
       },
     ],
-    stats: [
-      { label: "오늘 알림", value: "5", hint: "미확인 2" },
-      { label: "긴급", value: "2", hint: "D-1 이하" },
-      { label: "알림 설정", value: "ON", hint: "푸시·이메일" },
-    ],
-    sections: [
-      {
-        type: "table",
-        title: "알림 피드",
-        description: "실제 푸시 연동은 추후 구현 예정입니다.",
-        columns: ["유형", "내용", "시간", "우선순위"],
-        rows: [
-          ["유통기한", "우유 D-1 — 오늘 안에 사용하세요", "09:00", "긴급"],
-          ["유통기한", "상추 D-2 — 샐러드·쌈밥 추천", "09:05", "보통"],
-          ["재고 부족", "냉동 만두 1봉 남음", "10:30", "보통"],
-          ["레시피", "달걀·우유로 아침 메뉴 3선", "12:00", "정보"],
-          ["재고 부족", "양파 수량 기준 이하", "18:00", "보통"],
-        ],
-      },
-      {
-        type: "list",
-        title: "알림 설정 (데모)",
-        items: [
-          "유통기한 3일 전 알림",
-          "유통기한 1일 전 알림",
-          "재고 임계치 이하 시 알림",
-        ],
-      },
-    ],
+    stats: [],
+    sections: [],
     geminiPrompt: "유통기한이 임박한 우유와 상추로 만들 수 있는 요리를 알려줘.",
   },
   analytics: {
@@ -249,36 +169,8 @@ export const FEATURE_PAGES: Partial<Record<FeatureSlug, FeaturePageConfig>> = {
         description: "폐기·과소비 항목을 짚어 드립니다.",
       },
     ],
-    stats: [
-      { label: "이번 주 구매", value: "₩87,400", hint: "데모" },
-      { label: "폐기 감소", value: "-18%", hint: "전주 대비" },
-      { label: "자주 구매", value: "유제품", hint: "Top 카테고리" },
-    ],
-    sections: [
-      {
-        type: "table",
-        title: "카테고리별 소비",
-        description: "차트 연동 전 목업 테이블입니다.",
-        columns: ["카테고리", "소비 비율", "전주 대비", "제안"],
-        rows: [
-          ["유제품", "28%", "+5%", "소량 자주 구매"],
-          ["채소", "22%", "-3%", "상추·샐러리 소량 구매"],
-          ["육류·계란", "20%", "0%", "유지"],
-          ["냉동식품", "15%", "+8%", "만두 재고 확인"],
-          ["기타", "15%", "-2%", "—"],
-        ],
-      },
-      {
-        type: "list",
-        title: "이번 주 장보기 제안",
-        items: [
-          "우유 2팩",
-          "양파 1망",
-          "상추 1통",
-          "달걀 1판",
-        ],
-      },
-    ],
+    stats: [],
+    sections: [],
     geminiPrompt:
       "유제품 소비가 늘었을 때 장보기를 어떻게 줄이면 좋을지 조언해줘.",
   },
@@ -303,36 +195,8 @@ export const FEATURE_PAGES: Partial<Record<FeatureSlug, FeaturePageConfig>> = {
         description: "취향 데이터는 내 계정에만 사용됩니다.",
       },
     ],
-    stats: [
-      { label: "학습 태그", value: "8", hint: "활성" },
-      { label: "추천 만족도", value: "92%", hint: "데모" },
-      { label: "프로필 완성", value: "70%", hint: "" },
-    ],
-    sections: [
-      {
-        type: "table",
-        title: "학습된 취향 태그",
-        description: "로그인·DB 연동 후 저장됩니다.",
-        columns: ["태그", "출처", "신뢰도"],
-        rows: [
-          ["#간단요리", "레시피 클릭", "높음"],
-          ["#한식선호", "검색·채팅", "높음"],
-          ["#유제품자주", "재고 소비", "보통"],
-          ["#아침메뉴", "시간대 패턴", "보통"],
-          ["#저염", "설정", "높음"],
-        ],
-      },
-      {
-        type: "list",
-        title: "내 선호 설정 (데모)",
-        items: [
-          "조리 시간 30분 이하 선호",
-          "매운맛 보통",
-          "견과류 알레르기 없음",
-          "채식 옵션 가끔",
-        ],
-      },
-    ],
+    stats: [],
+    sections: [],
     geminiPrompt:
       "나는 한식·간단요리를 좋아하고 조리 시간은 30분 이하를 선호해. 이 취향으로 레시피를 추천해줘.",
   },
