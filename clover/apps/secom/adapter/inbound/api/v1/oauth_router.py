@@ -22,7 +22,7 @@ _KAKAO_CLIENT_ID = os.getenv('KAKAO_CLIENT_ID', '')
 _KAKAO_REDIRECT = f'{_BACKEND_URL}/auth/kakao/callback'
 _NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID', '')
 _NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET', '')
-_NAVER_REDIRECT = f'{_BACKEND_URL}/auth/naver/callback'
+_NAVER_REDIRECT = os.getenv('NAVER_REDIRECT_URI', f'{_BACKEND_URL}/auth/naver/callback')
 
 
 async def _upsert_oauth_user(db, provider, provider_id, email, name):
@@ -73,7 +73,7 @@ async def google_callback(code: str = Query(...), state: str = Query(default='')
                   'client_secret': _GOOGLE_CLIENT_SECRET, 'redirect_uri': _GOOGLE_REDIRECT, 'grant_type': 'authorization_code'})
         tr.raise_for_status()
         ur = await c.get('https://www.googleapis.com/oauth2/v2/userinfo',
-                         headers={'Authorization': f'Bearer {tr.json()[access_token]}'})
+                         headers={'Authorization': f'Bearer {tr.json()['access_token']}'})
         ur.raise_for_status()
         info = ur.json()
     return await _issue_token_and_redirect('google', info['id'], info['email'], info.get('name', info['email']))
@@ -95,7 +95,7 @@ async def kakao_callback(code: str = Query(...)):
                   'redirect_uri': _KAKAO_REDIRECT, 'code': code})
         tr.raise_for_status()
         ur = await c.get('https://kapi.kakao.com/v2/user/me',
-                         headers={'Authorization': f'Bearer {tr.json()[access_token]}'})
+                         headers={'Authorization': f'Bearer {tr.json()['access_token']}'})
         ur.raise_for_status()
         info = ur.json()
     acct = info.get('kakao_account', {})
@@ -121,7 +121,7 @@ async def naver_callback(code: str = Query(...), state: str = Query(default=''))
                     'client_secret': _NAVER_CLIENT_SECRET, 'code': code, 'state': state})
         tr.raise_for_status()
         ur = await c.get('https://openapi.naver.com/v1/nid/me',
-                         headers={'Authorization': f'Bearer {tr.json()[access_token]}'})
+                         headers={'Authorization': f'Bearer {tr.json()['access_token']}'})
         ur.raise_for_status()
         info = ur.json()['response']
     return await _issue_token_and_redirect('naver', info['id'],
