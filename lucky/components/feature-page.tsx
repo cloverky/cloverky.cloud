@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { InventoryFeaturePage } from "@/components/inventory-feature-page";
 import { RecipeFeaturePage } from "@/components/recipe-feature-page";
+import { ShoppingFeaturePage } from "@/components/shopping-feature-page";
 import {
   FEATURE_PAGES,
   type FeatureSection,
@@ -162,6 +163,9 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
   }
   if (slug === "recipes") {
     return <RecipeFeaturePage />;
+  }
+  if (slug === "shopping") {
+    return <ShoppingFeaturePage />;
   }
 
   const config = FEATURE_PAGES[slug];
