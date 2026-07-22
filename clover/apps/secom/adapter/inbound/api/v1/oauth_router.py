@@ -99,7 +99,7 @@ async def kakao_callback(code: str = Query(...)):
         ur.raise_for_status()
         info = ur.json()
     acct = info.get('kakao_account', {})
-    email = acct.get('email', f'kakao_{info[id]}@kakao.local')
+    email = acct.get('email', f'kakao_{info["id"]}@kakao.local')
     name = acct.get('profile', {}).get('nickname', '카카오 사용자')
     return await _issue_token_and_redirect('kakao', str(info['id']), email, name)
 
@@ -125,4 +125,4 @@ async def naver_callback(code: str = Query(...), state: str = Query(default=''))
         ur.raise_for_status()
         info = ur.json()['response']
     return await _issue_token_and_redirect('naver', info['id'],
-        info.get('email', f'naver_{info['id']}@naver.local'), info.get('name', '네이버 사용자'))
+        info.get('email', f"naver_{info['id']}@naver.local"), info.get('name', '네이버 사용자'))
