@@ -40,11 +40,14 @@ export default function ConsentContent() {
   const handleConsent = () => {
     if (!token) { router.replace('/'); return; }
     localStorage.setItem('access_token', token);
-    login({ username: email.split('@')[0], name, email }, true);
+    const username = email.split('@')[0];
     if (window.opener) {
-      window.opener.postMessage({ type: 'oauth_done' }, window.location.origin);
+      // 이 창(팝업)의 sessionStorage는 팝업이 닫히면 사라지므로, 신원 정보를
+      // postMessage에 실어 오프너가 자신의 login()을 호출하도록 한다.
+      window.opener.postMessage({ type: 'oauth_done', username, name, email }, window.location.origin);
       window.close();
     } else {
+      login({ username, name, email }, true);
       router.replace('/');
     }
   };
