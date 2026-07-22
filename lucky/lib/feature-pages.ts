@@ -10,7 +10,6 @@ import {
 export type FeatureSlug =
   | "inventory"
   | "recipes"
-  | "receipt"
   | "shopping"
   | "alerts"
   | "analytics"
@@ -200,31 +199,6 @@ export const FEATURE_PAGES: Partial<Record<FeatureSlug, FeaturePageConfig>> = {
     geminiPrompt:
       "나는 한식·간단요리를 좋아하고 조리 시간은 30분 이하를 선호해. 이 취향으로 레시피를 추천해줘.",
   },
-  receipt: {
-    slug: "receipt",
-    icon: Package,
-    title: "영수증 스캔",
-    subtitle: "영수증 사진 한 장으로 냉장고를 채우세요.",
-    tagline: "구매 영수증을 촬영하면 AI가 식재료를 자동으로 인식해 냉장고에 추가합니다.",
-    agentName: "영수증 AI",
-    highlights: [
-      {
-        title: "자동 인식",
-        description: "영수증 사진 한 장으로 식재료를 자동 추출합니다.",
-      },
-      {
-        title: "선택 추가",
-        description: "인식된 품목 중 원하는 것만 골라서 추가할 수 있습니다.",
-      },
-      {
-        title: "구매일 반영",
-        description: "영수증의 구매일을 기준으로 유통기한을 추정합니다.",
-      },
-    ],
-    stats: [],
-    sections: [],
-    geminiPrompt: "영수증으로 등록한 식재료로 오늘 뭘 해먹을 수 있어?",
-  },
   shopping: {
     slug: "shopping",
     icon: BarChart3,
@@ -281,13 +255,6 @@ export const HOME_FEATURE_LINKS: {
     title: "레시피 추천",
     description:
       "보유 재료로 만들 수 있는\n레시피를 AI가 추천합니다.",
-  },
-  {
-    slug: "receipt",
-    icon: Bell,
-    title: "영수증 스캔",
-    description:
-      "영수증을 찍으면\n냉장고에 자동으로 채워집니다.",
   },
   {
     slug: "shopping",

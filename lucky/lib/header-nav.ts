@@ -27,11 +27,6 @@ export const HEADER_NAV_MENUS: HeaderNavMenu[] = [
         description: "보유 재료로 요리 추천",
       },
       {
-        label: "영수증 스캔",
-        href: "/features/receipt",
-        description: "영수증 찍으면 냉장고에 자동 추가",
-      },
-      {
         label: "쇼핑 연결",
         href: "/features/shopping",
         description: "부족한 재료 바로 주문",
