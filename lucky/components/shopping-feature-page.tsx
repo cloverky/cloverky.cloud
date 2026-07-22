@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { fetchInventory, type InventoryItem } from "@/lib/inventory-api";
 
 const SHOPS = [
-  { name: "네이버쇼핑", url: (q: string) => `https://search.shopping.naver.com/search/all?query=${encodeURIComponent(q)}` },
+  { name: "네이버쇼핑", url: (q: string) => `https://search.naver.com/search.naver?query=${encodeURIComponent(q)}` },
   { name: "쿠팡", url: (q: string) => `https://www.coupang.com/np/search?q=${encodeURIComponent(q)}` },
   { name: "마켓컬리", url: (q: string) => `https://www.kurly.com/search?sword=${encodeURIComponent(q)}` },
 ] as const;
