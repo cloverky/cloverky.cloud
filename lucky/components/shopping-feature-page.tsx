@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Loader2, ShoppingCart, Trash2 } from "lucide-react";
+import { ArrowLeft, ChefHat, ExternalLink, Loader2, Search, ShoppingCart, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { BottomRightStack } from "@/components/bottom-right-stack";
 import { Footer } from "@/components/footer";
@@ -21,10 +21,40 @@ import { Input } from "@/components/ui/input";
 import { fetchInventory, type InventoryItem } from "@/lib/inventory-api";
 
 const SHOPS = [
-  { name: "네이버쇼핑", url: (q: string) => `https://search.naver.com/search.naver?query=${encodeURIComponent(q)}` },
-  { name: "쿠팡", url: (q: string) => `https://www.coupang.com/np/search?q=${encodeURIComponent(q)}` },
-  { name: "마켓컬리", url: (q: string) => `https://www.kurly.com/search?sword=${encodeURIComponent(q)}` },
+  {
+    name: "네이버",
+    url: (q: string) => `https://search.naver.com/search.naver?query=${encodeURIComponent(q + " 구매")}`,
+  },
+  {
+    name: "쿠팡",
+    url: (q: string) => `https://www.coupang.com/np/search?q=${encodeURIComponent(q)}`,
+  },
+  {
+    name: "마켓컬리",
+    url: (q: string) => `https://www.kurly.com/search?sword=${encodeURIComponent(q)}`,
+  },
 ] as const;
+
+type MissingIngredient = {
+  name: string;
+  inFridge: boolean;
+  quantity?: string;
+};
+
+async function fetchIngredients(dish: string): Promise<string[]> {
+  const prompt = `"${dish}"을(를) 만들기 위한 재료 목록을 JSON 배열로만 출력해줘. 예: ["재료1","재료2"]. 설명 없이 배열만.`;
+  const res = await fetch("/api/gemini/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: [{ role: "user", content: prompt }] }),
+  });
+  const data = (await res.json()) as { reply?: string; error?: string };
+  if (data.error) throw new Error(data.error);
+  const raw = data.reply ?? "";
+  const match = raw.match(/\[[\s\S]*?\]/);
+  if (!match) throw new Error("재료 목록을 파싱하지 못했습니다.");
+  return JSON.parse(match[0]) as string[];
+}
 
 function ShoppingItemRow({
   item,
@@ -38,17 +68,17 @@ function ShoppingItemRow({
   onRemove: () => void;
 }) {
   return (
-    <div className="flex items-center gap-3 py-2.5 px-4">
+    <div className="flex items-center gap-3 px-4 py-2.5">
       <input
         type="checkbox"
         checked={checked}
         onChange={onToggle}
-        className="h-4 w-4 accent-foreground shrink-0"
+        className="h-4 w-4 shrink-0 accent-foreground"
       />
       <span className={`flex-1 text-sm ${checked ? "line-through text-muted-foreground" : ""}`}>
         {item}
       </span>
-      <div className="flex gap-1 shrink-0">
+      <div className="flex shrink-0 gap-1">
         {SHOPS.map((shop) => (
           <a
             key={shop.name}
@@ -79,28 +109,62 @@ export function ShoppingFeaturePage() {
   const { user, isReady } = useAuth();
   const openLogin = useOpenLogin();
 
-  const [lowStockItems, setLowStockItems] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [inventoryLoading, setInventoryLoading] = useState(false);
+
+  const [dish, setDish] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [missing, setMissing] = useState<MissingIngredient[] | null>(null);
+  const [analyzedDish, setAnalyzedDish] = useState("");
+
   const [cartItems, setCartItems] = useState<string[]>([]);
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [newItem, setNewItem] = useState("");
 
-  const load = useCallback(async () => {
+  const loadInventory = useCallback(async () => {
     if (!user?.email) return;
-    setLoading(true);
+    setInventoryLoading(true);
     try {
       const data = await fetchInventory(user.email);
-      setLowStockItems(data.items.filter((i) => i.status === "부족" || i.status === "긴급"));
+      setInventory(data.items);
     } catch {
       // ignore
     } finally {
-      setLoading(false);
+      setInventoryLoading(false);
     }
   }, [user?.email]);
 
   useEffect(() => {
-    if (isReady && user?.email) void load();
-  }, [isReady, user?.email, load]);
+    if (isReady && user?.email) void loadInventory();
+  }, [isReady, user?.email, loadInventory]);
+
+  const handleAnalyze = async () => {
+    const d = dish.trim();
+    if (!d) return;
+    if (!user?.email) { openLogin(); return; }
+
+    setAnalyzing(true);
+    setMissing(null);
+    setAnalyzedDish(d);
+    try {
+      const ingredients = await fetchIngredients(d);
+      const result: MissingIngredient[] = ingredients.map((name) => {
+        const found = inventory.find((inv) =>
+          inv.name.includes(name) || name.includes(inv.name)
+        );
+        return {
+          name,
+          inFridge: !!found,
+          quantity: found?.quantity_label,
+        };
+      });
+      setMissing(result);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "분석 실패");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const addToCart = (name: string) => {
     if (cartItems.includes(name)) return;
@@ -108,11 +172,20 @@ export function ShoppingFeaturePage() {
     toast.success(`"${name}" 장바구니에 추가했습니다.`);
   };
 
+  const addAllMissing = () => {
+    if (!missing) return;
+    const toAdd = missing.filter((m) => !m.inFridge).map((m) => m.name);
+    const newOnes = toAdd.filter((n) => !cartItems.includes(n));
+    if (!newOnes.length) { toast("이미 모두 담겨 있습니다."); return; }
+    setCartItems((prev) => [...prev, ...newOnes]);
+    toast.success(`부족한 재료 ${newOnes.length}개를 장바구니에 담았습니다.`);
+  };
+
   const removeFromCart = (idx: number) => {
     setCartItems((prev) => prev.filter((_, i) => i !== idx));
     setChecked((prev) => {
-      const next = new Set(prev);
-      next.delete(idx);
+      const next = new Set<number>();
+      prev.forEach((v) => { if (v < idx) next.add(v); else if (v > idx) next.add(v - 1); });
       return next;
     });
   };
@@ -120,8 +193,7 @@ export function ShoppingFeaturePage() {
   const toggleCheck = (idx: number) => {
     setChecked((prev) => {
       const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
       return next;
     });
   };
@@ -133,6 +205,7 @@ export function ShoppingFeaturePage() {
     setNewItem("");
   };
 
+  const missingCount = missing?.filter((m) => !m.inFridge).length ?? 0;
   const uncheckedCount = cartItems.filter((_, i) => !checked.has(i)).length;
 
   return (
@@ -154,8 +227,12 @@ export function ShoppingFeaturePage() {
               <ShoppingCart className="h-7 w-7 text-accent" />
             </div>
             <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">쇼핑 연결</h1>
-            <p className="mt-2 text-lg text-muted-foreground">부족한 재료를 바로 주문하세요.</p>
-            <Badge variant="outline" className="mt-4 font-normal">도우미: 쇼핑 AI</Badge>
+            <p className="mt-2 text-lg text-muted-foreground">
+              만들 음식을 입력하면 부족한 재료를 알려드립니다.
+            </p>
+            <Badge variant="outline" className="mt-4 font-normal">
+              도우미: 쇼핑 AI
+            </Badge>
           </div>
           <div className="flex shrink-0 gap-3">
             <Button variant="outline" asChild>
@@ -172,7 +249,7 @@ export function ShoppingFeaturePage() {
           <Card className="mt-12 border-dashed">
             <CardHeader className="text-center">
               <CardTitle>로그인이 필요합니다</CardTitle>
-              <CardDescription>로그인하면 부족한 재료를 자동으로 감지합니다.</CardDescription>
+              <CardDescription>로그인하면 냉장고 재고와 비교해 부족한 재료를 찾아드립니다.</CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center gap-3 pb-8">
               <Button onClick={openLogin}>로그인</Button>
@@ -181,50 +258,92 @@ export function ShoppingFeaturePage() {
           </Card>
         ) : (
           <>
-            {/* 부족 재료 */}
+            {/* 음식 입력 + 재료 분석 */}
             <Card className="mt-12">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  재고 부족 재료
-                  {lowStockItems.length > 0 && (
-                    <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-destructive font-normal">
-                      {lowStockItems.length}개
-                    </Badge>
-                  )}
+                  <ChefHat className="h-5 w-5" />
+                  어떤 음식 만들 거야?
                 </CardTitle>
-                <CardDescription>재고가 부족하거나 긴급한 식재료입니다. 장바구니에 담아 한 번에 주문하세요.</CardDescription>
+                <CardDescription>
+                  음식 이름을 입력하면 AI가 필요한 재료를 분석하고 냉장고 재고와 비교합니다.
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : lowStockItems.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-muted-foreground">부족한 재료가 없습니다.</p>
-                ) : (
-                  <div className="divide-y divide-border rounded-md border">
-                    {lowStockItems.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 px-4 py-2.5">
-                        <span className="flex-1 text-sm font-medium">{item.name}</span>
-                        <span className="text-xs text-muted-foreground">{item.quantity_label}</span>
-                        <Badge
-                          variant="outline"
-                          className={`font-normal text-xs ${item.status === "긴급" ? "border-destructive/40 bg-destructive/10 text-destructive" : "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400"}`}
-                        >
-                          {item.status}
-                        </Badge>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="예: 김치찌개, 된장찌개, 파스타…"
+                    value={dish}
+                    onChange={(e) => setDish(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void handleAnalyze(); } }}
+                    disabled={analyzing}
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => void handleAnalyze()}
+                    disabled={!dish.trim() || analyzing || inventoryLoading}
+                  >
+                    {analyzing ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="mr-2 h-4 w-4" />
+                    )}
+                    분석
+                  </Button>
+                </div>
+
+                {missing !== null && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">
+                        <span className="text-foreground">{analyzedDish}</span> 재료{" "}
+                        {missing.length}개 중{" "}
+                        <span className="text-destructive font-semibold">{missingCount}개 부족</span>
+                      </p>
+                      {missingCount > 0 && (
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
                           className="h-7 text-xs"
-                          onClick={() => addToCart(item.name)}
-                          disabled={cartItems.includes(item.name)}
+                          onClick={addAllMissing}
                         >
-                          {cartItems.includes(item.name) ? "담김" : "장바구니 +"}
+                          부족한 재료 전부 담기
                         </Button>
-                      </div>
-                    ))}
+                      )}
+                    </div>
+                    <div className="divide-y divide-border rounded-md border">
+                      {missing.map((m) => (
+                        <div key={m.name} className="flex items-center gap-3 px-4 py-2.5">
+                          <span
+                            className={`h-2 w-2 shrink-0 rounded-full ${m.inFridge ? "bg-accent" : "bg-destructive"}`}
+                          />
+                          <span className="flex-1 text-sm">{m.name}</span>
+                          {m.inFridge ? (
+                            <span className="text-xs text-muted-foreground">{m.quantity} 보유</span>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="border-destructive/40 bg-destructive/10 text-destructive font-normal text-xs"
+                            >
+                              없음
+                            </Badge>
+                          )}
+                          {!m.inFridge && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                              onClick={() => addToCart(m.name)}
+                              disabled={cartItems.includes(m.name)}
+                            >
+                              {cartItems.includes(m.name) ? "담김" : "장바구니 +"}
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -237,11 +356,13 @@ export function ShoppingFeaturePage() {
                   <ShoppingCart className="h-5 w-5" />
                   장바구니 메모
                   {uncheckedCount > 0 && (
-                    <Badge variant="outline" className="font-normal">{uncheckedCount}개 남음</Badge>
+                    <Badge variant="outline" className="font-normal">
+                      {uncheckedCount}개 남음
+                    </Badge>
                   )}
                 </CardTitle>
                 <CardDescription>
-                  품목명 옆 쇼핑몰 버튼을 누르면 검색 결과로 이동합니다. 구매 후 체크하세요.
+                  품목 옆 쇼핑몰 버튼을 누르면 검색 결과로 이동합니다. 구매 후 체크하세요.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -252,7 +373,9 @@ export function ShoppingFeaturePage() {
                     onChange={(e) => setNewItem(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddManual(); } }}
                   />
-                  <Button type="button" onClick={handleAddManual} disabled={!newItem.trim()}>추가</Button>
+                  <Button type="button" onClick={handleAddManual} disabled={!newItem.trim()}>
+                    추가
+                  </Button>
                 </div>
                 {cartItems.length === 0 ? (
                   <p className="py-6 text-center text-sm text-muted-foreground">
