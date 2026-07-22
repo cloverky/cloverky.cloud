@@ -57,54 +57,56 @@ export default function ConsentContent() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/20">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent">
-            <path d="M5 6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z"/>
-            <path d="M5 10h14"/>
-            <path d="M15 7v6"/>
-          </svg>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+        {/* 헤더 */}
+        <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/20">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent">
+              <path d="M5 6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z"/>
+              <path d="M5 10h14"/>
+              <path d="M15 7v6"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">소셜 회원가입</p>
+            <p className="text-sm font-semibold text-foreground">FridgeAI</p>
+          </div>
         </div>
-        <div>
-          <p className="text-xs text-muted-foreground">소셜 회원가입</p>
-          <p className="text-sm font-semibold text-foreground">FridgeAI</p>
-        </div>
-      </div>
 
-      <div className="flex flex-1 flex-col">
-        <div className="px-5 pt-6 pb-4">
-          <h1 className="text-lg font-bold text-foreground">서비스 약관 동의</h1>
+        {/* 타이틀 */}
+        <div className="px-5 pt-5 pb-3">
+          <h1 className="text-base font-bold text-foreground">서비스 약관 동의</h1>
           {name && (
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               <span className="font-medium text-foreground">{name}</span>님, 환영합니다!
             </p>
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={toggleAll}
-          className="mx-5 mb-3 flex items-center gap-3 rounded-xl border border-border bg-secondary/50 px-4 py-3 transition hover:bg-secondary"
-        >
-          <div className={circleClass(allChecked)}>
-            {allChecked && <Checkmark />}
-          </div>
-          <span className="text-sm font-semibold text-foreground">전체 동의하기</span>
-          <span className="text-xs text-muted-foreground">선택 동의 포함</span>
-        </button>
+        {/* 전체 동의 */}
+        <div className="px-5 pb-2">
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="flex w-full items-center gap-3 rounded-xl border border-border bg-secondary/50 px-4 py-2.5 transition hover:bg-secondary"
+          >
+            <div className={circleClass(allChecked)}>
+              {allChecked && <Checkmark />}
+            </div>
+            <span className="text-sm font-semibold text-foreground">전체 동의하기</span>
+            <span className="text-xs text-muted-foreground">선택 동의 포함</span>
+          </button>
+        </div>
 
         <div className="mx-5 h-px bg-border" />
 
-        <div className="flex-1 px-5 pt-3">
+        {/* 약관 목록 */}
+        <div className="px-5 pt-2 pb-1">
           {TERMS.map(term => (
-            <div key={term.id} className="mb-1">
-              <div className="flex items-center gap-3 py-3">
-                <button
-                  type="button"
-                  onClick={() => toggle(term.id)}
-                  className={circleClass(checked[term.id])}
-                >
+            <div key={term.id}>
+              <div className="flex items-center gap-3 py-2.5">
+                <button type="button" onClick={() => toggle(term.id)} className={circleClass(checked[term.id])}>
                   {checked[term.id] && <Checkmark />}
                 </button>
                 <button
@@ -125,7 +127,7 @@ export default function ConsentContent() {
                   className="text-muted-foreground"
                 >
                   <svg
-                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
                     style={{ transform: expanded[term.id] ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}
                   >
                     <path d="M9 18l6-6-6-6"/>
@@ -133,7 +135,7 @@ export default function ConsentContent() {
                 </button>
               </div>
               {expanded[term.id] && (
-                <div className="mb-2 ml-8 rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+                <div className="mb-1 ml-8 rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
                   {term.detail}
                 </div>
               )}
@@ -141,16 +143,17 @@ export default function ConsentContent() {
           ))}
         </div>
 
-        <p className="px-5 pb-4 text-center text-xs leading-relaxed text-muted-foreground">
+        <p className="px-5 pb-3 text-center text-[11px] leading-relaxed text-muted-foreground">
           FridgeAI는 회원가입·로그인 기능 제공자이며,<br/>
           개인정보 수집·이용에 대한 책임은 FridgeAI에 있습니다.
         </p>
 
+        {/* 버튼 */}
         <div className="flex border-t border-border">
           <button
             type="button"
             onClick={handleCancel}
-            className="flex-1 py-4 text-sm font-medium text-muted-foreground transition hover:bg-secondary"
+            className="flex-1 py-3.5 text-sm font-medium text-muted-foreground transition hover:bg-secondary"
           >
             취소
           </button>
@@ -159,7 +162,7 @@ export default function ConsentContent() {
             type="button"
             onClick={handleConsent}
             disabled={!allRequired}
-            className="flex-1 py-4 text-sm font-semibold text-accent transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex-1 py-3.5 text-sm font-semibold text-accent transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-40"
           >
             동의하기
           </button>
