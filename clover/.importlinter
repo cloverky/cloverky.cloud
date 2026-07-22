@@ -12,6 +12,28 @@ root_packages =
     users
     star_craft
     core
+    auth
+
+[importlinter:contract:auth-isolation]
+# Harness Rule: apps/auth 는 auth_main 엔트리포인트 전용이다.
+# 비즈니스 스포크가 쓸 수 있는 인증 표면은 core.dependencies / core.security 뿐이며,
+# 개인키를 다루는 발급 코드(auth.*)를 스포크가 import해서는 안 된다.
+name = apps.auth is only imported by auth_main
+type = forbidden
+source_modules =
+    fridge
+    titanic
+    secom
+    doro
+    friday_13th
+    imitation_game
+    inception
+    lion_king
+    silicon_valley
+    users
+    star_craft
+forbidden_modules =
+    auth
 
 [importlinter:contract:star-topology-no-spoke-to-spoke]
 # Harness Rule: 스포크 → 스포크 직접 참조 금지

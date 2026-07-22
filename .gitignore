@@ -1,2 +1,9 @@
 EXAONE-3.5-7.8B-Instruct-AWQ/
 lucky/.env.production
+
+# 비밀·자격 증명 (scripts/generate_jwt_keys.sh 산출물 포함)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
