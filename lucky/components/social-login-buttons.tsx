@@ -4,7 +4,7 @@ interface Props {
   onClose: () => void;
 }
 
-const GATEWAY_PROVIDERS = new Set(['google', 'naver']);
+const GATEWAY_PROVIDERS = new Set(['google', 'naver', 'kakao']);
 
 export function SocialLoginButtons({ onClose }: Props) {
   const handleSocialLogin = (provider: string) => {
