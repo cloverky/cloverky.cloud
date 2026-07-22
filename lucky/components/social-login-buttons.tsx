@@ -7,8 +7,25 @@ interface Props {
 export function SocialLoginButtons({ onClose }: Props) {
   const handleSocialLogin = (provider: string) => {
     const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.cloverky.cloud';
-    onClose();
-    window.location.href = base + '/auth/' + provider;
+    const url = base + '/auth/' + provider;
+    const w = 480, h = 600;
+    const left = Math.round(window.screenX + (window.outerWidth - w) / 2);
+    const top = Math.round(window.screenY + (window.outerHeight - h) / 2);
+    const popup = window.open(url, 'social_login', `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`);
+
+    const onMsg = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.type === 'oauth_done') {
+        window.removeEventListener('message', onMsg);
+        onClose();
+        window.location.reload();
+      }
+    };
+    window.addEventListener('message', onMsg);
+
+    const timer = setInterval(() => {
+      if (popup?.closed) { clearInterval(timer); window.removeEventListener('message', onMsg); }
+    }, 500);
   };
 
   return (

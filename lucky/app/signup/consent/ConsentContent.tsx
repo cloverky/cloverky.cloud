@@ -41,10 +41,17 @@ export default function ConsentContent() {
     if (!token) { router.replace('/'); return; }
     localStorage.setItem('access_token', token);
     login({ username: email.split('@')[0], name, email }, true);
-    router.replace('/');
+    if (window.opener) {
+      window.opener.postMessage({ type: 'oauth_done' }, window.location.origin);
+      window.close();
+    } else {
+      router.replace('/');
+    }
   };
 
-  const handleCancel = () => router.replace('/');
+  const handleCancel = () => {
+    if (window.opener) { window.close(); } else { router.replace('/'); }
+  };
 
   const circleClass = (on: boolean) =>
     'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition ' +

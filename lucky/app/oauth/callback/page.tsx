@@ -15,7 +15,12 @@ function OAuthHandler() {
     if (!token) { router.replace('/'); return; }
     localStorage.setItem('access_token', token);
     login({ username: email.split('@')[0], name, email }, true);
-    router.replace('/');
+    if (window.opener) {
+      window.opener.postMessage({ type: 'oauth_done' }, window.location.origin);
+      window.close();
+    } else {
+      router.replace('/');
+    }
   }, [params, login, router]);
 
   return <p className='text-muted-foreground'>로그인 처리 중...</p>;
