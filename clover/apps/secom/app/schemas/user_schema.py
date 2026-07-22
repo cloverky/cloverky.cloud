@@ -20,3 +20,14 @@ class LoginResultSchema(BaseModel):
     name: str
     email: str
     role: str
+
+
+class UpdateUsernameSchema(BaseModel):
+    email: str
+    username: str
+
+
+class ChangePasswordSchema(BaseModel):
+    email: str
+    current_password: str
+    new_password: str

@@ -25,7 +25,7 @@ import os
 from contextlib import asynccontextmanager
 
 from admin.adapter.inbound.api import silicon_valley_router
-from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Form, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -52,9 +52,14 @@ from fridge.adapter.outbound.orm.inventory_orm import InventoryOrm  # noqa: F401
 from fridge.adapter.outbound.orm.receipt_line_orm import ReceiptLineOrm  # noqa: F401
 from fridge.adapter.outbound.orm.receipt_orm import ReceiptOrm  # noqa: F401
 from fridge.models.database import Base, dispose_engine, engine, get_db
-from secom.app.controllers.user_controller import UserController
 from secom.adapter.inbound.api.v1.oauth_router import oauth_router
-from secom.app.schemas.user_schema import LoginSchema, UserSchema
+from secom.app.controllers.user_controller import UserController
+from secom.app.schemas.user_schema import (
+    ChangePasswordSchema,
+    LoginSchema,
+    UpdateUsernameSchema,
+    UserSchema,
+)
 from star_craft.adapter.inbound.api.star_craft_router import star_craft_router
 from titanic.adapter.inbound.api import titanic_router
 from titanic.adapter.outbound.orm.passenger_jack_trainer_orm import (
@@ -147,6 +152,33 @@ class LoginResponse(BaseModel):
 class UsernameCheckResponse(BaseModel):
     username: str
     available: bool
+    message: str
+
+
+class UpdateUsernameRequest(BaseModel):
+    username: str = Field(..., min_length=2, max_length=20, description="새 닉네임")
+
+    @field_validator("username")
+    @classmethod
+    def username_format(cls, v: str) -> str:
+        u = v.strip()
+        if not re.fullmatch(r"[a-zA-Z0-9_]{2,20}", u):
+            raise ValueError("닉네임은 2~20자의 영문, 숫자, _ 만 사용할 수 있습니다.")
+        return u
+
+
+class UpdateUsernameResponse(BaseModel):
+    username: str
+
+
+class ChangePasswordRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    current_password: str = Field(..., min_length=1, alias="currentPassword")
+    new_password: str = Field(..., min_length=8, alias="newPassword")
+
+
+class ChangePasswordResponse(BaseModel):
     message: str
 
 
@@ -508,6 +540,42 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)) -> LoginR
         username=result.username,
         email=result.email,
     )
+
+
+@app.patch("/users/me/username", response_model=UpdateUsernameResponse)
+async def update_username(
+    req: UpdateUsernameRequest,
+    x_user_email: str = Header(..., alias="X-User-Email"),
+    db: AsyncSession = Depends(get_db),
+) -> UpdateUsernameResponse:
+    """내 정보 수정 — 닉네임(username) 변경."""
+    result = await UserController().update_username(
+        db,
+        UpdateUsernameSchema(email=x_user_email, username=req.username),
+    )
+    logger.info(
+        "닉네임 변경 완료 — email=%r username=%r", x_user_email, result.username
+    )
+    return UpdateUsernameResponse(username=result.username)
+
+
+@app.patch("/users/me/password", response_model=ChangePasswordResponse)
+async def change_password(
+    req: ChangePasswordRequest,
+    x_user_email: str = Header(..., alias="X-User-Email"),
+    db: AsyncSession = Depends(get_db),
+) -> ChangePasswordResponse:
+    """내 정보 수정 — 현재 비밀번호 확인 후 새 비밀번호로 변경."""
+    await UserController().change_password(
+        db,
+        ChangePasswordSchema(
+            email=x_user_email,
+            current_password=req.current_password,
+            new_password=req.new_password,
+        ),
+    )
+    logger.info("비밀번호 변경 완료 — email=%r", x_user_email)
+    return ChangePasswordResponse(message="비밀번호가 변경되었습니다.")
 
 
 if __name__ == "__main__":

@@ -1,9 +1,15 @@
 import logging
 
-from users.adapter.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
+from users.adapter.user import User
 
-from secom.app.schemas.user_schema import LoginResultSchema, LoginSchema, UserSchema
+from secom.app.schemas.user_schema import (
+    ChangePasswordSchema,
+    LoginResultSchema,
+    LoginSchema,
+    UpdateUsernameSchema,
+    UserSchema,
+)
 from secom.app.services.user_service import UserService
 from secom.app.utils.log_helper import log_login_layer, log_save_user_layer
 
@@ -38,3 +44,15 @@ class UserController:
             result.role,
         )
         return result
+
+    async def update_username(
+        self, db: AsyncSession, update_schema: UpdateUsernameSchema
+    ) -> LoginResultSchema:
+        logger.info("[Controller] → Service.update_username 호출")
+        return await self._user_service.update_username(db, update_schema)
+
+    async def change_password(
+        self, db: AsyncSession, change_schema: ChangePasswordSchema
+    ) -> None:
+        logger.info("[Controller] → Service.change_password 호출")
+        await self._user_service.change_password(db, change_schema)

@@ -10,9 +10,10 @@ import { HeaderMobileNav } from "@/components/header-mobile-nav";
 interface HeaderProps {
   onSignUpClick: () => void;
   onLoginClick: () => void;
+  onProfileEditClick: () => void;
 }
 
-export function Header({ onSignUpClick, onLoginClick }: HeaderProps) {
+export function Header({ onSignUpClick, onLoginClick, onProfileEditClick }: HeaderProps) {
   const { user, logout } = useAuth();
 
   return (
@@ -23,6 +24,7 @@ export function Header({ onSignUpClick, onLoginClick }: HeaderProps) {
             user={user}
             onLoginClick={onLoginClick}
             onSignUpClick={onSignUpClick}
+            onProfileEditClick={onProfileEditClick}
             onLogout={logout}
           />
           <Link href="/" className="flex min-w-0 items-center gap-2">
@@ -47,6 +49,15 @@ export function Header({ onSignUpClick, onLoginClick }: HeaderProps) {
               <span className="max-w-[10rem] truncate text-sm font-medium text-foreground">
                 {user.username}님
               </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 border-border bg-transparent px-4 text-sm text-foreground hover:bg-secondary"
+                onClick={onProfileEditClick}
+              >
+                내 정보 수정
+              </Button>
               <Button
                 type="button"
                 variant="outline"
