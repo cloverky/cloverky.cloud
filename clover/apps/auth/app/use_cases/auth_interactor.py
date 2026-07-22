@@ -60,10 +60,17 @@ class AuthInteractor(AuthUseCase):
 
         identity = await self._provider(cmd.provider).exchange_code(cmd.code)
         user = await self._users.get_by_email(identity.email)
+        is_new_user = user is None
         if user is None:
             user = await self._users.create_oauth_user(identity.email, identity.name)
 
-        return await self._issue_pair(sub=str(user.id), roles=[user.role])
+        return await self._issue_pair(
+            sub=str(user.id),
+            roles=[user.role],
+            name=user.name,
+            email=user.email,
+            is_new_user=is_new_user,
+        )
 
     async def refresh(self, cmd: RefreshCommand) -> TokenPairDto:
         payload = verify_token(cmd.refresh_token, aud=_REFRESH_AUD)
@@ -76,7 +83,9 @@ class AuthInteractor(AuthUseCase):
         user = await self._users.get_by_id(int(payload.sub))
         if user is None:
             raise ValueError("사용자를 찾을 수 없습니다.")
-        return await self._issue_pair(sub=payload.sub, roles=[user.role])
+        return await self._issue_pair(
+            sub=payload.sub, roles=[user.role], name=user.name, email=user.email
+        )
 
     async def logout(self, refresh_token: str, access_jti: str | None) -> None:
         try:
@@ -90,7 +99,14 @@ class AuthInteractor(AuthUseCase):
                 access_jti, ttl_seconds=_ACCESS_EXPIRES_MIN * 60
             )
 
-    async def _issue_pair(self, sub: str, roles: list[str]) -> TokenPairDto:
+    async def _issue_pair(
+        self,
+        sub: str,
+        roles: list[str],
+        name: str,
+        email: str,
+        is_new_user: bool = False,
+    ) -> TokenPairDto:
         access_token = create_access_token(
             sub=sub, roles=roles, aud=self._service_aud, expires_min=_ACCESS_EXPIRES_MIN
         )
@@ -105,4 +121,7 @@ class AuthInteractor(AuthUseCase):
             refresh_token=refresh_token,
             token_type="bearer",
             expires_in=_ACCESS_EXPIRES_MIN * 60,
+            name=name,
+            email=email,
+            is_new_user=is_new_user,
         )

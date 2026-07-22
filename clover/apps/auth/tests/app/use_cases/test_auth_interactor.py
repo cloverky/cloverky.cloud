@@ -114,8 +114,29 @@ async def test_callback_creates_user_and_issues_pair(
 
     assert pair.access_token and pair.refresh_token
     assert pair.token_type == "bearer"
+    assert pair.name == "Tester"
+    assert pair.email == "tester@example.com"
+    assert pair.is_new_user is True
     assert len(users.rows) == 1
     assert len(tokens.live) == 1
+
+
+async def test_callback_marks_returning_user_as_not_new(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    auth, _, _ = interactor
+    first_start = await auth.start_login("google")
+    await auth.handle_callback(
+        CallbackCommand(provider="google", code="c", state=first_start.state)
+    )
+
+    second_start = await auth.start_login("google")
+    second = await auth.handle_callback(
+        CallbackCommand(provider="google", code="c", state=second_start.state)
+    )
+
+    assert second.is_new_user is False
 
 
 async def test_callback_rejects_unknown_state(

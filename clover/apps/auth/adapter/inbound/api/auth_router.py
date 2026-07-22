@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
@@ -21,8 +22,20 @@ from core.security import COOKIE_KWARGS, peek_jti, public_key_pem
 
 auth_router = APIRouter(tags=["auth"])
 
-_POST_LOGIN_REDIRECT = os.getenv("POST_LOGIN_REDIRECT_URL", "https://cloverky.cloud")
+_FRONTEND_URL = os.getenv("FRONTEND_URL", "https://cloverky.cloud")
 _JWT_KID = os.getenv("JWT_KID", "cloverky-1")
+
+
+def _build_frontend_redirect(pair: TokenPairDto) -> str:
+    """기존 소셜 로그인 팝업(social-login-buttons.tsx)이 기대하는 콜백 계약과 동일하게
+    맞춘다 — 신규 가입자는 약관 동의 화면으로, 기존 사용자는 콜백 처리 페이지로."""
+    path = "/signup/consent" if pair.is_new_user else "/oauth/callback"
+    query = (
+        f"?token={quote(pair.access_token)}"
+        f"&name={quote(pair.name)}"
+        f"&email={quote(pair.email)}"
+    )
+    return f"{_FRONTEND_URL}{path}{query}"
 
 
 def _set_token_cookies(response: Response, pair: TokenPairDto) -> None:
@@ -86,7 +99,7 @@ async def callback(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e
 
-    response = RedirectResponse(url=_POST_LOGIN_REDIRECT, status_code=303)
+    response = RedirectResponse(url=_build_frontend_redirect(pair), status_code=303)
     _set_token_cookies(response, pair)
     return response
 

@@ -4,10 +4,13 @@ interface Props {
   onClose: () => void;
 }
 
+const GATEWAY_PROVIDERS = new Set(['google', 'naver']);
+
 export function SocialLoginButtons({ onClose }: Props) {
   const handleSocialLogin = (provider: string) => {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.cloverky.cloud';
-    const url = base + '/auth/' + provider;
+    const url = GATEWAY_PROVIDERS.has(provider)
+      ? (process.env.NEXT_PUBLIC_AUTH_URL ?? 'https://auth.cloverky.cloud') + '/auth/login/' + provider
+      : (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.cloverky.cloud') + '/auth/' + provider;
     const w = 480, h = 600;
     const left = Math.round(window.screenX + (window.outerWidth - w) / 2);
     const top = Math.round(window.screenY + (window.outerHeight - h) / 2);

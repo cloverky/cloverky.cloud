@@ -42,3 +42,6 @@ class TokenPairDto:
     refresh_token: str
     token_type: str
     expires_in: int
+    name: str
+    email: str
+    is_new_user: bool = False
