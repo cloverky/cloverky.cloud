@@ -21,6 +21,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   isReady: boolean;
   login: (user: AuthUser, remember?: boolean) => void;
+  updateUser: (patch: Partial<AuthUser>) => void;
   logout: () => void;
 };
 
@@ -79,14 +80,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.removeItem(STORAGE_KEY);
   }, []);
 
+  const updateUser = useCallback((patch: Partial<AuthUser>) => {
+    setAuth((prev) => {
+      if (!prev.user) return prev;
+      const next = { ...prev.user, ...patch };
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return { ...prev, user: next };
+    });
+  }, []);
+
   const value = useMemo(
     () => ({
       user: auth.user,
       isReady: auth.isReady,
       login,
+      updateUser,
       logout,
     }),
-    [auth.user, auth.isReady, login, logout],
+    [auth.user, auth.isReady, login, updateUser, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -6,6 +6,7 @@ import { GeminiChatProvider } from "@/components/gemini-chat-context";
 import { Header } from "@/components/header";
 import { OpenLoginProvider } from "@/components/login-dialog-context";
 import { LoginDialog } from "@/components/login-dialog";
+import { ProfileEditDialog } from "@/components/profile-edit-dialog";
 import { OpenSignUpProvider } from "@/components/sign-up-dialog-context";
 import { SignUpDialog } from "@/components/signup-dialog";
 
@@ -13,12 +14,14 @@ type AuthDialogsState = {
   signUpOpen: boolean;
   loginOpen: boolean;
   loginPrefillEmail: string;
+  profileEditOpen: boolean;
 };
 
 const INITIAL_AUTH_DIALOGS: AuthDialogsState = {
   signUpOpen: false,
   loginOpen: false,
   loginPrefillEmail: "",
+  profileEditOpen: false,
 };
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -32,13 +35,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     () => patchDialogs({ loginOpen: true, loginPrefillEmail: "" }),
     [],
   );
+  const openProfileEdit = useCallback(() => patchDialogs({ profileEditOpen: true }), []);
 
   return (
     <AuthProvider>
       <OpenSignUpProvider open={openSignUp}>
         <OpenLoginProvider open={openLogin}>
           <GeminiChatProvider>
-            <Header onSignUpClick={openSignUp} onLoginClick={openLogin} />
+            <Header
+              onSignUpClick={openSignUp}
+              onLoginClick={openLogin}
+              onProfileEditClick={openProfileEdit}
+            />
             {children}
             <SignUpDialog
               open={dialogs.signUpOpen}
@@ -55,6 +63,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               open={dialogs.loginOpen}
               onOpenChange={(loginOpen) => patchDialogs({ loginOpen })}
               initialEmail={dialogs.loginPrefillEmail}
+            />
+            <ProfileEditDialog
+              open={dialogs.profileEditOpen}
+              onOpenChange={(profileEditOpen) => patchDialogs({ profileEditOpen })}
             />
           </GeminiChatProvider>
         </OpenLoginProvider>

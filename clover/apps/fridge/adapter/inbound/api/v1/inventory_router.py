@@ -3,6 +3,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Header, Query
 from pydantic import BaseModel
 
+from core.dependencies import RoleChecker
+from core.rbac import Role
 from fridge.app.dtos.inventory_dto import (
     AdjustInventoryCommand,
     CreateInventoryCommand,
@@ -38,7 +40,9 @@ async def estimate_expiry(
     return vars(result)
 
 
-@inventory_router.get("")
+# RBAC 적용 패턴 예시 (auth 게이트웨이 1차 도입). 유효한 access token이 있어야 통과한다.
+# ⚠ 프론트엔드가 JWT 로그인으로 전환하기 전까지 이 라우터를 재배포하면 기존 요청이 401이 된다.
+@inventory_router.get("", dependencies=[Depends(RoleChecker(Role.USER))])
 async def list_inventory(
     x_user_email: str = Header(...),
     use_case: InventoryUseCase = Depends(get_inventory_use_case),

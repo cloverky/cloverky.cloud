@@ -1,13 +1,20 @@
 'use client';
 
+import { useAuth } from '@/components/auth-context';
+
 interface Props {
   onClose: () => void;
 }
 
+const GATEWAY_PROVIDERS = new Set(['google', 'naver', 'kakao']);
+
 export function SocialLoginButtons({ onClose }: Props) {
+  const { login } = useAuth();
+
   const handleSocialLogin = (provider: string) => {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.cloverky.cloud';
-    const url = base + '/auth/' + provider;
+    const url = GATEWAY_PROVIDERS.has(provider)
+      ? (process.env.NEXT_PUBLIC_AUTH_URL ?? 'https://auth.cloverky.cloud') + '/auth/login/' + provider
+      : (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.cloverky.cloud') + '/auth/' + provider;
     const w = 480, h = 600;
     const left = Math.round(window.screenX + (window.outerWidth - w) / 2);
     const top = Math.round(window.screenY + (window.outerHeight - h) / 2);
@@ -17,8 +24,14 @@ export function SocialLoginButtons({ onClose }: Props) {
       if (e.origin !== window.location.origin) return;
       if (e.data?.type === 'oauth_done') {
         window.removeEventListener('message', onMsg);
+        const { username, name, email } = e.data;
+        // 팝업과 이 창은 sessionStorage를 공유하지 않으므로, 팝업 안에서 호출한
+        // login()은 팝업이 닫히면 같이 사라진다 — 신원 정보를 postMessage로
+        // 직접 받아 이 창(오프너) 자신의 login()을 호출해야 한다.
+        if (username && email) {
+          login({ username, name: name || username, email }, true);
+        }
         onClose();
-        window.location.reload();
       }
     };
     window.addEventListener('message', onMsg);

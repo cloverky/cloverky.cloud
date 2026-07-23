@@ -153,3 +153,57 @@ export async function postLogin(
 
   return data;
 }
+
+function authHeaders(email: string): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+    "X-User-Email": email,
+  };
+}
+
+export type UpdateUsernameResponse = { username: string };
+
+export async function updateUsername(
+  email: string,
+  username: string,
+): Promise<UpdateUsernameResponse> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/users/me/username`, {
+      method: "PATCH",
+      headers: authHeaders(email),
+      body: JSON.stringify({ username }),
+    });
+  } catch {
+    throw new Error("백엔드 서버에 연결할 수 없습니다.");
+  }
+
+  const data = (await res.json()) as UpdateUsernameResponse & FastApiErrorBody;
+  if (!res.ok) {
+    throw new Error(parseApiError(data, res.status));
+  }
+  return data;
+}
+
+export async function changePassword(
+  email: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/users/me/password`, {
+      method: "PATCH",
+      headers: authHeaders(email),
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  } catch {
+    throw new Error("백엔드 서버에 연결할 수 없습니다.");
+  }
+
+  const data = (await res.json()) as { message: string } & FastApiErrorBody;
+  if (!res.ok) {
+    throw new Error(parseApiError(data, res.status));
+  }
+  return data;
+}

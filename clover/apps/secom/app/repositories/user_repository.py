@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 
-from users.adapter.user import User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from users.adapter.user import User
 
 from secom.app.schemas.user_schema import LoginSchema, UserSchema
 from secom.app.utils.auth_password import hash_password
@@ -30,6 +30,22 @@ class UserRepository:
             select(User).where(User.email == login_schema.email).limit(1),
         )
         return result.scalar_one_or_none()
+
+    async def update_username(
+        self, db: AsyncSession, user: User, username: str
+    ) -> User:
+        user.username = username.strip()
+        await db.commit()
+        await db.refresh(user)
+        logger.info("[Repository] update_username 완료 — id=%s", user.id)
+        return user
+
+    async def update_password(
+        self, db: AsyncSession, user: User, password_hash: str
+    ) -> None:
+        user.password_hash = password_hash
+        await db.commit()
+        logger.info("[Repository] update_password 완료 — id=%s", user.id)
 
     async def save_user(self, db: AsyncSession, user_schema: UserSchema) -> User:
         user = User(

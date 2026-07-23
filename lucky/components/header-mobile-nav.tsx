@@ -19,6 +19,7 @@ type HeaderMobileNavProps = {
   user: { username: string } | null;
   onLoginClick: () => void;
   onSignUpClick: () => void;
+  onProfileEditClick: () => void;
   onLogout: () => void;
 };
 
@@ -26,6 +27,7 @@ export function HeaderMobileNav({
   user,
   onLoginClick,
   onSignUpClick,
+  onProfileEditClick,
   onLogout,
 }: HeaderMobileNavProps) {
   const [open, setOpen] = useState(false);
@@ -40,6 +42,11 @@ export function HeaderMobileNav({
   const handleSignUp = () => {
     close();
     onSignUpClick();
+  };
+
+  const handleProfileEdit = () => {
+    close();
+    onProfileEditClick();
   };
 
   const handleLogout = () => {
@@ -109,6 +116,14 @@ export function HeaderMobileNav({
               <p className="px-1 text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">{user.username}</span>님
               </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-12 w-full text-base"
+                onClick={handleProfileEdit}
+              >
+                내 정보 수정
+              </Button>
               <Button
                 type="button"
                 variant="outline"
