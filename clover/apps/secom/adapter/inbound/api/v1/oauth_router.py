@@ -19,6 +19,7 @@ _GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 _GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
 _GOOGLE_REDIRECT = f'{_BACKEND_URL}/auth/google/callback'
 _KAKAO_CLIENT_ID = os.getenv('KAKAO_CLIENT_ID', '')
+_KAKAO_CLIENT_SECRET = os.getenv('KAKAO_CLIENT_SECRET', '')
 _KAKAO_REDIRECT = f'{_BACKEND_URL}/auth/kakao/callback'
 _NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID', '')
 _NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET', '')
@@ -92,7 +93,7 @@ async def kakao_callback(code: str = Query(...)):
     async with httpx.AsyncClient() as c:
         tr = await c.post('https://kauth.kakao.com/oauth/token',
             data={'grant_type': 'authorization_code', 'client_id': _KAKAO_CLIENT_ID,
-                  'redirect_uri': _KAKAO_REDIRECT, 'code': code})
+                  'client_secret': _KAKAO_CLIENT_SECRET, 'redirect_uri': _KAKAO_REDIRECT, 'code': code})
         tr.raise_for_status()
         ur = await c.get('https://kapi.kakao.com/v2/user/me',
                          headers={'Authorization': f'Bearer {tr.json()['access_token']}'})
