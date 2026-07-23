@@ -54,15 +54,6 @@ export function Header({ onSignUpClick, onLoginClick, onProfileEditClick }: Head
                 variant="outline"
                 size="sm"
                 className="h-9 border-border bg-transparent px-4 text-sm text-foreground hover:bg-secondary"
-                onClick={onProfileEditClick}
-              >
-                내 정보 수정
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-9 border-border bg-transparent px-4 text-sm text-foreground hover:bg-secondary"
                 onClick={logout}
               >
                 로그아웃
