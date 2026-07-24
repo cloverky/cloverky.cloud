@@ -193,7 +193,7 @@ _BASE = """<!DOCTYPE html>
       <div class="logo-sub">Admin Access</div>
     </div>
     {error_block}
-    <form method="post" action="/admin-login">
+    <form method="post" action="/admin/login">
       <label>아이디</label>
       <input type="text" name="username" placeholder="아이디를 입력하세요" autocomplete="username" required autofocus>
       <label>비밀번호</label>
