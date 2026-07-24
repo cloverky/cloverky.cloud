@@ -1,5 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
+import {
+  fallbackDetail,
+  fallbackMeals,
+  fallbackNote,
+  fallbackRecipes,
+  fallbackSuggestions,
+} from "@/lib/recipe-fallback";
 
 export const maxDuration = 60;
 
@@ -38,13 +45,30 @@ type RequestBody =
   | { mode: "suggest" }
   | { mode: "meal"; ingredients: string[] };
 
+// AI 호출이 실패해도 에러 화면 대신 미리 준비한 레시피를 돌려준다.
+function fallbackFor(body: RequestBody) {
+  const notice = fallbackNote();
+  if (body.mode === "detail") {
+    return NextResponse.json({ detail: fallbackDetail(body.recipeName, body.ingredients), fallback: true, notice });
+  }
+  if (body.mode === "suggest") {
+    return NextResponse.json({ suggestions: fallbackSuggestions(), fallback: true, notice });
+  }
+  if (body.mode === "meal") {
+    return NextResponse.json({ meals: fallbackMeals(body.ingredients), fallback: true, notice });
+  }
+  return NextResponse.json({ recipes: fallbackRecipes(body.ingredients), fallback: true, notice });
+}
+
 export async function POST(request: Request) {
+  const body = (await request.json()) as RequestBody;
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey?.trim()) {
-    return NextResponse.json({ error: "GEMINI_API_KEY가 설정되지 않았습니다." }, { status: 503 });
+    console.warn("[recipes] GEMINI_API_KEY가 없어 준비된 레시피로 대체합니다.");
+    return fallbackFor(body);
   }
 
-  const body = (await request.json()) as RequestBody;
   const modelName = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: modelName });
@@ -161,7 +185,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: "잘못된 요청" }, { status: 400 });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "알 수 없는 오류";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    // 키 만료, 쿼터 초과, 파싱 실패 전부 여기로 모인다. 로그에만 남기고 화면은 조용히 넘어간다.
+    console.error("[recipes] AI 호출 실패, 준비된 레시피로 대체:", e);
+    return fallbackFor(body);
   }
 }
