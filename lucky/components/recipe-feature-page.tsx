@@ -158,16 +158,14 @@ export function RecipeFeaturePage() {
       setLoading(true);
       let ingredientList: string[] = [];
 
+      // 비로그인은 냉장고가 없으니 재료를 채우지 않고 바로 요리 추천으로 간다.
       if (user?.email) {
         try {
           const inv = await fetchInventory(user.email);
           ingredientList = inv.items.map((i) => i.name);
         } catch {
-          // 백엔드 연결 실패 → suggest 모드
+          // 백엔드 연결 실패 → 재료 없이 요리 추천
         }
-      } else {
-        // 비로그인 → 데모 재료
-        ingredientList = ["달걀", "우유", "양파", "밥", "상추"];
       }
 
       setIngredients(ingredientList);
@@ -181,7 +179,7 @@ export function RecipeFeaturePage() {
       }
     };
     void load();
-  }, [user, fetchRecipes, fetchSuggestions]);
+  }, [user, fetchRecipes, fetchMeals]);
 
   const openDetail = async (name: string) => {
     setSelectedRecipe({ name });
@@ -231,9 +229,11 @@ export function RecipeFeaturePage() {
               {mode === "meal" ? "오늘 뭐 먹지?" : "맞춤형 레시피 추천"}
             </h1>
             <p className="mt-2 text-lg text-muted-foreground">
-              {mode === "meal"
-                ? `냉장고가 비었네요. ${currentMeal()} 메뉴를 AI가 추천해 드릴게요.`
-                : "지금 있는 재료로 무엇을 만들지 AI가 골라줍니다."}
+              {mode !== "meal"
+                ? "지금 있는 재료로 무엇을 만들지 AI가 골라줍니다."
+                : user?.email
+                  ? `냉장고가 비었네요. ${activeMeal} 메뉴를 AI가 추천해 드릴게요.`
+                  : `지금 시간에 어울리는 ${activeMeal} 요리를 AI가 추천해 드릴게요.`}
             </p>
             <Badge variant="outline" className="mt-4 font-normal">
               도우미: 레시피 담당 AI
@@ -258,7 +258,7 @@ export function RecipeFeaturePage() {
         {mode === "fridge" && ingredients.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              {user?.email ? `내 냉장고 재료 ${ingredients.length}개 기준:` : "데모 재료 기준:"}
+              내 냉장고 재료 {ingredients.length}개 기준:
             </span>
             {ingredients.slice(0, 10).map((ing) => (
               <Badge key={ing} variant="outline" className="font-normal text-xs">{ing}</Badge>
@@ -389,6 +389,15 @@ export function RecipeFeaturePage() {
                     <p className="text-center text-xs text-muted-foreground pt-1">
                       클릭하면 상세 레시피를 볼 수 있어요.
                     </p>
+                    {!user?.email && (
+                      <p className="text-center text-xs text-muted-foreground">
+                        로그인하고{" "}
+                        <Link href="/features/inventory" className="text-accent underline underline-offset-4">
+                          냉장고 재료
+                        </Link>
+                        를 등록하면 내 재료 기준으로 추천받을 수 있어요.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
