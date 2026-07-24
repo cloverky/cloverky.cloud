@@ -225,16 +225,15 @@ export function RecipeFeaturePage() {
             <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card">
               <ChefHat className="h-7 w-7 text-accent" />
             </div>
-            <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">
-              {mode === "meal" ? "오늘 뭐 먹지?" : "맞춤형 레시피 추천"}
-            </h1>
-            <p className="mt-2 text-lg text-muted-foreground">
-              {mode !== "meal"
-                ? "지금 있는 재료로 무엇을 만들지 AI가 골라줍니다."
-                : user?.email
-                  ? `냉장고가 비었네요. ${activeMeal} 메뉴를 AI가 추천해 드릴게요.`
-                  : `지금 시간에 어울리는 ${activeMeal} 요리를 AI가 추천해 드릴게요.`}
-            </p>
+            {/* meal 모드는 아래 큰 "오저뭐?" 타이틀이 제목 역할을 하므로 생략한다. */}
+            {mode !== "meal" && (
+              <>
+                <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">맞춤형 레시피 추천</h1>
+                <p className="mt-2 text-lg text-muted-foreground">
+                  지금 있는 재료로 무엇을 만들지 AI가 골라줍니다.
+                </p>
+              </>
+            )}
             <Badge variant="outline" className="mt-4 font-normal">
               도우미: 레시피 담당 AI
             </Badge>
