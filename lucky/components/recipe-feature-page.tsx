@@ -201,6 +201,9 @@ export function RecipeFeaturePage() {
     }
   };
 
+  const mealMeta = MEAL_META[activeMeal];
+  const MealIcon = mealMeta.icon;
+
   const handleRefresh = () => {
     if (mode === "meal") void fetchMeals(ingredients);
     else if (mode === "suggest") void fetchSuggestions();
@@ -225,8 +228,24 @@ export function RecipeFeaturePage() {
             <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card">
               <ChefHat className="h-7 w-7 text-accent" />
             </div>
-            {/* meal 모드는 아래 큰 "오저뭐?" 타이틀이 제목 역할을 하므로 생략한다. */}
-            {mode !== "meal" && (
+            {mode === "meal" ? (
+              // meal 모드의 제목은 "오저뭐?" 하나로 충분하다.
+              <div className="mt-6 flex items-center gap-3">
+                <MealIcon className={`h-7 w-7 ${mealMeta.color}`} />
+                <h1 className="flex items-end gap-0 text-5xl font-black tracking-tight leading-none">
+                  {mealMeta.parts.map((part, i) => (
+                    <span key={i} className="inline-flex items-end">
+                      <span className="leading-none">{part.big}</span>
+                      {part.small && (
+                        <span className="text-[0.25em] font-normal text-muted-foreground leading-none mb-1">
+                          {part.small}
+                        </span>
+                      )}
+                    </span>
+                  ))}
+                </h1>
+              </div>
+            ) : (
               <>
                 <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">맞춤형 레시피 추천</h1>
                 <p className="mt-2 text-lg text-muted-foreground">
@@ -332,28 +351,10 @@ export function RecipeFeaturePage() {
 
           {/* 빈 냉장고 → 현재 시간대 자동 메뉴 추천 */}
           {mode === "meal" && (() => {
-            const meta = MEAL_META[activeMeal];
-            const Icon = meta.icon;
             const mealData = meals.find((m) => m.meal === activeMeal);
             return (
               <div className="space-y-6">
-                {/* 타이틀 */}
-                <div className="flex items-center gap-3">
-                  <Icon className={`h-7 w-7 ${meta.color}`} />
-                  <h2 className="flex items-end gap-0 text-5xl font-black tracking-tight leading-none">
-                    {meta.parts.map((part, i) => (
-                      <span key={i} className="inline-flex items-end">
-                        <span className="leading-none">{part.big}</span>
-                        {part.small && (
-                          <span className="text-[0.25em] font-normal text-muted-foreground leading-none mb-1">
-                            {part.small}
-                          </span>
-                        )}
-                      </span>
-                    ))}
-                  </h2>
-                </div>
-
+                {/* 타이틀은 상단 헤더로 옮겼다. */}
                 {loading && (
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
