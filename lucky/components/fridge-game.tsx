@@ -99,8 +99,7 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
         s.frame++;
         s.score = Math.floor(s.frame * 0.12);
-        // 부드럽게 지속 증가
-        s.speed = 4 + s.score * 0.01;
+        s.speed = 6 + s.score * 0.012;
 
         s.obstacles.forEach(o => o.x -= s.speed);
         s.obstacles = s.obstacles.filter(o => o.x > -40);
@@ -180,8 +179,9 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
           to   { transform: translate(0,0) scale(1); opacity: 1; }
         }
         @keyframes fridgeDoorSwing {
-          from { transform: perspective(900px) rotateY(0deg); }
-          to   { transform: perspective(900px) rotateY(-116deg); }
+          0%   { transform: perspective(900px) rotateY(0deg);    opacity: 1; }
+          75%  { transform: perspective(900px) rotateY(-116deg); opacity: 1; }
+          100% { transform: perspective(900px) rotateY(-116deg); opacity: 0; pointer-events: none; }
         }
       `}</style>
 
