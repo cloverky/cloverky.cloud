@@ -45,6 +45,12 @@ class UserPgRepository(UserRepository):
         await self._session.refresh(user)
         return self._to_dto(user)
 
+    async def get_password_hash(self, email: str) -> str | None:
+        result = await self._session.execute(
+            select(User.password_hash).where(User.email == email)
+        )
+        return result.scalar_one_or_none()
+
     async def _unique_username(self, email: str) -> str:
         base = _USERNAME_SANITIZE.sub("", email.split("@")[0])[:16] or "user"
         candidate = base
@@ -59,4 +65,10 @@ class UserPgRepository(UserRepository):
 
     @staticmethod
     def _to_dto(user: User) -> AuthUserDto:
-        return AuthUserDto(id=user.id, email=user.email, name=user.name, role=user.role)
+        return AuthUserDto(
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            role=user.role,
+            username=user.username,
+        )

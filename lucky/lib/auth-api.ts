@@ -1,5 +1,7 @@
 /** FastAPI 인증 API */
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
+/** JWT 발급은 auth 컨테이너에서만 일어난다 — 로그인은 이쪽으로 보낸다. */
+const AUTH_BASE = (process.env.NEXT_PUBLIC_AUTH_URL ?? "https://auth.cloverky.cloud").replace(/\/$/, "");
 
 type FastApiErrorBody = { detail?: string | { msg?: string }[] };
 
@@ -118,13 +120,14 @@ export async function postLogin(
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}/login`, {
+    res = await fetch(`${AUTH_BASE}/auth/login/password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      // 토큰은 httponly 쿠키로 내려온다 — 저장·전송 모두 브라우저가 맡는다.
+      credentials: "include",
       body: JSON.stringify({
         email: payload.email,
         password: payload.password,
-        remember: payload.remember ?? false,
       }),
       signal: timeoutController.signal,
     });

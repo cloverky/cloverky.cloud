@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from auth.adapter.inbound.api.auth_router import auth_router
 from auth.app.dtos.auth_dto import (
     CallbackCommand,
+    PasswordLoginCommand,
     RefreshCommand,
     StartLoginResult,
     TokenPairDto,
@@ -24,6 +25,9 @@ class StubAuthUseCase(AuthUseCase):
         if provider != "google":
             raise ValueError(f"지원하지 않는 provider: {provider}")
         return StartLoginResult(authorize_url=_AUTHORIZE_URL, state="state-0")
+
+    async def login_with_password(self, cmd: PasswordLoginCommand) -> TokenPairDto:
+        raise NotImplementedError
 
     async def handle_callback(self, cmd: CallbackCommand) -> TokenPairDto:
         raise NotImplementedError
@@ -73,6 +77,9 @@ class _CallbackStub(AuthUseCase):
 
     async def start_login(self, provider: str) -> StartLoginResult:
         return StartLoginResult(authorize_url=_AUTHORIZE_URL, state="state-0")
+
+    async def login_with_password(self, cmd: PasswordLoginCommand) -> TokenPairDto:
+        return self._pair
 
     async def handle_callback(self, cmd: CallbackCommand) -> TokenPairDto:
         return self._pair

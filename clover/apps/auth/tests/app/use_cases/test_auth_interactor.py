@@ -7,6 +7,7 @@ import pytest
 from auth.app.dtos.auth_dto import (
     AuthUserDto,
     CallbackCommand,
+    PasswordLoginCommand,
     ProviderIdentity,
     RefreshCommand,
 )
@@ -15,6 +16,7 @@ from auth.app.ports.output.oauth_state_repository import OAuthStateRepository
 from auth.app.ports.output.refresh_token_repository import RefreshTokenRepository
 from auth.app.ports.output.user_repository import UserRepository
 from auth.app.use_cases.auth_interactor import AuthInteractor
+from secom.app.utils.auth_password import hash_password
 
 
 class FakeGoogleGateway(OAuthProviderGateway):
@@ -46,6 +48,7 @@ class FakeStateStore(OAuthStateRepository):
 class FakeUserRepository(UserRepository):
     def __init__(self) -> None:
         self.rows: dict[int, AuthUserDto] = {}
+        self.password_hashes: dict[str, str] = {}
         self._next_id = 1
 
     async def get_by_email(self, email: str) -> AuthUserDto | None:
@@ -57,6 +60,18 @@ class FakeUserRepository(UserRepository):
     async def create_oauth_user(self, email: str, name: str) -> AuthUserDto:
         user = AuthUserDto(id=self._next_id, email=email, name=name, role="user")
         self.rows[user.id] = user
+        self._next_id += 1
+        return user
+
+    async def get_password_hash(self, email: str) -> str | None:
+        return self.password_hashes.get(email)
+
+    def add_password_user(self, email: str, name: str, password_hash: str) -> AuthUserDto:
+        user = AuthUserDto(
+            id=self._next_id, email=email, name=name, role="user", username=name
+        )
+        self.rows[user.id] = user
+        self.password_hashes[email] = password_hash
         self._next_id += 1
         return user
 
@@ -100,6 +115,52 @@ def interactor() -> tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore]:
         users,
         tokens,
     )
+
+
+async def test_password_login_issues_pair(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    auth, users, tokens = interactor
+    users.add_password_user(
+        "aa@example.com", "aa", hash_password("supersecret1")
+    )
+
+    pair = await auth.login_with_password(
+        PasswordLoginCommand(email="aa@example.com", password="supersecret1")
+    )
+
+    assert pair.access_token and pair.refresh_token
+    assert pair.email == "aa@example.com"
+    assert pair.username == "aa"
+    assert len(tokens.live) == 1
+
+
+async def test_password_login_rejects_wrong_password(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    auth, users, _ = interactor
+    users.add_password_user("aa@example.com", "aa", hash_password("supersecret1"))
+
+    with pytest.raises(ValueError):
+        await auth.login_with_password(
+            PasswordLoginCommand(email="aa@example.com", password="wrongpassword")
+        )
+
+
+async def test_password_login_rejects_oauth_only_account(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    """OAuth 전용 계정(해시가 빈 문자열)은 비밀번호 로그인이 불가하다."""
+    auth, users, _ = interactor
+    users.add_password_user("oauth@example.com", "oauthuser", "")
+
+    with pytest.raises(ValueError):
+        await auth.login_with_password(
+            PasswordLoginCommand(email="oauth@example.com", password="anything")
+        )
 
 
 async def test_callback_creates_user_and_issues_pair(

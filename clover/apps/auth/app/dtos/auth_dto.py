@@ -16,6 +16,7 @@ class AuthUserDto:
     email: str
     name: str
     role: str
+    username: str = ""
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,12 @@ class RefreshCommand:
 
 
 @dataclass(frozen=True)
+class PasswordLoginCommand:
+    email: str
+    password: str
+
+
+@dataclass(frozen=True)
 class TokenPairDto:
     access_token: str
     refresh_token: str
@@ -45,3 +52,4 @@ class TokenPairDto:
     name: str
     email: str
     is_new_user: bool = False
+    username: str = ""

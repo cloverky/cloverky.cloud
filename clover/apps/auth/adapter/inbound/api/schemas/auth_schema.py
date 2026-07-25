@@ -12,6 +12,21 @@ class LoginResponse(BaseModel):
     state: str
 
 
+class PasswordLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class PasswordLoginResponse(BaseModel):
+    """토큰은 httponly 쿠키로만 내려간다 — 본문에는 표시용 사용자 정보만 담는다."""
+
+    message: str
+    name: str
+    username: str
+    email: str
+    expires_in: int
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str | None = Field(
         default=None,

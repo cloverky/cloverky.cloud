@@ -11,10 +11,17 @@ from auth.adapter.inbound.api.schemas.auth_schema import (
     LoginRequest,
     LoginResponse,
     LogoutResponse,
+    PasswordLoginRequest,
+    PasswordLoginResponse,
     RefreshRequest,
     TokenResponse,
 )
-from auth.app.dtos.auth_dto import CallbackCommand, RefreshCommand, TokenPairDto
+from auth.app.dtos.auth_dto import (
+    CallbackCommand,
+    PasswordLoginCommand,
+    RefreshCommand,
+    TokenPairDto,
+)
 from auth.app.ports.input.auth_use_case import AuthUseCase
 from auth.app.use_cases._jwks import build_jwks
 from auth.dependencies.auth_provider import get_auth_use_case
@@ -65,6 +72,35 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e
     return LoginResponse(authorize_url=result.authorize_url, state=result.state)
+
+
+@auth_router.post("/login/password", response_model=PasswordLoginResponse)
+async def login_with_password(
+    req: PasswordLoginRequest,
+    response: Response,
+    auth: AuthUseCase = Depends(get_auth_use_case),
+) -> PasswordLoginResponse:
+    """아이디·비밀번호 로그인 — 토큰 쌍을 httponly 쿠키로 심는다.
+
+    쿠키 도메인이 `.cloverky.cloud` 이므로 api 서브도메인 요청에도 함께 실려간다.
+    """
+    try:
+        pair = await auth.login_with_password(
+            PasswordLoginCommand(email=req.email, password=req.password)
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)
+        ) from e
+
+    _set_token_cookies(response, pair)
+    return PasswordLoginResponse(
+        message="로그인되었습니다.",
+        name=pair.name,
+        username=pair.username,
+        email=pair.email,
+        expires_in=pair.expires_in,
+    )
 
 
 @auth_router.get("/login/{provider}", response_model=None)

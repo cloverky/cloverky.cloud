@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 from auth.app.dtos.auth_dto import (
     CallbackCommand,
+    PasswordLoginCommand,
     RefreshCommand,
     StartLoginResult,
     TokenPairDto,
@@ -13,6 +14,10 @@ from auth.app.dtos.auth_dto import (
 class AuthUseCase(ABC):
     @abstractmethod
     async def start_login(self, provider: str) -> StartLoginResult:
+        pass
+
+    @abstractmethod
+    async def login_with_password(self, cmd: PasswordLoginCommand) -> TokenPairDto:
         pass
 
     @abstractmethod
