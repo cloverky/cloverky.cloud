@@ -2,18 +2,22 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Refrigerator, X } from "lucide-react";
+import { X } from "lucide-react";
 
 interface FridgeGameProps {
   onClose: () => void;
   origin?: { x: number; y: number };
 }
 
-const GW = 480;
-const GH = 200;
-const GROUND = GH - 32;
-const GRAVITY = 1.2;
-const JUMP_V = -15;
+// 냉장고 치수
+const PAD = 16;
+const GW = 460;
+const GH = 210;
+const FREEZE_H = 56; // 냉동실
+
+const GROUND = GH - 30;
+const GRAVITY = 1.5;
+const JUMP_V = -16;
 const GROUND_OBS = ["🥕", "🧅", "🥦", "🍳", "🧄", "🌽", "🍎", "🥚"];
 const AIR_OBS    = ["🐟", "🍕", "🧇", "🥐", "🍗"];
 const AIR_Y = GROUND - 52;
@@ -24,12 +28,11 @@ type Obstacle = { x: number; emoji: string; air: boolean };
 function randInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
 function makeInitState() {
   return {
     y: GROUND, vy: 0, onGround: true,
     obstacles: [] as Obstacle[],
-    nextObstacleIn: randInt(320, 480),
+    nextObstacleIn: randInt(300, 460),
     score: 0, speed: 4, frame: 0,
     dead: false, started: false,
   };
@@ -41,13 +44,9 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gs = useRef(makeInitState());
 
+  useEffect(() => { gs.current = makeInitState(); setMounted(true); }, []);
   useEffect(() => {
-    gs.current = makeInitState();
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const t = setTimeout(() => setPhase("playing"), 1000);
+    const t = setTimeout(() => setPhase("playing"), 950);
     return () => clearTimeout(t);
   }, []);
 
@@ -71,14 +70,14 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
       ctx.fillStyle = "#fafafa";
       ctx.fillRect(0, 0, GW, GH);
 
-      ctx.strokeStyle = "#efefef";
+      ctx.strokeStyle = "#f0f0f0";
       ctx.lineWidth = 1;
-      for (let yy = 52; yy < GH - 40; yy += 50) {
+      for (let yy = 50; yy < GH - 40; yy += 50) {
         ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(GW, yy); ctx.stroke();
       }
       ctx.strokeStyle = "#d1d5db";
       ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, GROUND + 22); ctx.lineTo(GW, GROUND + 22); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, GROUND + 20); ctx.lineTo(GW, GROUND + 20); ctx.stroke();
 
       if (!s.started) {
         ctx.font = "14px sans-serif";
@@ -88,11 +87,9 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
         ctx.font = "11px sans-serif";
         ctx.fillStyle = "#9ca3af";
         ctx.fillText("공중 장애물(🐟 등)은 점프 말고 바닥에서 피해!", GW / 2, GH / 2 + 10);
-        ctx.font = "28px sans-serif";
-        ctx.textAlign = "left";
+        ctx.font = "28px sans-serif"; ctx.textAlign = "left";
         ctx.fillText("🍀", 50, s.y);
-        rafId = requestAnimationFrame(loop);
-        return;
+        rafId = requestAnimationFrame(loop); return;
       }
 
       if (!s.dead) {
@@ -102,12 +99,11 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
         s.frame++;
         s.score = Math.floor(s.frame * 0.12);
-        // 처음엔 느리다가 점점 빨라짐
-        s.speed = 3 + s.score * 0.006;
+        // 부드럽게 지속 증가
+        s.speed = 4 + s.score * 0.01;
 
         s.obstacles.forEach(o => o.x -= s.speed);
         s.obstacles = s.obstacles.filter(o => o.x > -40);
-
         s.nextObstacleIn -= s.speed;
         if (s.nextObstacleIn <= 0) {
           const canAir = s.score > 25 && Math.random() < 0.22;
@@ -121,17 +117,13 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
         for (const o of s.obstacles) {
           if (o.x < 84 && o.x > 42) {
-            if (o.air) {
-              if (s.y > GROUND - 78 && s.y < GROUND - 26) s.dead = true;
-            } else {
-              if (s.y > GROUND - 4) s.dead = true;
-            }
+            if (o.air) { if (s.y > GROUND - 78 && s.y < GROUND - 26) s.dead = true; }
+            else { if (s.y > GROUND - 4) s.dead = true; }
           }
         }
       }
 
-      ctx.font = "28px sans-serif";
-      ctx.textAlign = "left";
+      ctx.font = "28px sans-serif"; ctx.textAlign = "left";
       ctx.fillText("🍀", 50, s.y);
 
       s.obstacles.forEach(o => {
@@ -139,20 +131,18 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
         ctx.fillText(o.emoji, o.x, o.air ? AIR_Y : GROUND + 2);
       });
 
+      // 점수는 왼쪽 상단
       ctx.font = "bold 12px sans-serif";
       ctx.fillStyle = "#374151";
-      ctx.textAlign = "right";
-      ctx.fillText(`${s.score}점`, GW - 10, 18);
+      ctx.textAlign = "left";
+      ctx.fillText(`${s.score}점`, 10, 18);
 
       if (s.dead) {
         ctx.fillStyle = "rgba(250,250,250,0.92)";
         ctx.fillRect(0, 0, GW, GH);
-        ctx.font = "bold 20px sans-serif";
-        ctx.fillStyle = "#dc2626";
-        ctx.textAlign = "center";
+        ctx.font = "bold 20px sans-serif"; ctx.fillStyle = "#dc2626"; ctx.textAlign = "center";
         ctx.fillText("게임 오버!", GW / 2, GH / 2 - 12);
-        ctx.font = "13px sans-serif";
-        ctx.fillStyle = "#4b5563";
+        ctx.font = "13px sans-serif"; ctx.fillStyle = "#4b5563";
         ctx.fillText(`점수: ${s.score}점 · 클릭하여 재시작`, GW / 2, GH / 2 + 12);
       }
 
@@ -165,12 +155,11 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Space" || e.code === "ArrowUp") {
-        e.preventDefault(); jump();
-      } else if (e.code === "ArrowDown") {
+      if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); }
+      else if (e.code === "ArrowDown") {
         e.preventDefault();
         const s = gs.current;
-        if (s.started && !s.dead && !s.onGround) s.vy = Math.max(s.vy, 10);
+        if (s.started && !s.dead && !s.onGround) s.vy = Math.max(s.vy, 12);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -181,17 +170,18 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
   const tx = origin ? `${Math.round(origin.x - window.innerWidth / 2)}px` : "0px";
   const ty = origin ? `${Math.round(origin.y - window.innerHeight / 2)}px` : "0px";
+  const FW = GW + PAD * 2; // 냉장고 전체 너비
 
   return createPortal(
     <>
       <style>{`
         @keyframes fridgePopIn {
-          from { transform: translate(var(--ftx,0), var(--fty,0)) scale(0.05); opacity: 0; }
+          from { transform: translate(var(--ftx,0), var(--fty,0)) scale(0.04); opacity: 0; }
           to   { transform: translate(0,0) scale(1); opacity: 1; }
         }
         @keyframes fridgeDoorSwing {
           from { transform: perspective(900px) rotateY(0deg); }
-          to   { transform: perspective(900px) rotateY(-115deg); }
+          to   { transform: perspective(900px) rotateY(-116deg); }
         }
       `}</style>
 
@@ -210,62 +200,109 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
           } as React.CSSProperties}
           onClick={e => e.stopPropagation()}
         >
-          {/* 게임 영역 전체 */}
-          <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", boxShadow: "0 24px 60px rgba(0,0,0,0.35)" }}>
+          {/* ─── 냉장고 몸통 ─── */}
+          <div style={{
+            width: FW,
+            background: "#f1f5f9",
+            borderRadius: 20,
+            border: "3px solid #94a3b8",
+            boxShadow: "0 28px 70px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.7)",
+            position: "relative",
+          }}>
 
-            {/* X 버튼 */}
-            <button
-              onClick={onClose}
-              style={{
-                position: "absolute", top: 8, right: 8, zIndex: 20,
-                width: 26, height: 26, borderRadius: "50%",
-                background: "rgba(0,0,0,0.15)", border: "none",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: "#fff",
-              }}
-            >
-              <X size={13} />
-            </button>
-
-            {/* 게임 캔버스 (playing 되면 보임) */}
-            {phase === "playing" ? (
-              <canvas
-                ref={canvasRef}
-                width={GW}
-                height={GH}
-                onClick={jump}
-                style={{ display: "block", cursor: "pointer" }}
-              />
-            ) : (
-              /* opening: 냉장고 아이콘 배경 */
-              <div style={{
-                width: GW, height: GH,
-                background: "#f3f4f6",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <Refrigerator size={80} strokeWidth={1} style={{ color: "#9ca3af" }} />
-              </div>
-            )}
-
-            {/* 냉장고 문 — 처음에 덮고 있다가 열림 */}
+            {/* 오른쪽 손잡이 전체 (냉동실) */}
             <div style={{
-              position: "absolute", inset: 0,
-              background: "linear-gradient(155deg, #f9fafb 0%, #e5e7eb 100%)",
-              transformOrigin: "left center",
-              animation: "fridgeDoorSwing 0.6s 0.25s cubic-bezier(0.4,0,0.2,1) forwards",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              position: "absolute", right: -13,
+              top: FREEZE_H / 2 - 18,
+              width: 9, height: 36, borderRadius: 5,
+              background: "linear-gradient(180deg,#cbd5e1,#94a3b8,#cbd5e1)",
+              boxShadow: "2px 0 6px rgba(0,0,0,0.2)",
+            }} />
+            {/* 오른쪽 손잡이 (냉장실) */}
+            <div style={{
+              position: "absolute", right: -13,
+              top: FREEZE_H + 40,
+              width: 9, height: 70, borderRadius: 5,
+              background: "linear-gradient(180deg,#cbd5e1,#94a3b8,#cbd5e1)",
+              boxShadow: "2px 0 6px rgba(0,0,0,0.2)",
+            }} />
+
+            {/* ── 냉동실 ── */}
+            <div style={{
+              height: FREEZE_H,
+              background: "linear-gradient(180deg,#e2e8f0,#f1f5f9)",
+              borderRadius: "17px 17px 0 0",
+              borderBottom: "3px solid #94a3b8",
+              display: "flex", alignItems: "center",
+              padding: "0 14px",
+              position: "relative",
             }}>
-              {/* 문에 냉장고 아이콘 */}
-              <Refrigerator size={90} strokeWidth={1.2} style={{ color: "#d1d5db" }} />
-              {/* 손잡이 */}
-              <div style={{
-                position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)",
-                width: 5, height: 60, borderRadius: 3,
-                background: "linear-gradient(180deg, #9ca3af, #6b7280, #9ca3af)",
-                boxShadow: "1px 0 4px rgba(0,0,0,0.15)",
-              }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#475569" }}>
+                ❄️ 냉장고 달리기
+              </span>
+              {/* X 버튼 */}
+              <button
+                onClick={onClose}
+                style={{
+                  marginLeft: "auto",
+                  width: 26, height: 26, borderRadius: "50%",
+                  background: "#dde3eb", border: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: "#64748b",
+                }}
+              >
+                <X size={12} />
+              </button>
             </div>
 
+            {/* ── 냉장실 ── */}
+            <div style={{ position: "relative", padding: PAD }}>
+              {phase === "playing" ? (
+                <canvas
+                  ref={canvasRef}
+                  width={GW}
+                  height={GH}
+                  onClick={jump}
+                  style={{ display: "block", cursor: "pointer", borderRadius: 8, border: "1px solid #e2e8f0" }}
+                />
+              ) : (
+                <div style={{
+                  width: GW, height: GH,
+                  background: "#fafafa",
+                  borderRadius: 8, border: "1px solid #e2e8f0",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <span style={{ fontSize: 48 }}>🍀</span>
+                </div>
+              )}
+
+              {/* 냉장실 문 — 열림 */}
+              <div style={{
+                position: "absolute",
+                top: PAD, left: PAD, right: PAD, bottom: PAD,
+                background: "linear-gradient(155deg, #f8fafc 0%, #e2e8f0 100%)",
+                borderRadius: 8,
+                transformOrigin: "left center",
+                animation: "fridgeDoorSwing 0.6s 0.28s cubic-bezier(0.4,0,0.2,1) forwards",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <span style={{ fontSize: 52, opacity: 0.25 }}>🧊</span>
+                {/* 문 손잡이 */}
+                <div style={{
+                  position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                  width: 5, height: 56, borderRadius: 3,
+                  background: "linear-gradient(180deg,#94a3b8,#64748b,#94a3b8)",
+                  boxShadow: "1px 0 4px rgba(0,0,0,0.15)",
+                }} />
+              </div>
+            </div>
+
+            {/* 냉장고 발받침 */}
+            <div style={{
+              height: 10, marginTop: -3,
+              background: "#94a3b8",
+              borderRadius: "0 0 12px 12px",
+            }} />
           </div>
         </div>
       </div>
