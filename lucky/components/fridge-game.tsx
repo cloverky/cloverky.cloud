@@ -46,6 +46,16 @@ const SHELF_BLOCKS = [
 function randInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+// 실제 레이아웃 뷰포트. window.innerWidth 는 스크롤바·모바일 에뮬레이션에서
+// 레이아웃 뷰포트보다 크게 나와 배율이 덜 줄어든다 — 가장 작은 값을 쓴다.
+function viewport() {
+  const de = document.documentElement;
+  const vv = window.visualViewport;
+  return {
+    w: Math.min(de.clientWidth, vv ? vv.width : Infinity, window.innerWidth),
+    h: Math.min(de.clientHeight, vv ? vv.height : Infinity, window.innerHeight),
+  };
+}
 function makeInitState() {
   return {
     y: GROUND, vy: 0, onGround: true,
@@ -59,17 +69,21 @@ function makeInitState() {
 export function FridgeGame({ onClose, origin }: FridgeGameProps) {
   const [phase, setPhase] = useState<Phase>("closed");
   const [mounted, setMounted] = useState(false);
-  const [vw, setVw] = useState(0);
+  const [vp, setVp] = useState({ w: 0, h: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gs = useRef(makeInitState());
 
   useEffect(() => {
     gs.current = makeInitState();
     setMounted(true);
-    const onResize = () => setVw(window.innerWidth);
+    const onResize = () => setVp(viewport());
     onResize();
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
+    };
   }, []);
 
   const openDoor = useCallback(() => {
@@ -207,12 +221,15 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
   if (!mounted) return null;
 
-  const tx = origin ? `${Math.round(origin.x - window.innerWidth / 2)}px` : "0px";
-  const ty = origin ? `${Math.round(origin.y - window.innerHeight / 2)}px` : "0px";
-  const FW = GW + PAD * 2; // 냉장고 전체 너비
-  // 모바일에서 뷰포트보다 큰 경우 축소. transform 이 아니라 zoom 을 쓴다 —
+  const tx = origin ? `${Math.round(origin.x - vp.w / 2)}px` : "0px";
+  const ty = origin ? `${Math.round(origin.y - vp.h / 2)}px` : "0px";
+  const FW = GW + PAD * 2;                    // 냉장고 전체 너비
+  const FH = FREEZE_H + PAD * 2 + GH + 20;    // 전체 높이 — 발받침·테두리 포함
+  // 뷰포트보다 큰 경우 축소. transform 이 아니라 zoom 을 쓴다 —
   // transform 은 레이아웃 박스를 그대로 두어 스크롤바가 생긴다.
-  const zoom = vw ? Math.min(1, (vw - 24) / FW) : 1;
+  const zoom = vp.w
+    ? Math.min(1, (vp.w - 24) / FW, (vp.h - 24) / FH)
+    : 1;
 
   return createPortal(
     <>
@@ -230,7 +247,11 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
       <div
         style={{
-          position: "fixed", inset: 0, zIndex: 9999,
+          // inset:0 대신 측정한 뷰포트 크기를 명시한다 — 페이지에 가로 오버플로우가
+          // 있으면 fixed 컨테이닝 블록이 레이아웃 뷰포트보다 넓어져 중앙이 어긋난다.
+          position: "fixed", top: 0, left: 0,
+          width: vp.w || "100%", height: vp.h || "100%",
+          zIndex: 9999,
           display: "flex", alignItems: "center", justifyContent: "center",
           background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)",
           overflow: "hidden",
