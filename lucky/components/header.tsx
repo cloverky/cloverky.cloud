@@ -18,6 +18,7 @@ interface HeaderProps {
 export function Header({ onSignUpClick, onLoginClick, onProfileEditClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const [gameOpen, setGameOpen] = useState(false);
+  const [gameOrigin, setGameOrigin] = useState<{ x: number; y: number } | undefined>();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -31,14 +32,21 @@ export function Header({ onSignUpClick, onLoginClick, onProfileEditClick }: Head
             onLogout={logout}
           />
           <div className="flex min-w-0 items-center gap-2">
-            <button onClick={() => setGameOpen(true)} className="shrink-0 rounded p-0.5 hover:opacity-70 transition-opacity">
+            <button
+              onClick={(e) => {
+                const r = e.currentTarget.getBoundingClientRect();
+                setGameOrigin({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+                setGameOpen(true);
+              }}
+              className="shrink-0 rounded p-0.5 hover:opacity-70 transition-opacity"
+            >
               <Refrigerator className="h-5 w-5 text-accent sm:h-6 sm:w-6" />
             </button>
             <Link href="/" className="truncate text-lg font-bold text-foreground max-md:max-w-[7.5rem] sm:max-w-none sm:text-xl">
               FridgeAI
             </Link>
           </div>
-          {gameOpen && <FridgeGame onClose={() => setGameOpen(false)} />}
+          {gameOpen && <FridgeGame onClose={() => setGameOpen(false)} origin={gameOrigin} />}
         </div>
 
         <div className="relative z-10 ml-auto hidden shrink-0 items-center gap-2 md:flex">
