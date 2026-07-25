@@ -224,6 +224,7 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
           position: "fixed", inset: 0, zIndex: 9999,
           display: "flex", alignItems: "center", justifyContent: "center",
           background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)",
+          overflow: "hidden",
         }}
         onClick={onClose}
       >
