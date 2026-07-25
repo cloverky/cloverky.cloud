@@ -99,6 +99,7 @@ class AuthInteractor(AuthUseCase):
             roles=[user.role],
             name=user.name,
             email=user.email,
+            username=user.username,
             is_new_user=is_new_user,
         )
 

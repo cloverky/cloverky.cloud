@@ -14,7 +14,7 @@ function OAuthHandler() {
     const email = params.get('email') ?? '';
     if (!token) { router.replace('/'); return; }
     localStorage.setItem('access_token', token);
-    const username = email.split('@')[0];
+    const username = params.get('username') || email.split('@')[0];
     if (window.opener) {
       // 이 창(팝업)의 sessionStorage는 팝업이 닫히면 사라지므로, 신원 정보를
       // postMessage에 실어 오프너가 자신의 login()을 호출하도록 한다.

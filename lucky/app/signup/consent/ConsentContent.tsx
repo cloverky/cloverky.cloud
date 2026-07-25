@@ -19,6 +19,7 @@ export default function ConsentContent() {
   const token = params.get('token') ?? '';
   const name = params.get('name') ?? '';
   const email = params.get('email') ?? '';
+  const usernameParam = params.get('username') ?? '';
 
   const [checked, setChecked] = useState<Record<TermId, boolean>>({
     terms: false, privacy: false, marketing: false,
@@ -40,7 +41,7 @@ export default function ConsentContent() {
   const handleConsent = () => {
     if (!token) { router.replace('/'); return; }
     localStorage.setItem('access_token', token);
-    const username = email.split('@')[0];
+    const username = usernameParam || email.split('@')[0];
     if (window.opener) {
       // 이 창(팝업)의 sessionStorage는 팝업이 닫히면 사라지므로, 신원 정보를
       // postMessage에 실어 오프너가 자신의 login()을 호출하도록 한다.

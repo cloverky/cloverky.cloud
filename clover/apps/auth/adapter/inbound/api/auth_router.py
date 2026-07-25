@@ -41,6 +41,7 @@ def _build_frontend_redirect(pair: TokenPairDto) -> str:
         f"?token={quote(pair.access_token)}"
         f"&name={quote(pair.name)}"
         f"&email={quote(pair.email)}"
+        f"&username={quote(pair.username)}"
     )
     return f"{_FRONTEND_URL}{path}{query}"
 
