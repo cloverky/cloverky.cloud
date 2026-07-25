@@ -25,6 +25,24 @@ const AIR_Y = GROUND - 52;
 type Phase = "closed" | "opening" | "playing";
 type Obstacle = { x: number; emoji: string; air: boolean };
 
+// 냉장고 안 반찬통 (블러 배경용)
+const SHELF_BLOCKS = [
+  { x: 18,  y: 16, w: 54, h: 38, c: "rgba(147,197,253,0.5)" },
+  { x: 82,  y: 24, w: 40, h: 30, c: "rgba(196,181,253,0.45)" },
+  { x: 132, y: 12, w: 62, h: 42, c: "rgba(134,239,172,0.4)" },
+  { x: 206, y: 22, w: 46, h: 32, c: "rgba(253,224,171,0.45)" },
+  { x: 264, y: 14, w: 58, h: 40, c: "rgba(165,243,252,0.45)" },
+  { x: 334, y: 20, w: 48, h: 34, c: "rgba(216,180,254,0.4)" },
+  { x: 392, y: 16, w: 52, h: 38, c: "rgba(147,197,253,0.42)" },
+  { x: 26,  y: 76, w: 46, h: 36, c: "rgba(254,202,202,0.42)" },
+  { x: 84,  y: 82, w: 58, h: 30, c: "rgba(191,219,254,0.45)" },
+  { x: 154, y: 72, w: 44, h: 40, c: "rgba(187,247,208,0.4)" },
+  { x: 210, y: 80, w: 60, h: 32, c: "rgba(253,230,138,0.4)" },
+  { x: 282, y: 74, w: 50, h: 38, c: "rgba(199,210,254,0.45)" },
+  { x: 344, y: 84, w: 42, h: 28, c: "rgba(165,243,252,0.4)" },
+  { x: 398, y: 78, w: 48, h: 34, c: "rgba(221,214,254,0.42)" },
+];
+
 function randInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -70,16 +88,20 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
       const s = gs.current;
       ctx.clearRect(0, 0, GW, GH);
 
-      // 냉장고 내부 배경 + 선반 (블러로 은은하게)
-      ctx.save();
-      ctx.filter = "blur(2px)";
+      // 냉장고 내부 배경
       ctx.fillStyle = "#eef6ff";
       ctx.fillRect(0, 0, GW, GH);
-      // 냉장고 선반
-      ctx.fillStyle = "rgba(180,210,235,0.45)";
-      for (let yy = 58; yy < GH - 38; yy += 60) {
-        ctx.fillRect(0, yy - 4, GW, 8);
-      }
+
+      // 냉장고 안 반찬통 — 네모 블럭들, 블러로 흐릿하게
+      ctx.save();
+      ctx.filter = "blur(6px)";
+      SHELF_BLOCKS.forEach(b => {
+        ctx.fillStyle = b.c;
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+      });
+      // 선반 판
+      ctx.fillStyle = "rgba(160,195,228,0.5)";
+      [56, 116].forEach(yy => ctx.fillRect(-10, yy, GW + 20, 7));
       ctx.restore();
 
       // 바닥선
@@ -108,7 +130,7 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
         s.frame++;
         s.score = Math.floor(s.frame * 0.12);
         // 50점마다 0.6씩 딱딱 올라감
-        s.speed = 6 + Math.floor(s.score / 50) * 0.6;
+        s.speed = 4.5 + Math.floor(s.score / 50) * 0.5;
 
         s.obstacles.forEach(o => o.x -= s.speed);
         s.obstacles = s.obstacles.filter(o => o.x > -40);
