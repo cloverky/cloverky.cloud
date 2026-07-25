@@ -34,7 +34,7 @@ export function HeroSection() {
               <CloverIcon className="h-4 w-4 text-accent" strokeWidth={2.5} />
               당신만의 냉장고 도우미
             </p>
-            <h1 className="font-display text-balance text-[3.75rem] leading-[1.15] tracking-normal text-foreground antialiased sm:text-[3.25rem] md:text-6xl lg:text-[4.75rem] lg:leading-[1.12]">
+            <h1 className="font-display text-balance text-[2.5rem] leading-[1.15] tracking-normal text-foreground antialiased sm:text-[3.25rem] md:text-6xl lg:text-[4.75rem] lg:leading-[1.12]">
               <span className="block text-foreground/55">
                 똑똑한 <span className="text-brand-text">AI</span>로
               </span>

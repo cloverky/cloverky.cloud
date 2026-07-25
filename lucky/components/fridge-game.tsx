@@ -202,13 +202,15 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
   const tx = origin ? `${Math.round(origin.x - window.innerWidth / 2)}px` : "0px";
   const ty = origin ? `${Math.round(origin.y - window.innerHeight / 2)}px` : "0px";
   const FW = GW + PAD * 2; // 냉장고 전체 너비
+  // 모바일에서 뷰포트보다 큰 경우 축소
+  const scale = Math.min(1, (window.innerWidth - 24) / FW);
 
   return createPortal(
     <>
       <style>{`
         @keyframes fridgePopIn {
-          from { transform: translate(var(--ftx,0), var(--fty,0)) scale(0.04); opacity: 0; }
-          to   { transform: translate(0,0) scale(1); opacity: 1; }
+          from { transform: translate(var(--ftx,0), var(--fty,0)) scale(${(0.04 * scale).toFixed(4)}); opacity: 0; }
+          to   { transform: translate(0,0) scale(${scale.toFixed(4)}); opacity: 1; }
         }
         @keyframes fridgeDoorSwing {
           0%   { transform: perspective(900px) rotateY(0deg);    opacity: 1; }
