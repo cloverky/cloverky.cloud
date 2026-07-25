@@ -22,7 +22,7 @@ const GROUND_OBS = ["🥕", "🧅", "🥦", "🍳", "🧄", "🌽", "🍎", "�
 const AIR_OBS    = ["🐟", "🍕", "🧇", "🥐", "🍗"];
 const AIR_Y = GROUND - 52;
 
-type Phase = "opening" | "playing";
+type Phase = "closed" | "opening" | "playing";
 type Obstacle = { x: number; emoji: string; air: boolean };
 
 function randInt(min: number, max: number) {
@@ -39,16 +39,18 @@ function makeInitState() {
 }
 
 export function FridgeGame({ onClose, origin }: FridgeGameProps) {
-  const [phase, setPhase] = useState<Phase>("opening");
+  const [phase, setPhase] = useState<Phase>("closed");
   const [mounted, setMounted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gs = useRef(makeInitState());
 
   useEffect(() => { gs.current = makeInitState(); setMounted(true); }, []);
-  useEffect(() => {
-    const t = setTimeout(() => setPhase("playing"), 950);
-    return () => clearTimeout(t);
-  }, []);
+
+  const openDoor = useCallback(() => {
+    if (phase !== "closed") return;
+    setPhase("opening");
+    setTimeout(() => setPhase("playing"), 950);
+  }, [phase]);
 
   const jump = useCallback(() => {
     const s = gs.current;
@@ -265,6 +267,7 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
             {/* ── 냉장실 ── */}
             <div style={{ position: "relative", padding: PAD }}>
+              {/* 게임 캔버스 */}
               {phase === "playing" ? (
                 <canvas
                   ref={canvasRef}
@@ -276,33 +279,76 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
               ) : (
                 <div style={{
                   width: GW, height: GH,
-                  background: "#fafafa",
+                  background: "#eef6ff",
                   borderRadius: 8, border: "1px solid #e2e8f0",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <span style={{ fontSize: 48 }}>🍀</span>
+                }} />
+              )}
+
+              {/* 냉장실 문 — closed: 닫힘, opening: 열리는 중 */}
+              {phase !== "playing" && (
+                <div
+                  onClick={openDoor}
+                  style={{
+                    position: "absolute",
+                    top: PAD, left: PAD, right: PAD, bottom: PAD,
+                    background: "linear-gradient(155deg, #f8fafc 0%, #e2e8f0 100%)",
+                    borderRadius: 8,
+                    transformOrigin: "left center",
+                    cursor: phase === "closed" ? "pointer" : "default",
+                    animation: phase === "opening"
+                      ? "fridgeDoorSwing 0.65s cubic-bezier(0.4,0,0.2,1) forwards"
+                      : undefined,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: phase === "closed" ? "inset -3px 0 8px rgba(0,0,0,0.06)" : undefined,
+                  }}
+                >
+                  {/* 문 손잡이 */}
+                  <div style={{
+                    position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                    width: 5, height: 56, borderRadius: 3,
+                    background: "linear-gradient(180deg,#94a3b8,#64748b,#94a3b8)",
+                    boxShadow: "1px 0 4px rgba(0,0,0,0.15)",
+                  }} />
                 </div>
               )}
 
-              {/* 냉장실 문 — 열림 */}
-              <div style={{
-                position: "absolute",
-                top: PAD, left: PAD, right: PAD, bottom: PAD,
-                background: "linear-gradient(155deg, #f8fafc 0%, #e2e8f0 100%)",
-                borderRadius: 8,
-                transformOrigin: "left center",
-                animation: "fridgeDoorSwing 0.6s 0.28s cubic-bezier(0.4,0,0.2,1) forwards",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <span style={{ fontSize: 52, opacity: 0.25 }}>🧊</span>
-                {/* 문 손잡이 */}
+              {/* 말풍선 — closed일 때만 */}
+              {phase === "closed" && (
                 <div style={{
-                  position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                  width: 5, height: 56, borderRadius: 3,
-                  background: "linear-gradient(180deg,#94a3b8,#64748b,#94a3b8)",
-                  boxShadow: "1px 0 4px rgba(0,0,0,0.15)",
-                }} />
-              </div>
+                  position: "absolute",
+                  left: "50%", top: "38%",
+                  transform: "translate(-50%, -50%)",
+                  background: "#fff",
+                  border: "2px solid #e2e8f0",
+                  borderRadius: 14,
+                  padding: "10px 18px",
+                  fontSize: 13, fontWeight: 700, color: "#374151",
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+                  pointerEvents: "none",
+                  zIndex: 5,
+                }}>
+                  🍀 냉장고를 열어봐!
+                  {/* 말풍선 꼬리 (아래) */}
+                  <div style={{
+                    position: "absolute", bottom: -9, left: "50%",
+                    transform: "translateX(-50%)",
+                    width: 0, height: 0,
+                    borderLeft: "8px solid transparent",
+                    borderRight: "8px solid transparent",
+                    borderTop: "9px solid #fff",
+                  }} />
+                  <div style={{
+                    position: "absolute", bottom: -12, left: "50%",
+                    transform: "translateX(-50%)",
+                    width: 0, height: 0,
+                    borderLeft: "9px solid transparent",
+                    borderRight: "9px solid transparent",
+                    borderTop: "10px solid #e2e8f0",
+                    zIndex: -1,
+                  }} />
+                </div>
+              )}
             </div>
 
             {/* 냉장고 발받침 */}
