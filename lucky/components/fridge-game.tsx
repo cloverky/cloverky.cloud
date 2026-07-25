@@ -16,7 +16,7 @@ const GH = 210;
 const FREEZE_H = 56; // 냉동실
 
 const GROUND = GH - 30;
-const GRAVITY = 1.7;
+const GRAVITY = 1.2;
 const JUMP_V = -20;
 const GROUND_OBS = ["🥕", "🧅", "🥦", "🍳", "🧄", "🌽", "🍎", "🥚"];
 const AIR_OBS    = ["🐟", "🍕", "🧇", "🥐", "🍗"];
