@@ -38,7 +38,7 @@ export function Header({ onSignUpClick, onLoginClick, onProfileEditClick }: Head
                 setGameOrigin({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
                 setGameOpen(true);
               }}
-              className="shrink-0 rounded p-0.5 hover:opacity-70 transition-opacity"
+              className="shrink-0 rounded p-0.5 outline-none ring-0 focus:outline-none focus-visible:outline-none hover:opacity-70 transition-opacity"
             >
               <Refrigerator className="h-5 w-5 text-accent sm:h-6 sm:w-6" />
             </button>
@@ -46,7 +46,15 @@ export function Header({ onSignUpClick, onLoginClick, onProfileEditClick }: Head
               FridgeAI
             </Link>
           </div>
-          {gameOpen && <FridgeGame onClose={() => setGameOpen(false)} origin={gameOrigin} />}
+          {gameOpen && (
+            <FridgeGame
+              onClose={() => {
+                setGameOpen(false);
+                (document.activeElement as HTMLElement | null)?.blur();
+              }}
+              origin={gameOrigin}
+            />
+          )}
         </div>
 
         <div className="relative z-10 ml-auto hidden shrink-0 items-center gap-2 md:flex">
