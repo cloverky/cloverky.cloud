@@ -135,8 +135,8 @@ export function FridgeGame({ onClose }: FridgeGameProps) {
       s.raf = requestAnimationFrame(loop);
     };
 
-    s.raf = requestAnimationFrame(loop);
     const s = gs.current;
+    s.raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(s.raf);
   }, [phase]);
 
