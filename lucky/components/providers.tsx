@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="fridgeai-theme">
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="fridgeai-theme">
       {children}
       <Toaster position="top-center" richColors closeButton />
     </ThemeProvider>

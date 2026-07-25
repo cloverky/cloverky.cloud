@@ -422,9 +422,6 @@ export function InventoryFeaturePage() {
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
               {config.tagline}
             </p>
-            <Badge variant="outline" className="mt-4 font-normal">
-              도우미: {config.agentName}
-            </Badge>
             {user ? (
               <p className="mt-3 text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">{user.username}</span>

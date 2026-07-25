@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Refrigerator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth-context";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { HeaderMobileNav } from "@/components/header-mobile-nav";
+import { FridgeGame } from "@/components/fridge-game";
 
 interface HeaderProps {
   onSignUpClick: () => void;
@@ -15,6 +17,7 @@ interface HeaderProps {
 
 export function Header({ onSignUpClick, onLoginClick, onProfileEditClick }: HeaderProps) {
   const { user, logout } = useAuth();
+  const [gameOpen, setGameOpen] = useState(false);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -27,12 +30,15 @@ export function Header({ onSignUpClick, onLoginClick, onProfileEditClick }: Head
             onProfileEditClick={onProfileEditClick}
             onLogout={logout}
           />
-          <Link href="/" className="flex min-w-0 items-center gap-2">
-            <Refrigerator className="h-5 w-5 shrink-0 text-accent sm:h-6 sm:w-6" />
-            <span className="truncate text-lg font-bold text-foreground max-md:max-w-[7.5rem] sm:max-w-none sm:text-xl">
+          <div className="flex min-w-0 items-center gap-2">
+            <button onClick={() => setGameOpen(true)} className="shrink-0 rounded p-0.5 hover:opacity-70 transition-opacity">
+              <Refrigerator className="h-5 w-5 text-accent sm:h-6 sm:w-6" />
+            </button>
+            <Link href="/" className="truncate text-lg font-bold text-foreground max-md:max-w-[7.5rem] sm:max-w-none sm:text-xl">
               FridgeAI
-            </span>
-          </Link>
+            </Link>
+          </div>
+          {gameOpen && <FridgeGame onClose={() => setGameOpen(false)} />}
         </div>
 
         <div className="relative z-10 ml-auto hidden shrink-0 items-center gap-2 md:flex">

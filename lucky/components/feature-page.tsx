@@ -205,9 +205,6 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
               {config.tagline}
             </p>
-            <Badge variant="outline" className="mt-4 font-normal">
-              도우미: {config.agentName}
-            </Badge>
           </div>
           <div className="flex shrink-0 flex-wrap gap-3">
             <Button variant="outline" asChild>

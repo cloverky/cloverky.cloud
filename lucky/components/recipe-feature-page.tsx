@@ -13,13 +13,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fetchInventory } from "@/lib/inventory-api";
-import {
-  fallbackDetail,
-  fallbackMeals,
-  fallbackNote,
-  fallbackRecipes,
-  fallbackSuggestions,
-} from "@/lib/recipe-fallback";
 import type { RecipeSummary, RecipeDetail, SuggestedRecipe, MealSuggestion } from "@/app/api/gemini/recipes/route";
 
 function difficultyClass(difficulty: string) {
@@ -35,17 +28,6 @@ function currentMeal(): "아침" | "점심" | "저녁" {
   if (h < 11) return "아침";
   if (h < 17) return "점심";
   return "저녁";
-}
-
-const COOKING_LINES = [
-  "AI가 냉장고 뒤지는 중… 🧑‍🍳",
-  "AI가 팬을 예열하는 중… 🔥",
-  "AI가 냉동실 구석까지 확인하는 중… 🧊",
-  "AI가 양념통을 흔들어 보는 중… 🧂",
-];
-
-function cookingLine() {
-  return COOKING_LINES[Math.floor(Math.random() * COOKING_LINES.length)];
 }
 
 const MEAL_META = {
@@ -75,9 +57,7 @@ export function RecipeFeaturePage() {
   const [meals, setMeals] = useState<MealSuggestion[]>([]);
   const [activeMeal, setActiveMeal] = useState<"아침" | "점심" | "저녁">(currentMeal());
   const [loading, setLoading] = useState(false);
-  const [loadingLine, setLoadingLine] = useState(COOKING_LINES[0]);
-  // AI가 실패했을 때 보여줄 능청스러운 안내. 에러 메시지는 화면에 띄우지 않는다.
-  const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const [selectedRecipe, setSelectedRecipe] = useState<{ name: string } | null>(null);
   const [detail, setDetail] = useState<RecipeDetail | null>(null);
@@ -85,8 +65,7 @@ export function RecipeFeaturePage() {
 
   const fetchRecipes = useCallback(async (ingredientList: string[]) => {
     setLoading(true);
-    setLoadingLine(cookingLine());
-    setNotice(null);
+    setError(null);
     setRecipes([]);
     try {
       const res = await fetch("/api/gemini/recipes", {
@@ -94,14 +73,11 @@ export function RecipeFeaturePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "list", ingredients: ingredientList }),
       });
-      const data = (await res.json()) as { recipes?: RecipeSummary[]; fallback?: boolean; notice?: string };
-      if (!res.ok || !data.recipes?.length) throw new Error("레시피 로드 실패");
-      setRecipes(data.recipes);
-      setNotice(data.fallback ? data.notice ?? fallbackNote() : null);
-    } catch {
-      // 서버까지 못 갔을 때도 화면은 채워 준다.
-      setRecipes(fallbackRecipes(ingredientList));
-      setNotice(fallbackNote());
+      const data = (await res.json()) as { recipes?: RecipeSummary[]; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error ?? "레시피 로드 실패");
+      setRecipes(data.recipes ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -109,8 +85,7 @@ export function RecipeFeaturePage() {
 
   const fetchSuggestions = useCallback(async () => {
     setLoading(true);
-    setLoadingLine(cookingLine());
-    setNotice(null);
+    setError(null);
     setSuggestions([]);
     try {
       const res = await fetch("/api/gemini/recipes", {
@@ -118,13 +93,11 @@ export function RecipeFeaturePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "suggest" }),
       });
-      const data = (await res.json()) as { suggestions?: SuggestedRecipe[]; fallback?: boolean; notice?: string };
-      if (!res.ok || !data.suggestions?.length) throw new Error("추천 로드 실패");
-      setSuggestions(data.suggestions);
-      setNotice(data.fallback ? data.notice ?? fallbackNote() : null);
-    } catch {
-      setSuggestions(fallbackSuggestions());
-      setNotice(fallbackNote());
+      const data = (await res.json()) as { suggestions?: SuggestedRecipe[]; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error ?? "추천 로드 실패");
+      setSuggestions(data.suggestions ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -132,8 +105,7 @@ export function RecipeFeaturePage() {
 
   const fetchMeals = useCallback(async (ingredientList: string[]) => {
     setLoading(true);
-    setLoadingLine(cookingLine());
-    setNotice(null);
+    setError(null);
     setMeals([]);
     try {
       const res = await fetch("/api/gemini/recipes", {
@@ -141,13 +113,11 @@ export function RecipeFeaturePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "meal", ingredients: ingredientList }),
       });
-      const data = (await res.json()) as { meals?: MealSuggestion[]; fallback?: boolean; notice?: string };
-      if (!res.ok || !data.meals?.length) throw new Error("식사 추천 실패");
-      setMeals(data.meals);
-      setNotice(data.fallback ? data.notice ?? fallbackNote() : null);
-    } catch {
-      setMeals(fallbackMeals(ingredientList));
-      setNotice(fallbackNote());
+      const data = (await res.json()) as { meals?: MealSuggestion[]; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error ?? "식사 추천 실패");
+      setMeals(data.meals ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -158,14 +128,16 @@ export function RecipeFeaturePage() {
       setLoading(true);
       let ingredientList: string[] = [];
 
-      // 비로그인은 냉장고가 없으니 재료를 채우지 않고 바로 요리 추천으로 간다.
       if (user?.email) {
         try {
           const inv = await fetchInventory(user.email);
           ingredientList = inv.items.map((i) => i.name);
         } catch {
-          // 백엔드 연결 실패 → 재료 없이 요리 추천
+          // 백엔드 연결 실패 → suggest 모드
         }
+      } else {
+        // 비로그인 → 데모 재료
+        ingredientList = ["달걀", "우유", "양파", "밥", "상추"];
       }
 
       setIngredients(ingredientList);
@@ -179,7 +151,7 @@ export function RecipeFeaturePage() {
       }
     };
     void load();
-  }, [user, fetchRecipes, fetchMeals]);
+  }, [user, fetchRecipes, fetchSuggestions]);
 
   const openDetail = async (name: string) => {
     setSelectedRecipe({ name });
@@ -191,18 +163,15 @@ export function RecipeFeaturePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "detail", recipeName: name, ingredients }),
       });
-      const data = (await res.json()) as { detail?: RecipeDetail };
-      if (!res.ok || !data.detail) throw new Error("상세 로드 실패");
-      setDetail(data.detail);
+      const data = (await res.json()) as { detail?: RecipeDetail; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error ?? "상세 로드 실패");
+      setDetail(data.detail ?? null);
     } catch {
-      setDetail(fallbackDetail(name, ingredients));
+      setDetail(null);
     } finally {
       setDetailLoading(false);
     }
   };
-
-  const mealMeta = MEAL_META[activeMeal];
-  const MealIcon = mealMeta.icon;
 
   const handleRefresh = () => {
     if (mode === "meal") void fetchMeals(ingredients);
@@ -228,34 +197,14 @@ export function RecipeFeaturePage() {
             <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card">
               <ChefHat className="h-7 w-7 text-accent" />
             </div>
-            {mode === "meal" ? (
-              // meal 모드의 제목은 "오저뭐?" 하나로 충분하다.
-              <div className="mt-6 flex items-center gap-3">
-                <MealIcon className={`h-7 w-7 ${mealMeta.color}`} />
-                <h1 className="flex items-end gap-0 text-5xl font-black tracking-tight leading-none">
-                  {mealMeta.parts.map((part, i) => (
-                    <span key={i} className="inline-flex items-end">
-                      <span className="leading-none">{part.big}</span>
-                      {part.small && (
-                        <span className="text-[0.25em] font-normal text-muted-foreground leading-none mb-1">
-                          {part.small}
-                        </span>
-                      )}
-                    </span>
-                  ))}
-                </h1>
-              </div>
-            ) : (
-              <>
-                <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">맞춤형 레시피 추천</h1>
-                <p className="mt-2 text-lg text-muted-foreground">
-                  지금 있는 재료로 무엇을 만들지 AI가 골라줍니다.
-                </p>
-              </>
-            )}
-            <Badge variant="outline" className="mt-4 font-normal">
-              도우미: 레시피 담당 AI
-            </Badge>
+            <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">
+              {mode === "meal" ? "오늘 뭐 먹지?" : "맞춤형 레시피 추천"}
+            </h1>
+            <p className="mt-2 text-lg text-muted-foreground">
+              {mode === "meal"
+                ? `냉장고가 비었네요. ${currentMeal()} 메뉴를 AI가 추천해 드릴게요.`
+                : "지금 있는 재료로 무엇을 만들지 AI가 골라줍니다."}
+            </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-3">
             <Button
@@ -276,7 +225,7 @@ export function RecipeFeaturePage() {
         {mode === "fridge" && ingredients.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              내 냉장고 재료 {ingredients.length}개 기준:
+              {user?.email ? `내 냉장고 재료 ${ingredients.length}개 기준:` : "데모 재료 기준:"}
             </span>
             {ingredients.slice(0, 10).map((ing) => (
               <Badge key={ing} variant="outline" className="font-normal text-xs">{ing}</Badge>
@@ -286,13 +235,6 @@ export function RecipeFeaturePage() {
                 +{ingredients.length - 10}개
               </Badge>
             )}
-          </div>
-        )}
-
-        {!loading && notice && (
-          <div className="mt-6 flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 px-4 py-3 text-sm text-muted-foreground">
-            <CloverIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" strokeWidth={2} />
-            <span>{notice}</span>
           </div>
         )}
 
@@ -308,10 +250,11 @@ export function RecipeFeaturePage() {
                 {loading && (
                   <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin text-accent" />
-                    <p className="text-sm">{loadingLine}</p>
+                    <p className="text-sm">AI가 냉장고 뒤지는 중… 🧑‍🍳</p>
                   </div>
                 )}
-                {!loading && recipes.length > 0 && (
+                {error && <p className="py-8 text-center text-sm text-destructive">{error}</p>}
+                {!loading && !error && recipes.length > 0 && (
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -351,10 +294,28 @@ export function RecipeFeaturePage() {
 
           {/* 빈 냉장고 → 현재 시간대 자동 메뉴 추천 */}
           {mode === "meal" && (() => {
+            const meta = MEAL_META[activeMeal];
+            const Icon = meta.icon;
             const mealData = meals.find((m) => m.meal === activeMeal);
             return (
               <div className="space-y-6">
-                {/* 타이틀은 상단 헤더로 옮겼다. */}
+                {/* 타이틀 */}
+                <div className="flex items-center gap-3">
+                  <Icon className={`h-7 w-7 ${meta.color}`} />
+                  <h2 className="flex items-end gap-0 text-5xl font-black tracking-tight leading-none">
+                    {meta.parts.map((part, i) => (
+                      <span key={i} className="inline-flex items-end">
+                        <span className="leading-none">{part.big}</span>
+                        {part.small && (
+                          <span className="text-[0.25em] font-normal text-muted-foreground leading-none mb-1">
+                            {part.small}
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                  </h2>
+                </div>
+
                 {loading && (
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
@@ -363,7 +324,8 @@ export function RecipeFeaturePage() {
                     </CardContent>
                   </Card>
                 )}
-                {!loading && mealData && (
+                {error && <p className="py-8 text-center text-sm text-destructive">{error}</p>}
+                {!loading && !error && mealData && (
                   <div className="space-y-3">
                     {mealData.recipes.map((r) => (
                       <Card
@@ -389,15 +351,6 @@ export function RecipeFeaturePage() {
                     <p className="text-center text-xs text-muted-foreground pt-1">
                       클릭하면 상세 레시피를 볼 수 있어요.
                     </p>
-                    {!user?.email && (
-                      <p className="text-center text-xs text-muted-foreground">
-                        로그인하고{" "}
-                        <Link href="/features/inventory" className="text-accent underline underline-offset-4">
-                          냉장고 재료
-                        </Link>
-                        를 등록하면 내 재료 기준으로 추천받을 수 있어요.
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
@@ -415,7 +368,8 @@ export function RecipeFeaturePage() {
                   </CardContent>
                 </Card>
               )}
-              {!loading && suggestions.length > 0 && suggestions.map((s) => (
+              {error && <p className="py-8 text-center text-sm text-destructive">{error}</p>}
+              {!loading && !error && suggestions.length > 0 && suggestions.map((s) => (
                 <Card
                   key={s.name}
                   className="cursor-pointer transition-shadow hover:shadow-md hover:ring-1 hover:ring-accent/30"
@@ -446,7 +400,7 @@ export function RecipeFeaturePage() {
                   </CardContent>
                 </Card>
               ))}
-              {!loading && suggestions.length > 0 && (
+              {!loading && !error && suggestions.length > 0 && (
                 <p className="text-center text-xs text-muted-foreground pt-2">
                   재료를 장보고{" "}
                   <Link href="/features/inventory" className="text-accent underline underline-offset-4">

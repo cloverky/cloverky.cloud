@@ -31,9 +31,8 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-foreground">문의</h3>
             <ul className="mt-4 space-y-2">
-              <li><a href="mailto:contact@fridgeai.dev" className="text-sm text-muted-foreground hover:text-foreground">contact@fridgeai.dev</a></li>
-              <li><a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">GitHub</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground">Discord</a></li>
+              <li><a href="mailto:hisoyeon04@gmail.com" className="text-sm text-muted-foreground hover:text-foreground">hisoyeon04@gmail.com</a></li>
+              <li><a href="https://github.com/cloverky" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">GitHub</a></li>
             </ul>
           </div>
         </div>

@@ -230,9 +230,6 @@ export function ShoppingFeaturePage() {
             <p className="mt-2 text-lg text-muted-foreground">
               만들 음식을 입력하면 부족한 재료를 알려드립니다.
             </p>
-            <Badge variant="outline" className="mt-4 font-normal">
-              도우미: 쇼핑 AI
-            </Badge>
           </div>
           <div className="flex shrink-0 gap-3">
             <Button variant="outline" asChild>

@@ -5,6 +5,10 @@
   background: transparent;
 }
 
+input, textarea {
+  ime-mode: active;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
