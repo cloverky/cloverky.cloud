@@ -59,10 +59,18 @@ function makeInitState() {
 export function FridgeGame({ onClose, origin }: FridgeGameProps) {
   const [phase, setPhase] = useState<Phase>("closed");
   const [mounted, setMounted] = useState(false);
+  const [vw, setVw] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gs = useRef(makeInitState());
 
-  useEffect(() => { gs.current = makeInitState(); setMounted(true); }, []);
+  useEffect(() => {
+    gs.current = makeInitState();
+    setMounted(true);
+    const onResize = () => setVw(window.innerWidth);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const openDoor = useCallback(() => {
     if (phase !== "closed") return;
@@ -202,15 +210,16 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
   const tx = origin ? `${Math.round(origin.x - window.innerWidth / 2)}px` : "0px";
   const ty = origin ? `${Math.round(origin.y - window.innerHeight / 2)}px` : "0px";
   const FW = GW + PAD * 2; // 냉장고 전체 너비
-  // 모바일에서 뷰포트보다 큰 경우 축소
-  const scale = Math.min(1, (window.innerWidth - 24) / FW);
+  // 모바일에서 뷰포트보다 큰 경우 축소. transform 이 아니라 zoom 을 쓴다 —
+  // transform 은 레이아웃 박스를 그대로 두어 스크롤바가 생긴다.
+  const zoom = vw ? Math.min(1, (vw - 24) / FW) : 1;
 
   return createPortal(
     <>
       <style>{`
         @keyframes fridgePopIn {
-          from { transform: translate(var(--ftx,0), var(--fty,0)) scale(${(0.04 * scale).toFixed(4)}); opacity: 0; }
-          to   { transform: translate(0,0) scale(${scale.toFixed(4)}); opacity: 1; }
+          from { transform: translate(var(--ftx,0), var(--fty,0)) scale(0.04); opacity: 0; }
+          to   { transform: translate(0,0) scale(1); opacity: 1; }
         }
         @keyframes fridgeDoorSwing {
           0%   { transform: perspective(900px) rotateY(0deg);    opacity: 1; }
@@ -238,6 +247,7 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
           {/* ─── 냉장고 몸통 ─── */}
           <div style={{
             width: FW,
+            zoom,
             background: "#f1f5f9",
             borderRadius: 20,
             border: "3px solid #94a3b8",
