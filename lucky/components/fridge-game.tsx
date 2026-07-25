@@ -67,15 +67,21 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
     const loop = () => {
       const s = gs.current;
       ctx.clearRect(0, 0, GW, GH);
-      ctx.fillStyle = "#fafafa";
-      ctx.fillRect(0, 0, GW, GH);
 
-      ctx.strokeStyle = "#f0f0f0";
-      ctx.lineWidth = 1;
-      for (let yy = 50; yy < GH - 40; yy += 50) {
-        ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(GW, yy); ctx.stroke();
+      // 냉장고 내부 배경 + 선반 (블러로 은은하게)
+      ctx.save();
+      ctx.filter = "blur(2px)";
+      ctx.fillStyle = "#eef6ff";
+      ctx.fillRect(0, 0, GW, GH);
+      // 냉장고 선반
+      ctx.fillStyle = "rgba(180,210,235,0.45)";
+      for (let yy = 58; yy < GH - 38; yy += 60) {
+        ctx.fillRect(0, yy - 4, GW, 8);
       }
-      ctx.strokeStyle = "#d1d5db";
+      ctx.restore();
+
+      // 바닥선
+      ctx.strokeStyle = "#c7d8e8";
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(0, GROUND + 20); ctx.lineTo(GW, GROUND + 20); ctx.stroke();
 
@@ -99,7 +105,8 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
         s.frame++;
         s.score = Math.floor(s.frame * 0.12);
-        s.speed = 6 + s.score * 0.012;
+        // 50점마다 0.6씩 딱딱 올라감
+        s.speed = 6 + Math.floor(s.score / 50) * 0.6;
 
         s.obstacles.forEach(o => o.x -= s.speed);
         s.obstacles = s.obstacles.filter(o => o.x > -40);
