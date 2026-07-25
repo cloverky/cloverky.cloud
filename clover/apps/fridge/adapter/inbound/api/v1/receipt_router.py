@@ -66,7 +66,7 @@ async def scan_receipt(image: UploadFile = File(...)) -> ReceiptScanResponse:
 
     client = keymaker.get_gemini_client()
     try:
-        response = client.models.generate_content(
+        response = await client.aio.models.generate_content(
             model=_MODEL,
             contents=[
                 genai_types.Part.from_bytes(data=data, mime_type=mime),

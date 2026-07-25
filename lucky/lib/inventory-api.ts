@@ -279,6 +279,7 @@ export async function scanReceipt(imageFile: File): Promise<ReceiptScanResult> {
   form.append("image", imageFile);
   const res = await fetch(`${API_BASE}/api/fridge/receipt/scan`, {
     method: "POST",
+    credentials: "include",
     body: form,
   });
   if (!res.ok) {
