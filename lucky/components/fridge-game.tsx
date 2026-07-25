@@ -154,6 +154,7 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.code === "Escape") { onClose(); return; }
       if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); }
       else if (e.code === "ArrowDown") {
         e.preventDefault();
@@ -163,7 +164,7 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [jump]);
+  }, [jump, onClose]);
 
   if (!mounted) return null;
 
@@ -210,21 +211,21 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
             position: "relative",
           }}>
 
-            {/* 오른쪽 손잡이 전체 (냉동실) */}
+            {/* 냉동실 손잡이 */}
             <div style={{
-              position: "absolute", right: -13,
-              top: FREEZE_H / 2 - 18,
-              width: 9, height: 36, borderRadius: 5,
-              background: "linear-gradient(180deg,#cbd5e1,#94a3b8,#cbd5e1)",
-              boxShadow: "2px 0 6px rgba(0,0,0,0.2)",
+              position: "absolute", right: 10,
+              top: FREEZE_H / 2 - 14,
+              width: 7, height: 28, borderRadius: 4,
+              background: "linear-gradient(180deg,#94a3b8,#64748b,#94a3b8)",
+              boxShadow: "inset 1px 0 2px rgba(255,255,255,0.4), 0 1px 4px rgba(0,0,0,0.2)",
             }} />
-            {/* 오른쪽 손잡이 (냉장실) */}
+            {/* 냉장실 손잡이 */}
             <div style={{
-              position: "absolute", right: -13,
-              top: FREEZE_H + 40,
-              width: 9, height: 70, borderRadius: 5,
-              background: "linear-gradient(180deg,#cbd5e1,#94a3b8,#cbd5e1)",
-              boxShadow: "2px 0 6px rgba(0,0,0,0.2)",
+              position: "absolute", right: 10,
+              top: FREEZE_H + 36,
+              width: 7, height: 62, borderRadius: 4,
+              background: "linear-gradient(180deg,#94a3b8,#64748b,#94a3b8)",
+              boxShadow: "inset 1px 0 2px rgba(255,255,255,0.4), 0 1px 4px rgba(0,0,0,0.2)",
             }} />
 
             {/* ── 냉동실 ── */}
