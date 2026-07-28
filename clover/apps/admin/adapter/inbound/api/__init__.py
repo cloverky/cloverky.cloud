@@ -25,6 +25,8 @@ _routers = [
         "admin.adapter.inbound.api.v1.piper_bighetti_hr_router",
         "bighetti_hr_router",
     ),
+    ("admin.adapter.inbound.api.v1.pdf_loader_router", "pdf_loader_router"),
+    ("admin.adapter.inbound.api.v1.morningstar_router", "morningstar_router"),
 ]
 
 for _mod, _attr in _routers:
