@@ -41,8 +41,9 @@ export function MailComposeDialog({ open, onOpenChange }: Props) {
   const suggestionsRef = useRef<HTMLUListElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 다이얼로그 열릴 때 연락처 로드
+  // 다이얼로그 열릴 때 연락처 로드 (localStorage는 SSR에서 접근 불가)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (open) setContacts(loadContacts());
   }, [open]);
 

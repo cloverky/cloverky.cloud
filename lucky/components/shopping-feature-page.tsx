@@ -122,10 +122,11 @@ export function ShoppingFeaturePage() {
   const [newItem, setNewItem] = useState("");
 
   const loadInventory = useCallback(async () => {
-    if (!user?.email) return;
+    const email = user?.email;
+    if (!email) return;
     setInventoryLoading(true);
     try {
-      const data = await fetchInventory(user.email);
+      const data = await fetchInventory(email);
       setInventory(data.items);
     } catch {
       // ignore
@@ -135,6 +136,8 @@ export function ShoppingFeaturePage() {
   }, [user?.email]);
 
   useEffect(() => {
+    // 로그인 사용자가 확인되면 서버에서 재고 목록을 가져온다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isReady && user?.email) void loadInventory();
   }, [isReady, user?.email, loadInventory]);
 

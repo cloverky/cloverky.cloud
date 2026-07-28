@@ -72,6 +72,8 @@ export function WeatherWidget() {
   useEffect(() => {
     const cached = readCachedWeather();
     if (cached) {
+      // 캐시된 날씨는 localStorage에 있어 SSR에서 접근 불가 — 마운트 후 복원이 필수다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setState({ weather: cached, loading: false, stale: true });
     }
     void load();
@@ -97,6 +99,9 @@ export function WeatherWidget() {
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/50"
         aria-hidden
       >
+        {/* eslint-disable-next-line react-hooks/static-components -- weatherIconForCode는 항상
+            위에서 import한 안정된 lucide 아이콘 컴포넌트 중 하나를 그대로 반환할 뿐, 새 컴포넌트를
+            만들지 않는다 */}
         <Icon className="h-4 w-4 text-accent" strokeWidth={2} />
       </span>
       <span className="font-medium text-foreground tabular-nums">

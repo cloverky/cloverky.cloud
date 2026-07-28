@@ -30,6 +30,8 @@ export function TelegramSettingsDialog({ open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (open) {
+      // localStorage는 SSR에서 접근 불가 — 다이얼로그가 열릴 때 복원한다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChatId(getTelegramChatId());
       setSaved(false);
     }

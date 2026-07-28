@@ -11,6 +11,43 @@ import { type Detection, detectFace } from "@/lib/vision-api";
 
 type State = "idle" | "loading" | "done" | "error";
 
+const Sidebar = () => (
+  <aside className="hidden border-r border-border/70 pr-6 text-sm lg:block">
+    <div className="sticky top-28">
+      <p className="mb-6 text-xs font-semibold text-muted-foreground">수업</p>
+      <nav className="space-y-5">
+        <Collapsible>
+          <CollapsibleTrigger className="group flex w-full items-center justify-between rounded-md py-1 text-left font-semibold text-foreground transition-colors hover:text-accent">
+            <span>타이타닉</span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <ul className="mt-3 space-y-2 pl-1 text-muted-foreground">
+              <li><a className="transition-colors hover:text-accent" href="/lesson#data-collection">1. 데이터 수집</a></li>
+              <li><a className="transition-colors hover:text-accent" href="/lesson#data-analysis">2. 승객 목록</a></li>
+              <li><a className="transition-colors hover:text-accent" href="/lesson">3. 스미스 선장과 대화</a></li>
+              <li><a className="transition-colors hover:text-accent" href="/lesson#model-prediction">4. 모델 예측</a></li>
+            </ul>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <Collapsible>
+          <CollapsibleTrigger className="group flex w-full items-center justify-between rounded-md py-1 text-left font-semibold text-foreground transition-colors hover:text-accent">
+            <span>이미지 분석</span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <ul className="mt-3 space-y-2 pl-1 text-muted-foreground">
+              <li><a className="transition-colors hover:text-accent" href="/vision">1. vision</a></li>
+              <li><a className="font-semibold text-accent" href="/vision/detect">2. 객체 탐지</a></li>
+            </ul>
+          </CollapsibleContent>
+        </Collapsible>
+      </nav>
+    </div>
+  </aside>
+);
+
 export default function DetectPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -53,43 +90,6 @@ export default function DetectPage() {
       setState("error");
     }
   };
-
-  const Sidebar = () => (
-    <aside className="hidden border-r border-border/70 pr-6 text-sm lg:block">
-      <div className="sticky top-28">
-        <p className="mb-6 text-xs font-semibold text-muted-foreground">수업</p>
-        <nav className="space-y-5">
-          <Collapsible>
-            <CollapsibleTrigger className="group flex w-full items-center justify-between rounded-md py-1 text-left font-semibold text-foreground transition-colors hover:text-accent">
-              <span>타이타닉</span>
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <ul className="mt-3 space-y-2 pl-1 text-muted-foreground">
-                <li><a className="transition-colors hover:text-accent" href="/lesson#data-collection">1. 데이터 수집</a></li>
-                <li><a className="transition-colors hover:text-accent" href="/lesson#data-analysis">2. 승객 목록</a></li>
-                <li><a className="transition-colors hover:text-accent" href="/lesson">3. 스미스 선장과 대화</a></li>
-                <li><a className="transition-colors hover:text-accent" href="/lesson#model-prediction">4. 모델 예측</a></li>
-              </ul>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Collapsible>
-            <CollapsibleTrigger className="group flex w-full items-center justify-between rounded-md py-1 text-left font-semibold text-foreground transition-colors hover:text-accent">
-              <span>이미지 분석</span>
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <ul className="mt-3 space-y-2 pl-1 text-muted-foreground">
-                <li><a className="transition-colors hover:text-accent" href="/vision">1. vision</a></li>
-                <li><a className="font-semibold text-accent" href="/vision/detect">2. 객체 탐지</a></li>
-              </ul>
-            </CollapsibleContent>
-          </Collapsible>
-        </nav>
-      </div>
-    </aside>
-  );
 
   return (
     <main className="min-h-screen bg-background pt-20 text-foreground sm:pt-24">

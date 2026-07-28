@@ -40,6 +40,8 @@ export function TelegramComposeDialog({ open, onOpenChange }: Props) {
   useEffect(() => {
     if (open) {
       const saved = localStorage.getItem(CHAT_ID_KEY) ?? "";
+      // localStorage는 SSR에서 접근 불가 — 다이얼로그가 열릴 때 복원한다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChatId(saved);
     }
   }, [open]);

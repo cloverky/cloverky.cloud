@@ -65,6 +65,7 @@ export async function POST(request: Request) {
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey?.trim()) {
+    // eslint-disable-next-line no-console -- 서버 로그: API 키 누락은 운영자가 확인해야 한다
     console.warn("[recipes] GEMINI_API_KEY가 없어 준비된 레시피로 대체합니다.");
     return fallbackFor(body);
   }
@@ -186,6 +187,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "잘못된 요청" }, { status: 400 });
   } catch (e) {
     // 키 만료, 쿼터 초과, 파싱 실패 전부 여기로 모인다. 로그에만 남기고 화면은 조용히 넘어간다.
+    // eslint-disable-next-line no-console -- 서버 로그: 원인 파악을 위해 남긴다
     console.error("[recipes] AI 호출 실패, 준비된 레시피로 대체:", e);
     return fallbackFor(body);
   }

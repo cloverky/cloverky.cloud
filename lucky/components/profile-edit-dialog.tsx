@@ -36,6 +36,8 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
   const [passwordDone, setPasswordDone] = useState(false);
 
   useEffect(() => {
+    // 다이얼로그가 열릴 때만 1회 프리필한다 — 이후 사용자가 편집하는 입력값을 덮어쓰지 않는다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (open) setNickname(user?.username ?? "");
   }, [open, user?.username]);
 

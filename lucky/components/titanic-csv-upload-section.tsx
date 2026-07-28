@@ -99,15 +99,19 @@ export function TitanicCsvUploadSection({
     busy: false,
   });
 
-  const patchUi = (patch: Partial<UploadUiState>) =>
-    setUi((prev) => ({ ...prev, ...patch }));
+  const patchUi = useCallback(
+    (patch: Partial<UploadUiState>) => setUi((prev) => ({ ...prev, ...patch })),
+    [],
+  );
 
   useEffect(() => {
     if (bypassLocalGuard) return;
+    // window.location.hostname은 SSR에서 접근 불가 — 마운트 후 동기화가 필수다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     patchUi({
       localRootOk: pathname === "/" && isLocalDevHost(window.location.hostname),
     });
-  }, [pathname, bypassLocalGuard]);
+  }, [pathname, bypassLocalGuard, patchUi]);
 
   const applyFile = useCallback(async (file: File | undefined) => {
     if (!file) return;
@@ -158,7 +162,7 @@ export function TitanicCsvUploadSection({
     } finally {
       patchUi({ busy: false });
     }
-  }, []);
+  }, [patchUi, onUploadSuccess]);
 
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

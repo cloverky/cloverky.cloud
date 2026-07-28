@@ -13,11 +13,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { CloverIcon } from "@/components/clover-icon";
 import { BottomRightStack } from "@/components/bottom-right-stack";
 import { Footer } from "@/components/footer";
 import { useAuth } from "@/components/auth-context";
-import { useGeminiChat } from "@/components/gemini-chat-context";
 import { useOpenLogin } from "@/components/login-dialog-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,7 +55,6 @@ import {
   fetchInventory,
   quantityStep,
   isPackCountFood,
-  packStyleFromUnit,
   suggestUnitForName,
   unitForPackStyle,
   scanReceipt,
@@ -67,8 +64,6 @@ import {
   type ReceiptScanResult,
 } from "@/lib/inventory-api";
 import { cn } from "@/lib/utils";
-
-const STATUS_VALUES = ["양호", "임박", "부족", "긴급"] as const;
 
 function statusBadgeClass(status: string) {
   if (status === "임박" || status === "긴급") {
@@ -149,7 +144,6 @@ export function InventoryFeaturePage() {
   const config = FEATURE_PAGES.inventory;
   const { user, isReady } = useAuth();
   const openLogin = useOpenLogin();
-  const { setInput } = useGeminiChat();
 
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptScanning, setReceiptScanning] = useState(false);
@@ -186,10 +180,11 @@ export function InventoryFeaturePage() {
   } = form;
 
   const load = useCallback(async () => {
-    if (!user?.email) return;
+    const email = user?.email;
+    if (!email) return;
     patchPage({ loading: true, error: null });
     try {
-      const data = await fetchInventory(user.email);
+      const data = await fetchInventory(email);
       patchPage({ items: data.items, stats: data.stats });
     } catch (e) {
       patchPage({
@@ -202,6 +197,8 @@ export function InventoryFeaturePage() {
 
   useEffect(() => {
     if (isReady && user?.email) {
+      // 로그인 사용자가 확인되면 서버에서 재고 목록을 가져온다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void load();
     }
   }, [isReady, user?.email, load]);
@@ -211,6 +208,8 @@ export function InventoryFeaturePage() {
   useEffect(() => {
     const meatUnit = suggestUnitForName(name);
     if (meatUnit) {
+      // 식재료 이름이 바뀔 때마다 추천 단위로 폼을 자동 조정한다(사용자가 이후 직접 변경 가능).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       patchForm({ unit: meatUnit, showAllUnits: false });
       return;
     }
@@ -221,10 +220,12 @@ export function InventoryFeaturePage() {
     } else {
       patchForm({ showAllUnits: false });
     }
-  }, [name, packStyle, showAllUnits]);
+  }, [name, packStyle, showAllUnits, patchForm]);
 
   useEffect(() => {
     if (dateMode !== "purchase" || !name.trim()) {
+      // 유통기한 추정 조건을 벗어나면 이전에 표시하던 힌트를 지운다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       patchForm({ estimateHint: null });
       return;
     }
@@ -238,7 +239,7 @@ export function InventoryFeaturePage() {
         .catch(() => patchForm({ estimateHint: null }));
     }, 400);
     return () => clearTimeout(timer);
-  }, [dateMode, name, purchasedDate, storage]);
+  }, [dateMode, name, purchasedDate, storage, patchForm]);
 
   const handleScanReceipt = async (file: File) => {
     setReceiptFile(file);
@@ -387,14 +388,6 @@ export function InventoryFeaturePage() {
     } finally {
       patchPage({ adjustingId: null });
     }
-  };
-
-  const askGemini = () => {
-    setInput(config.geminiPrompt);
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: "smooth",
-    });
   };
 
   return (

@@ -108,6 +108,8 @@ export function MailInboxPanel({ open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (open) {
+      // 다이얼로그가 열릴 때 서버·브라우저 알림 권한 상태를 동기화한다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       load();
       getPushState().then(setPushState);
     }

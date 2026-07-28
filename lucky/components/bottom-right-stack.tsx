@@ -23,6 +23,8 @@ export function BottomRightStack({ className }: BottomRightStackProps) {
   const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
+    // 로컬 알림 저장소는 SSR에서 접근 불가 — 마운트 후 최초 값 동기화가 필수다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNotifCount(getUnreadCount());
     const handler = () => setNotifCount(getUnreadCount());
     window.addEventListener("cloverky:new-notification", handler);

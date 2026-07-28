@@ -75,6 +75,8 @@ export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDial
 
   useEffect(() => {
     if (open && initialEmail) {
+      // 다이얼로그가 열릴 때만 1회 프리필한다 — 이후 사용자가 편집하는 폼 상태를 덮어쓰지 않는다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       patchForm({ email: initialEmail });
     }
   }, [open, initialEmail]);

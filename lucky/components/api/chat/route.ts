@@ -23,6 +23,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ text: responseText });
   } catch (error) {
+    // eslint-disable-next-line no-console -- 서버 로그: 원인 파악을 위해 남긴다
     console.error("Gemini API Error:", error);
     const message = error instanceof Error ? error.message : "서버 오류가 발생했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });

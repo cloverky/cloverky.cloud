@@ -75,6 +75,8 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
   useEffect(() => {
     gs.current = makeInitState();
+    // 캔버스·viewport는 SSR에서 접근 불가 — 마운트 후 게임 초기화가 필수다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     const onResize = () => setVp(viewport());
     onResize();
@@ -103,7 +105,8 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
     if (phase !== "playing") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
     let rafId = 0;
 
     const loop = () => {

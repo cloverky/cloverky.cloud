@@ -55,6 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         const parsed: unknown = JSON.parse(raw);
         if (isAuthUser(parsed)) {
+          // sessionStorage는 SSR에서 접근 불가 — 마운트 후 세션 복원이 필수다.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           patchAuth({
             user: {
               username: parsed.username,

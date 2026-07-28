@@ -11,6 +11,8 @@ import { uploadVisionImage } from "@/lib/vision-api";
 
 type UploadState = "idle" | "uploading" | "done" | "error";
 
+const ACCEPT = ["image/jpeg", "image/png"];
+
 export default function VisionPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -19,10 +21,8 @@ export default function VisionPage() {
   const [errorMsg, setErrorMsg] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const accept = ["image/jpeg", "image/png"];
-
   const handleFile = useCallback((f: File) => {
-    if (!accept.includes(f.type)) return;
+    if (!ACCEPT.includes(f.type)) return;
     setFile(f);
     setPreview(URL.createObjectURL(f));
     setState("idle");

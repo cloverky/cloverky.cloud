@@ -11,6 +11,12 @@ const TERMS = [
 
 type TermId = typeof TERMS[number]['id'];
 
+const Checkmark = () => (
+  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+    <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 export default function ConsentContent() {
   const router = useRouter();
   const params = useSearchParams();
@@ -60,12 +66,6 @@ export default function ConsentContent() {
   const circleClass = (on: boolean) =>
     'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition ' +
     (on ? 'border-accent bg-accent' : 'border-border bg-background');
-
-  const Checkmark = () => (
-    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-      <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">

@@ -10,6 +10,8 @@ export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // SSR·첫 클라이언트 렌더와 동일한 결과를 보장하기 위한 hydration 가드 — effect가 필수다.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
   const isDark = resolvedTheme === "dark";

@@ -35,6 +35,8 @@ export function NotificationPanel({ open, onOpenChange, onCountChange }: Props) 
   useEffect(() => {
     if (open) {
       markAllRead();
+      // 패널이 열릴 때 로컬 알림 저장소에서 목록을 다시 읽어온다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       refresh();
       onCountChange?.(0);
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);

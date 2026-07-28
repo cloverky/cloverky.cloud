@@ -55,7 +55,7 @@ export function RecipeFeaturePage() {
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
   const [suggestions, setSuggestions] = useState<SuggestedRecipe[]>([]);
   const [meals, setMeals] = useState<MealSuggestion[]>([]);
-  const [activeMeal, setActiveMeal] = useState<"아침" | "점심" | "저녁">(currentMeal());
+  const [activeMeal] = useState<"아침" | "점심" | "저녁">(currentMeal());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -151,7 +151,7 @@ export function RecipeFeaturePage() {
       }
     };
     void load();
-  }, [user, fetchRecipes, fetchSuggestions]);
+  }, [user, fetchRecipes, fetchSuggestions, fetchMeals]);
 
   const openDetail = async (name: string) => {
     setSelectedRecipe({ name });

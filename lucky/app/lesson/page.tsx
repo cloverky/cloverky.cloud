@@ -51,7 +51,9 @@ export default function LessonPage() {
   }, []);
 
   useEffect(() => {
+    // window.location.hash는 SSR에서 접근 불가 — 마운트 후 1회 동기화한다.
     if (window.location.hash === "#data-analysis") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPassengerListRequested(true);
     }
   }, []);

@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { CloverIcon } from "@/components/clover-icon";
 import { BottomRightStack } from "@/components/bottom-right-stack";
 import { Footer } from "@/components/footer";
-import { useGeminiChat } from "@/components/gemini-chat-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -169,16 +167,7 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
   }
 
   const config = FEATURE_PAGES[slug];
-  const { setInput } = useGeminiChat();
   const Icon = config.icon;
-
-  const askGemini = () => {
-    setInput(config.geminiPrompt);
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: "smooth",
-    });
-  };
 
   return (
     <main className="min-h-screen bg-background text-foreground">

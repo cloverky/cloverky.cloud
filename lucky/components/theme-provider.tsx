@@ -29,6 +29,8 @@ export function ThemeProvider({
   React.useEffect(() => {
     const saved = window.localStorage.getItem(storageKey)
     const next = saved === 'light' || saved === 'dark' ? saved : defaultTheme
+    // localStorage는 SSR에서 접근 불가 — 마운트 후 저장된 테마 복원이 필수다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setResolvedTheme(next)
   }, [defaultTheme, storageKey])
 
