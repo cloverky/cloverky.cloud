@@ -1,4 +1,4 @@
-"""LLM 채팅 게이트웨이 — EXAONE 우선, 실패 시 Ollama로 폴백."""
+"""LLM 채팅 게이트웨이 — EXAONE 우선, 실패 시 Ollama·Gemini로 폴백."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import httpx
 from admin.app.ports.output.chat_llm_port import ChatLlmPort
 
 from core.lol.t1_mid_faker_orchestrator import FakerOrchestrator
+from core.matrix.keymaker_api import get_keymaker
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,8 @@ _OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL") or (
 _OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:4b")
 # 폴백 경로는 콜드 스타트와 thinking 토큰 생성을 포함한다 (로컬 실측 수 분).
 _OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "900"))
+# 로컬 LLM(EXAONE·Ollama)이 없는 배포 환경의 최종 폴백.
+_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 
 class ExaoneChatGateway(ChatLlmPort):
@@ -71,6 +74,32 @@ class OllamaChatGateway(ChatLlmPort):
         answer = str(data["choices"][0]["message"]["content"] or "").strip()
         if not answer:
             raise RuntimeError("Ollama가 빈 응답을 반환했습니다.")
+        return answer
+
+
+class GeminiChatGateway(ChatLlmPort):
+    """Gemini — 로컬 LLM을 띄울 수 없는 배포 환경의 폴백."""
+
+    def __init__(self, model: str = _GEMINI_MODEL) -> None:
+        self._model = model
+
+    async def complete(self, system_prompt: str, user_prompt: str) -> str:
+        from google.genai import types
+
+        keymaker = get_keymaker()
+        if not keymaker.is_gemini_ready():
+            raise RuntimeError(
+                "GEMINI_API_KEY가 설정되지 않았습니다. clover/.env 에 키를 넣어 주세요."
+            )
+        client = keymaker.get_gemini_client()
+        response = await client.aio.models.generate_content(
+            model=self._model,
+            contents=user_prompt,
+            config=types.GenerateContentConfig(system_instruction=system_prompt),
+        )
+        answer = (response.text or "").strip()
+        if not answer:
+            raise RuntimeError("Gemini가 빈 응답을 반환했습니다.")
         return answer
 
 
