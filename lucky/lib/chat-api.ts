@@ -73,3 +73,20 @@ export async function postFridgeAssistantChat(
 
   return data.reply?.trim() ?? "";
 }
+
+/** 백엔드 POST /api/v1/langchain/chat — LangChain LCEL 범용 채팅 */
+export async function postLangchainChat(message: string): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/v1/langchain/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message }),
+  });
+
+  const data = (await res.json()) as ChatApiResponse & FastApiErrorBody;
+
+  if (!res.ok) {
+    throw new Error(parseApiError(data, res.status));
+  }
+
+  return data.reply?.trim() ?? "";
+}

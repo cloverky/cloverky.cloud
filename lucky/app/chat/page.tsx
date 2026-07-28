@@ -1,12 +1,13 @@
 "use client";
 
-import { ChevronDown, Refrigerator } from "lucide-react";
+import { ChevronDown, Link2, Refrigerator } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { FridgeAssistantChat } from "@/components/fridge-assistant-chat";
+import { LangchainChat } from "@/components/langchain-chat";
 
 const Sidebar = () => (
   <aside className="hidden border-r border-border/70 pr-6 text-sm lg:block">
@@ -98,6 +99,14 @@ export default function ChatPage() {
               <h2 className="text-lg font-bold">냉장고 어시스턴트</h2>
             </div>
             <FridgeAssistantChat />
+          </div>
+
+          <div className="mt-10 max-w-2xl rounded-2xl border border-border bg-card/50 p-5 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <Link2 className="h-5 w-5 text-accent" />
+              <h2 className="text-lg font-bold">랭체인 어시스턴트</h2>
+            </div>
+            <LangchainChat />
           </div>
         </section>
       </div>
