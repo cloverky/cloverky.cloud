@@ -74,19 +74,33 @@ export async function postFridgeAssistantChat(
   return data.reply?.trim() ?? "";
 }
 
-/** 백엔드 POST /api/v1/langchain/chat — LangChain LCEL 범용 채팅 */
-export async function postLangchainChat(message: string): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/v1/langchain/chat`, {
+export type SemanticChatResult = {
+  reply: string;
+  destination: string;
+  entities: string[];
+};
+type SemanticChatApiResponse = { reply: string; destination: string; entities: string[] };
+
+/**
+ * 백엔드 POST /api/v1/langchain/semantic-chat
+ * star_craft(Hub)의 의도 분류(crud|exaone_rag|gemini) 후 LangChain 챗봇 엔진이 답변한다.
+ */
+export async function postSemanticChat(message: string): Promise<SemanticChatResult> {
+  const res = await fetch(`${API_BASE}/api/v1/langchain/semantic-chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message }),
   });
 
-  const data = (await res.json()) as ChatApiResponse & FastApiErrorBody;
+  const data = (await res.json()) as SemanticChatApiResponse & FastApiErrorBody;
 
   if (!res.ok) {
     throw new Error(parseApiError(data, res.status));
   }
 
-  return data.reply?.trim() ?? "";
+  return {
+    reply: data.reply?.trim() ?? "",
+    destination: data.destination,
+    entities: data.entities ?? [],
+  };
 }

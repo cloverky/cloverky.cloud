@@ -5,7 +5,7 @@ import { Link2, Loader2, SendHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/components/auth-context";
-import { postLangchainChat } from "@/lib/chat-api";
+import { postSemanticChat } from "@/lib/chat-api";
 import { cn } from "@/lib/utils";
 
 type Message = { id: number; role: "user" | "assistant"; content: string };
@@ -38,7 +38,7 @@ export function LangchainChat() {
     scrollDown();
 
     try {
-      const reply = await postLangchainChat(text);
+      const { reply } = await postSemanticChat(text);
       if (reply) {
         setMessages((prev) => [...prev, { id: nextId(), role: "assistant", content: reply }]);
       }

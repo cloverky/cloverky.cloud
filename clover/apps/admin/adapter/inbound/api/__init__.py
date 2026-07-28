@@ -28,6 +28,7 @@ _routers = [
     ("admin.adapter.inbound.api.v1.pdf_loader_router", "pdf_loader_router"),
     ("admin.adapter.inbound.api.v1.morningstar_router", "morningstar_router"),
     ("admin.adapter.inbound.api.v1.langchain_chat_router", "langchain_chat_router"),
+    ("admin.adapter.inbound.api.v1.semantic_chat_router", "semantic_chat_router"),
 ]
 
 for _mod, _attr in _routers:
