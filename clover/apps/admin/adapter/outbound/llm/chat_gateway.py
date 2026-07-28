@@ -21,7 +21,9 @@ _OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:4b")
 # 폴백 경로는 콜드 스타트와 thinking 토큰 생성을 포함한다 (로컬 실측 수 분).
 _OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "900"))
 # 로컬 LLM(EXAONE·Ollama)이 없는 배포 환경의 최종 폴백.
-_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+# gemini-2.0-flash 는 무료 티어 쿼터가 0, gemini-2.5-flash 계열은 단종(404)이라
+# 별칭 모델을 기본값으로 둔다.
+_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 
 
 class ExaoneChatGateway(ChatLlmPort):
