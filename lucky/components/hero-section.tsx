@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { BottomRightStack } from "@/components/bottom-right-stack";
 import { useOpenSignUp } from "@/components/sign-up-dialog-context";
 import { useAuth } from "@/components/auth-context";
-import { ArrowRight, ChefHat, Package } from "lucide-react";
+import { ChefHat, Package } from "lucide-react";
 import { CloverIcon } from "@/components/clover-icon";
-
-const API_DOCS_URL = `${(process.env.NEXT_PUBLIC_API_URL ?? "https://api.cloverky.cloud").replace(/\/$/, "")}/docs`;
 
 export function HeroSection() {
   const onSignUpClick = useOpenSignUp();
@@ -83,16 +81,6 @@ export function HeroSection() {
                   시작하기
                 </Button>
               )}
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="border-border bg-transparent text-foreground hover:bg-secondary"
-              >
-                <a href={API_DOCS_URL} target="_blank" rel="noopener noreferrer">
-                  문서 보기 <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
             </div>
           </div>
 
