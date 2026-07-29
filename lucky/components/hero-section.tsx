@@ -1,13 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BottomRightStack } from "@/components/bottom-right-stack";
 import { useOpenSignUp } from "@/components/sign-up-dialog-context";
+import { useAuth } from "@/components/auth-context";
 import { ArrowRight, ChefHat, Package } from "lucide-react";
 import { CloverIcon } from "@/components/clover-icon";
 
+const API_DOCS_URL = `${(process.env.NEXT_PUBLIC_API_URL ?? "https://api.cloverky.cloud").replace(/\/$/, "")}/docs`;
+
 export function HeroSection() {
   const onSignUpClick = useOpenSignUp();
+  const { user } = useAuth();
   return (
     <section className="relative flex min-h-[100dvh] flex-col overflow-x-hidden pb-8 md:pb-20">
       {/* Background glow effect */}
@@ -60,19 +65,33 @@ export function HeroSection() {
               맞춤형 레시피를 추천합니다.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
+              {/* 이미 로그인했으면 가입을 다시 권할 이유가 없으니 냉장고로 바로 보낸다. */}
+              {user ? (
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-foreground text-background hover:bg-foreground/90"
+                >
+                  <Link href="/features/inventory">내 냉장고 보기</Link>
+                </Button>
+              ) : (
+                <Button
+                  onClick={onSignUpClick}
+                  size="lg"
+                  className="bg-foreground text-background hover:bg-foreground/90"
+                >
+                  시작하기
+                </Button>
+              )}
               <Button
-                onClick={onSignUpClick}
-                size="lg"
-                className="bg-foreground text-background hover:bg-foreground/90"
-              >
-                시작하기
-              </Button>
-              <Button
+                asChild
                 variant="outline"
                 size="lg"
                 className="border-border bg-transparent text-foreground hover:bg-secondary"
               >
-                문서 보기 <ArrowRight className="ml-2 h-4 w-4" />
+                <a href={API_DOCS_URL} target="_blank" rel="noopener noreferrer">
+                  문서 보기 <ArrowRight className="ml-2 h-4 w-4" />
+                </a>
               </Button>
             </div>
           </div>

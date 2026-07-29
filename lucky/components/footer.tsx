@@ -2,6 +2,8 @@
 
 import { Refrigerator } from "lucide-react";
 
+const API_DOCS_URL = `${(process.env.NEXT_PUBLIC_API_URL ?? "https://api.cloverky.cloud").replace(/\/$/, "")}/docs`;
+
 export function Footer() {
   return (
     <footer id="contact" className="border-t border-border bg-card/50 py-12">
@@ -24,7 +26,7 @@ export function Footer() {
               <li><a href="#features" className="text-sm text-muted-foreground hover:text-foreground">기능</a></li>
               <li><a href="#agents" className="text-sm text-muted-foreground hover:text-foreground">AI 도우미</a></li>
               <li><a href="#architecture" className="text-sm text-muted-foreground hover:text-foreground">서비스 구성</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground">API 문서</a></li>
+              <li><a href={API_DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">API 문서</a></li>
             </ul>
           </div>
 
