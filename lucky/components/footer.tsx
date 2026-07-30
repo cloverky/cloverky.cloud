@@ -8,20 +8,20 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid gap-10 md:grid-cols-3">
           {/* 브랜드 */}
-          <div className="md:col-span-1">
+          <div className="md:col-span-2">
             <div className="flex items-center gap-2">
               <Refrigerator className="h-6 w-6 text-accent" />
               <span className="text-xl font-bold text-foreground">FridgeAI</span>
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
               AI 기반 냉장고 재고 관리 및 맞춤 레시피 서비스로
               더 스마트한 주방 생활을 경험하세요.
             </p>
           </div>
 
-          {/* 연락처 */}
+          {/* Connect */}
           <div className="md:col-span-1">
-            <h3 className="font-semibold text-foreground">연락처</h3>
+            <h3 className="font-semibold text-foreground">Connect</h3>
             <ul className="mt-4 space-y-3">
               <li>
                 <a
@@ -44,12 +44,7 @@ export function Footer() {
                 </a>
               </li>
             </ul>
-          </div>
-
-          {/* 문의 시간 */}
-          <div className="md:col-span-1">
-            <h3 className="font-semibold text-foreground">문의 시간</h3>
-            <div className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
+            <div className="mt-5 flex items-start gap-2 text-sm text-muted-foreground">
               <Clock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
               <div>
                 <p>평일 10:00 – 18:00 (KST)</p>
