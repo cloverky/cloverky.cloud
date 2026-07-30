@@ -220,11 +220,13 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
       ctx.fillText(`${s.score}점`, 10, 18);
 
       // 최고 기록은 오른쪽 상단 — 로그인해서 기록이 있을 때만.
-      if (best.current > 0) {
+      // 현재 점수가 최고를 넘으면 실시간으로 같이 올라간다.
+      const displayBest = Math.max(best.current, s.score);
+      if (displayBest > 0) {
         ctx.font = "bold 11px sans-serif";
         ctx.fillStyle = "#6b7280";
         ctx.textAlign = "right";
-        ctx.fillText(`🏆 최고 ${best.current}점`, GW - 10, 18);
+        ctx.fillText(`🏆 최고 ${displayBest}점`, GW - 10, 18);
       }
 
       // 죽은 직후 한 번만 기록을 올린다.
