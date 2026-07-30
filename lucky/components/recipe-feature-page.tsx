@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChefHat, Clock, Loader2, RefreshCw, ShoppingCart, Utensils, Sunrise, Sun, Moon } from "lucide-react";
+import { ArrowLeft, ChefHat, Clock, Loader2, RefreshCw, Utensils, Sunrise, Sun, Moon } from "lucide-react";
 import { CloverIcon } from "@/components/clover-icon";
 import { BottomRightExtras } from "@/components/bottom-right-extras-context";
 import { Footer } from "@/components/footer";
@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fetchInventory } from "@/lib/inventory-api";
-import type { RecipeSummary, RecipeDetail, SuggestedRecipe, MealSuggestion } from "@/app/api/gemini/recipes/route";
+import type { RecipeSummary, RecipeDetail, MealSuggestion } from "@/app/api/gemini/recipes/route";
 
 function difficultyClass(difficulty: string) {
   if (difficulty === "어려움") return "border-destructive/40 bg-destructive/10 text-destructive";
@@ -21,7 +21,7 @@ function difficultyClass(difficulty: string) {
   return "border-accent/30 bg-accent/10 text-accent";
 }
 
-type Mode = "fridge" | "suggest" | "meal";
+type Mode = "fridge" | "meal";
 
 function currentMeal(): "아침" | "점심" | "저녁" {
   const h = new Date().getHours();
@@ -53,7 +53,6 @@ export function RecipeFeaturePage() {
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [mode, setMode] = useState<Mode>("fridge");
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
-  const [suggestions, setSuggestions] = useState<SuggestedRecipe[]>([]);
   const [meals, setMeals] = useState<MealSuggestion[]>([]);
   const [activeMeal] = useState<"아침" | "점심" | "저녁">(currentMeal());
   const [loading, setLoading] = useState(false);
@@ -76,26 +75,6 @@ export function RecipeFeaturePage() {
       const data = (await res.json()) as { recipes?: RecipeSummary[]; error?: string };
       if (!res.ok || data.error) throw new Error(data.error ?? "레시피 로드 실패");
       setRecipes(data.recipes ?? []);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchSuggestions = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setSuggestions([]);
-    try {
-      const res = await fetch("/api/gemini/recipes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "suggest" }),
-      });
-      const data = (await res.json()) as { suggestions?: SuggestedRecipe[]; error?: string };
-      if (!res.ok || data.error) throw new Error(data.error ?? "추천 로드 실패");
-      setSuggestions(data.suggestions ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
     } finally {
@@ -151,7 +130,7 @@ export function RecipeFeaturePage() {
       }
     };
     void load();
-  }, [user, fetchRecipes, fetchSuggestions, fetchMeals]);
+  }, [user, fetchRecipes, fetchMeals]);
 
   const openDetail = async (name: string) => {
     setSelectedRecipe({ name });
@@ -175,7 +154,6 @@ export function RecipeFeaturePage() {
 
   const handleRefresh = () => {
     if (mode === "meal") void fetchMeals(ingredients);
-    else if (mode === "suggest") void fetchSuggestions();
     else void fetchRecipes(ingredients);
   };
 
@@ -357,60 +335,6 @@ export function RecipeFeaturePage() {
             );
           })()}
 
-          {/* 빈 냉장고 → suggest 모드 (미사용, 혹시 몰라서 유지) */}
-          {mode === "suggest" && (
-            <div className="space-y-4">
-              {loading && (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
-                    <Loader2 className="h-6 w-6 animate-spin text-accent" />
-                    <p className="text-sm">AI가 오늘 메뉴 고민 중… 🤔</p>
-                  </CardContent>
-                </Card>
-              )}
-              {error && <p className="py-8 text-center text-sm text-destructive">{error}</p>}
-              {!loading && !error && suggestions.length > 0 && suggestions.map((s) => (
-                <Card
-                  key={s.name}
-                  className="cursor-pointer transition-shadow hover:shadow-md hover:ring-1 hover:ring-accent/30"
-                  onClick={() => void openDetail(s.name)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base text-accent">{s.name}</CardTitle>
-                      <div className="flex gap-2">
-                        <Badge variant="outline" className="font-normal text-xs">
-                          <Clock className="mr-1 h-3 w-3" />{s.time}
-                        </Badge>
-                        <Badge variant="outline" className={`font-normal text-xs ${difficultyClass(s.difficulty)}`}>
-                          {s.difficulty}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex items-start gap-2">
-                      <ShoppingCart className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                      <div className="flex flex-wrap gap-1.5">
-                        {s.shopping.map((item) => (
-                          <Badge key={item} variant="secondary" className="font-normal text-xs">{item}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {!loading && !error && suggestions.length > 0 && (
-                <p className="text-center text-xs text-muted-foreground pt-2">
-                  재료를 장보고{" "}
-                  <Link href="/features/inventory" className="text-accent underline underline-offset-4">
-                    재고 관리
-                  </Link>
-                  에 등록하면 내 냉장고 기반 추천을 받을 수 있어요.
-                </p>
-              )}
-            </div>
-          )}
         </div>
       </div>
 

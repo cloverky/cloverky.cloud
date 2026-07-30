@@ -1,3 +1,4 @@
+import importlib
 import logging
 
 from fastapi import APIRouter
@@ -19,8 +20,6 @@ _routers = [
 
 for _mod, _attr in _routers:
     try:
-        import importlib
-
         _m = importlib.import_module(_mod)
         fridge_router.include_router(getattr(_m, _attr))
     except Exception as _e:
