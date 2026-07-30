@@ -1,6 +1,6 @@
 "use client";
 
-import { Refrigerator } from "lucide-react";
+import { Clock, Refrigerator } from "lucide-react";
 
 const API_DOCS_URL = `${(process.env.NEXT_PUBLIC_API_URL ?? "https://api.cloverky.cloud").replace(/\/$/, "")}/docs`;
 
@@ -36,6 +36,14 @@ export function Footer() {
               <li><a href="mailto:hisoyeon04@gmail.com" className="text-sm text-muted-foreground hover:text-foreground">hisoyeon04@gmail.com</a></li>
               <li><a href="https://github.com/cloverky" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">GitHub</a></li>
             </ul>
+            <div className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+              <div>
+                <p className="font-medium text-foreground">문의 시간</p>
+                <p className="mt-0.5">평일 10:00 – 18:00 (KST)</p>
+                <p className="text-xs">답변은 순차 처리됩니다</p>
+              </div>
+            </div>
           </div>
         </div>
 
