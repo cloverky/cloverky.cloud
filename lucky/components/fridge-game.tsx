@@ -3,11 +3,15 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { useAuth } from "@/components/auth-context";
+import { fetchBestScore, submitScore } from "@/lib/game-score-api";
 
 interface FridgeGameProps {
   onClose: () => void;
   origin?: { x: number; y: number };
 }
+
+const GAME_ID = "fridge-run";
 
 // 냉장고 치수
 const PAD = 16;
@@ -63,15 +67,21 @@ function makeInitState() {
     nextObstacleIn: randInt(300, 460),
     score: 0, speed: 4, frame: 0,
     dead: false, started: false,
+    // 죽는 순간 한 번만 기록을 올리기 위한 플래그
+    submitted: false,
   };
 }
 
 export function FridgeGame({ onClose, origin }: FridgeGameProps) {
+  const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>("closed");
   const [mounted, setMounted] = useState(false);
   const [vp, setVp] = useState({ w: 0, h: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gs = useRef(makeInitState());
+  // 캔버스는 rAF 루프에서 그려지므로 최신 값을 ref로 들고 있어야 한다.
+  const best = useRef(0);
+  const isRecord = useRef(false);
 
   useEffect(() => {
     gs.current = makeInitState();
@@ -88,6 +98,19 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
     };
   }, []);
 
+  // 로그인 사용자는 계정에 저장된 최고 기록을 불러온다.
+  useEffect(() => {
+    if (!user?.email) {
+      best.current = 0;
+      return;
+    }
+    let alive = true;
+    void fetchBestScore(user.email, GAME_ID).then((r) => {
+      if (alive && r) best.current = r.best_score;
+    });
+    return () => { alive = false; };
+  }, [user?.email]);
+
   const openDoor = useCallback(() => {
     if (phase !== "closed") return;
     setPhase("opening");
@@ -96,7 +119,11 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
   const jump = useCallback(() => {
     const s = gs.current;
-    if (s.dead) { gs.current = { ...makeInitState(), started: true }; return; }
+    if (s.dead) {
+      isRecord.current = false;
+      gs.current = { ...makeInitState(), started: true };
+      return;
+    }
     if (!s.started) s.started = true;
     if (s.onGround) { s.vy = JUMP_V; s.onGround = false; }
   }, []);
@@ -192,13 +219,49 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
       ctx.textAlign = "left";
       ctx.fillText(`${s.score}점`, 10, 18);
 
+      // 최고 기록은 오른쪽 상단 — 로그인해서 기록이 있을 때만.
+      if (best.current > 0) {
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillStyle = "#6b7280";
+        ctx.textAlign = "right";
+        ctx.fillText(`🏆 최고 ${best.current}점`, GW - 10, 18);
+      }
+
+      // 죽은 직후 한 번만 기록을 올린다.
+      if (s.dead && !s.submitted) {
+        s.submitted = true;
+        const finalScore = s.score;
+        if (user?.email) {
+          void submitScore(user.email, GAME_ID, finalScore).then((r) => {
+            if (!r) return;
+            best.current = r.best_score;
+            isRecord.current = r.is_record;
+          });
+        }
+      }
+
       if (s.dead) {
         ctx.fillStyle = "rgba(250,250,250,0.92)";
         ctx.fillRect(0, 0, GW, GH);
-        ctx.font = "bold 20px sans-serif"; ctx.fillStyle = "#dc2626"; ctx.textAlign = "center";
-        ctx.fillText("게임 오버!", GW / 2, GH / 2 - 12);
+        ctx.textAlign = "center";
+
+        if (isRecord.current) {
+          ctx.font = "bold 20px sans-serif"; ctx.fillStyle = "#16a34a";
+          ctx.fillText(`🎉 신기록 ${s.score}점!`, GW / 2, GH / 2 - 12);
+        } else {
+          ctx.font = "bold 20px sans-serif"; ctx.fillStyle = "#dc2626";
+          ctx.fillText("게임 오버!", GW / 2, GH / 2 - 12);
+        }
+
         ctx.font = "13px sans-serif"; ctx.fillStyle = "#4b5563";
         ctx.fillText(`점수: ${s.score}점 · 클릭하여 재시작`, GW / 2, GH / 2 + 12);
+
+        ctx.font = "11px sans-serif"; ctx.fillStyle = "#9ca3af";
+        if (!user?.email) {
+          ctx.fillText("로그인하면 최고 기록이 저장돼요", GW / 2, GH / 2 + 32);
+        } else if (!isRecord.current && best.current > 0) {
+          ctx.fillText(`내 최고 기록 ${best.current}점`, GW / 2, GH / 2 + 32);
+        }
       }
 
       rafId = requestAnimationFrame(loop);
@@ -206,7 +269,7 @@ export function FridgeGame({ onClose, origin }: FridgeGameProps) {
 
     rafId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafId);
-  }, [phase]);
+  }, [phase, user?.email]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

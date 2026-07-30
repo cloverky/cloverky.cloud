@@ -48,6 +48,7 @@ from core.matrix.wault_keymaker_serect_manager import get_keymaker
 from fridge.adapter.inbound.api.fridge_router import fridge_router
 from fridge.adapter.outbound.orm.category_orm import CategoryOrm  # noqa: F401
 from fridge.adapter.outbound.orm.foods_orm import FoodsOrm  # noqa: F401
+from fridge.adapter.outbound.orm.game_score_orm import GameScoreOrm  # noqa: F401
 from fridge.adapter.outbound.orm.inventory_orm import InventoryOrm  # noqa: F401
 from fridge.adapter.outbound.orm.receipt_line_orm import ReceiptLineOrm  # noqa: F401
 from fridge.adapter.outbound.orm.receipt_orm import ReceiptOrm  # noqa: F401
