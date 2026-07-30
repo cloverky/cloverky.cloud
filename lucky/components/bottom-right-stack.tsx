@@ -8,6 +8,7 @@ import { MailComposeDialog } from "@/components/mail-compose-dialog";
 import { MailInboxPanel } from "@/components/mail-inbox-panel";
 import { NotificationPanel } from "@/components/notification-panel";
 import { CloverIcon } from "@/components/clover-icon";
+import { useBottomRightExtras } from "@/components/bottom-right-extras-context";
 import { getUnreadCount } from "@/lib/notification-store";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export function BottomRightStack({ className }: BottomRightStackProps) {
   const [inboxOpen, setInboxOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
+  const { showExtras } = useBottomRightExtras();
 
   useEffect(() => {
     // 로컬 알림 저장소는 SSR에서 접근 불가 — 마운트 후 최초 값 동기화가 필수다.
@@ -43,57 +45,63 @@ export function BottomRightStack({ className }: BottomRightStackProps) {
         )}
       >
         {/* 알림 */}
-        <button
-          type="button"
-          onClick={() => setNotifOpen((v) => !v)}
-          className={cn(
-            "relative flex h-10 w-10 items-center justify-center rounded-full",
-            "border border-border bg-card text-accent shadow-sm",
-            "ring-1 ring-inset ring-white/[0.04]",
-            "transition hover:border-accent/35 hover:bg-accent/10",
-            "focus-visible:ring-2 focus-visible:ring-accent/35 focus-visible:outline-none",
-          )}
-          aria-label="알림"
-        >
-          <Bell className="h-5 w-5" strokeWidth={1.85} />
-          {notifCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
-              {notifCount > 99 ? "99" : notifCount}
-            </span>
-          )}
-        </button>
+        {showExtras && (
+          <button
+            type="button"
+            onClick={() => setNotifOpen((v) => !v)}
+            className={cn(
+              "relative flex h-10 w-10 items-center justify-center rounded-full",
+              "border border-border bg-card text-accent shadow-sm",
+              "ring-1 ring-inset ring-white/[0.04]",
+              "transition hover:border-accent/35 hover:bg-accent/10",
+              "focus-visible:ring-2 focus-visible:ring-accent/35 focus-visible:outline-none",
+            )}
+            aria-label="알림"
+          >
+            <Bell className="h-5 w-5" strokeWidth={1.85} />
+            {notifCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
+                {notifCount > 99 ? "99" : notifCount}
+              </span>
+            )}
+          </button>
+        )}
 
         {/* 수신함 */}
-        <button
-          type="button"
-          onClick={() => setInboxOpen((v) => !v)}
-          className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-full",
-            "border border-border bg-card text-accent shadow-sm",
-            "ring-1 ring-inset ring-white/[0.04]",
-            "transition hover:border-accent/35 hover:bg-accent/10",
-            "focus-visible:ring-2 focus-visible:ring-accent/35 focus-visible:outline-none",
-          )}
-          aria-label="수신함"
-        >
-          <Inbox className="h-5 w-5" strokeWidth={1.85} />
-        </button>
+        {showExtras && (
+          <button
+            type="button"
+            onClick={() => setInboxOpen((v) => !v)}
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-full",
+              "border border-border bg-card text-accent shadow-sm",
+              "ring-1 ring-inset ring-white/[0.04]",
+              "transition hover:border-accent/35 hover:bg-accent/10",
+              "focus-visible:ring-2 focus-visible:ring-accent/35 focus-visible:outline-none",
+            )}
+            aria-label="수신함"
+          >
+            <Inbox className="h-5 w-5" strokeWidth={1.85} />
+          </button>
+        )}
 
         {/* 이메일 작성 */}
-        <button
-          type="button"
-          onClick={() => setMailOpen(true)}
-          className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-full",
-            "border border-border bg-card text-accent shadow-sm",
-            "ring-1 ring-inset ring-white/[0.04]",
-            "transition hover:border-accent/35 hover:bg-accent/10",
-            "focus-visible:ring-2 focus-visible:ring-accent/35 focus-visible:outline-none",
-          )}
-          aria-label="이메일 작성"
-        >
-          <Mail className="h-5 w-5" strokeWidth={1.85} />
-        </button>
+        {showExtras && (
+          <button
+            type="button"
+            onClick={() => setMailOpen(true)}
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-full",
+              "border border-border bg-card text-accent shadow-sm",
+              "ring-1 ring-inset ring-white/[0.04]",
+              "transition hover:border-accent/35 hover:bg-accent/10",
+              "focus-visible:ring-2 focus-visible:ring-accent/35 focus-visible:outline-none",
+            )}
+            aria-label="이메일 작성"
+          >
+            <Mail className="h-5 w-5" strokeWidth={1.85} />
+          </button>
+        )}
 
         {/* Gemini */}
         <button
@@ -111,16 +119,18 @@ export function BottomRightStack({ className }: BottomRightStackProps) {
           <CloverIcon className="h-5 w-5" strokeWidth={1.85} />
         </button>
 
-        <WeatherWidget />
+        {showExtras && <WeatherWidget />}
       </div>
 
-      <NotificationPanel
-        open={notifOpen}
-        onOpenChange={setNotifOpen}
-        onCountChange={setNotifCount}
-      />
-      <MailInboxPanel open={inboxOpen} onOpenChange={setInboxOpen} />
-      <MailComposeDialog open={mailOpen} onOpenChange={setMailOpen} />
+      {showExtras && (
+        <NotificationPanel
+          open={notifOpen}
+          onOpenChange={setNotifOpen}
+          onCountChange={setNotifCount}
+        />
+      )}
+      {showExtras && <MailInboxPanel open={inboxOpen} onOpenChange={setInboxOpen} />}
+      {showExtras && <MailComposeDialog open={mailOpen} onOpenChange={setMailOpen} />}
       <GeminiChatDialog open={geminiOpen} onOpenChange={setGeminiOpen} />
     </>
   );
