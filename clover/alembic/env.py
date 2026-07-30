@@ -55,7 +55,6 @@ from fridge.adapter.outbound.orm.game_score_orm import GameScoreOrm  # noqa: F40
 from fridge.adapter.outbound.orm.inventory_orm import InventoryOrm  # noqa: F401
 from fridge.adapter.outbound.orm.receipt_line_orm import ReceiptLineOrm  # noqa: F401
 from fridge.adapter.outbound.orm.receipt_orm import ReceiptOrm  # noqa: F401
-from fridge.adapter.outbound.orm.user_orm import UserOrm  # noqa: F401
 from fridge.models.database import Base  # noqa: E402
 
 target_metadata = Base.metadata
