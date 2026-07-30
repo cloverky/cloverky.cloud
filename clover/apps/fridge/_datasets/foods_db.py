@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """냉장고 재고 파인튜닝 데이터셋 - 식품 마스터 DB.
 
 각 식품: name, category, unit, storages(가중치), 보관별 소비기한(min,max일), min_qty(부족 기준).

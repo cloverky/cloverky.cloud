@@ -3,9 +3,9 @@ from __future__ import annotations
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from users.adapter.user import User as UserOrm
 
 from fridge.adapter.outbound.orm.game_score_orm import GameScoreOrm
-from users.adapter.user import User as UserOrm
 
 
 class GameScorePgRepository:

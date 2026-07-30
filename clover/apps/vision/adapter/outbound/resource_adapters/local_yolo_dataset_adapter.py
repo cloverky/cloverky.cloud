@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from vision.app.ports.output.face_dataset_port import FaceDatasetPort

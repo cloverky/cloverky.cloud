@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """냉장고 재고 관리 SFT 데이터셋 생성기 (EXAONE 3.5 파인튜닝용).
 
 유형 A: 유통기한/재고 질의 300개
@@ -500,7 +499,7 @@ def gen_typeB(mode, near_miss, force_expiring):
     # 임박 처리: 레시피 재료 중 하나를 임박으로
     exp_target = None
     if force_expiring:
-        pool = [f for f in (present_core + chosen_subs)]
+        pool = present_core + chosen_subs
         if pool:
             exp_target = random.choice(pool)
 
@@ -569,7 +568,7 @@ def build_typeB():
 
     out = []
     near_miss_left = 54
-    for idx, mode in enumerate(modes):
+    for mode in modes:
         # 근접 메뉴(재료 부족)는 general/time 모드에서만 자연스럽게 배치
         near_miss = False
         if mode in ("general", "time") and near_miss_left > 0 and random.random() < 0.45:

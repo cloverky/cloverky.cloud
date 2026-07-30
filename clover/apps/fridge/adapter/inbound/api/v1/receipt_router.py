@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import re
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
@@ -41,8 +40,8 @@ class ParsedItem(BaseModel):
 
 
 class ReceiptScanResponse(BaseModel):
-    store_name: Optional[str]
-    purchased_date: Optional[str]
+    store_name: str | None
+    purchased_date: str | None
     items: list[ParsedItem]
 
 
@@ -57,8 +56,9 @@ async def scan_receipt(image: UploadFile = File(...)) -> ReceiptScanResponse:
     if len(data) > 10 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="이미지 크기는 10MB 이하여야 합니다.")
 
-    from core.matrix.wault_keymaker_serect_manager import get_keymaker
     from google.genai import types as genai_types
+
+    from core.matrix.wault_keymaker_serect_manager import get_keymaker
 
     keymaker = get_keymaker()
     if not keymaker.is_gemini_ready():
