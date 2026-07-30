@@ -24,7 +24,7 @@ export function FeaturesSection() {
             <Link
               key={feature.slug}
               href={`/features/${feature.slug}`}
-              className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-accent/50 hover:bg-card/80 sm:p-6"
+              className="group flex flex-col rounded-xl border border-border bg-card p-4 transition-all hover:border-accent/50 hover:bg-card/80 sm:p-6"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary sm:h-12 sm:w-12">
                 <feature.icon className="h-5 w-5 text-foreground sm:h-6 sm:w-6" />
@@ -35,7 +35,7 @@ export function FeaturesSection() {
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground sm:mt-2 sm:text-sm">
                 {feature.description.replace(/\n/g, " ")}
               </p>
-              <span className="mt-3 inline-flex items-center text-xs font-medium text-accent opacity-0 transition-opacity group-hover:opacity-100 sm:mt-4 sm:text-sm">
+              <span className="mt-auto inline-flex items-center pt-3 text-xs font-medium text-accent opacity-0 transition-opacity group-hover:opacity-100 sm:pt-4 sm:text-sm">
                 자세히 보기
                 <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
               </span>
