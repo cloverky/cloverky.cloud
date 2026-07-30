@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fridge.adapter.outbound.orm.game_score_orm import GameScoreOrm
-from fridge.adapter.outbound.orm.user_orm import UserOrm
+from users.adapter.user import User as UserOrm
 
 
 class GameScorePgRepository:
