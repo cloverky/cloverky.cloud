@@ -47,10 +47,11 @@ def _get_sync_database_url() -> str:
 
 
 # 모델 메타데이터 — autogenerate 용
-from models.user import User  # noqa: E402, F401
+from users.adapter.user import User  # noqa: E402, F401
 
 from fridge.adapter.outbound.orm.category_orm import CategoryOrm  # noqa: F401
 from fridge.adapter.outbound.orm.food_orm import FoodOrm  # noqa: F401
+from fridge.adapter.outbound.orm.game_score_orm import GameScoreOrm  # noqa: F401
 from fridge.adapter.outbound.orm.inventory_orm import InventoryOrm  # noqa: F401
 from fridge.adapter.outbound.orm.receipt_orm import (  # noqa: F401
     ReceiptLineOrm,
