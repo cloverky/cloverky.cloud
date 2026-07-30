@@ -2,6 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { AuthProvider } from "@/components/auth-context";
+import { BottomRightExtrasProvider } from "@/components/bottom-right-extras-context";
+import { BottomRightStack } from "@/components/bottom-right-stack";
 import { GeminiChatProvider } from "@/components/gemini-chat-context";
 import { Header } from "@/components/header";
 import { OpenLoginProvider } from "@/components/login-dialog-context";
@@ -42,32 +44,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <OpenSignUpProvider open={openSignUp}>
         <OpenLoginProvider open={openLogin}>
           <GeminiChatProvider>
-            <Header
-              onSignUpClick={openSignUp}
-              onLoginClick={openLogin}
-              onProfileEditClick={openProfileEdit}
-            />
-            {children}
-            <SignUpDialog
-              open={dialogs.signUpOpen}
-              onOpenChange={(signUpOpen) => patchDialogs({ signUpOpen })}
-              onOpenLogin={(email) => {
-                patchDialogs({
-                  signUpOpen: false,
-                  loginPrefillEmail: email ?? "",
-                  loginOpen: true,
-                });
-              }}
-            />
-            <LoginDialog
-              open={dialogs.loginOpen}
-              onOpenChange={(loginOpen) => patchDialogs({ loginOpen })}
-              initialEmail={dialogs.loginPrefillEmail}
-            />
-            <ProfileEditDialog
-              open={dialogs.profileEditOpen}
-              onOpenChange={(profileEditOpen) => patchDialogs({ profileEditOpen })}
-            />
+            <BottomRightExtrasProvider>
+              <Header
+                onSignUpClick={openSignUp}
+                onLoginClick={openLogin}
+                onProfileEditClick={openProfileEdit}
+              />
+              {children}
+              <BottomRightStack />
+              <SignUpDialog
+                open={dialogs.signUpOpen}
+                onOpenChange={(signUpOpen) => patchDialogs({ signUpOpen })}
+                onOpenLogin={(email) => {
+                  patchDialogs({
+                    signUpOpen: false,
+                    loginPrefillEmail: email ?? "",
+                    loginOpen: true,
+                  });
+                }}
+              />
+              <LoginDialog
+                open={dialogs.loginOpen}
+                onOpenChange={(loginOpen) => patchDialogs({ loginOpen })}
+                initialEmail={dialogs.loginPrefillEmail}
+              />
+              <ProfileEditDialog
+                open={dialogs.profileEditOpen}
+                onOpenChange={(profileEditOpen) => patchDialogs({ profileEditOpen })}
+              />
+            </BottomRightExtrasProvider>
           </GeminiChatProvider>
         </OpenLoginProvider>
       </OpenSignUpProvider>
