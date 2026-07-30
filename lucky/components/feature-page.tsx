@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { BottomRightStack } from "@/components/bottom-right-stack";
+import { BottomRightExtras } from "@/components/bottom-right-extras-context";
 import { Footer } from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -243,7 +243,7 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
       </div>
 
       <Footer />
-      <BottomRightStack />
+      <BottomRightExtras />
     </main>
   );
 }

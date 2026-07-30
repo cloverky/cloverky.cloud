@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChefHat, Clock, Loader2, RefreshCw, ShoppingCart, Utensils, Sunrise, Sun, Moon } from "lucide-react";
 import { CloverIcon } from "@/components/clover-icon";
-import { BottomRightStack } from "@/components/bottom-right-stack";
+import { BottomRightExtras } from "@/components/bottom-right-extras-context";
 import { Footer } from "@/components/footer";
 import { useAuth } from "@/components/auth-context";
 import { Badge } from "@/components/ui/badge";
@@ -415,7 +415,7 @@ export function RecipeFeaturePage() {
       </div>
 
       <Footer />
-      <BottomRightStack />
+      <BottomRightExtras />
 
       <Dialog open={!!selectedRecipe} onOpenChange={(o) => { if (!o) setSelectedRecipe(null); }}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">

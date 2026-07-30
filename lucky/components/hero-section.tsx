@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { BottomRightStack } from "@/components/bottom-right-stack";
+import { BottomRightExtras } from "@/components/bottom-right-extras-context";
 import { useOpenSignUp } from "@/components/sign-up-dialog-context";
 import { useAuth } from "@/components/auth-context";
 import { ChefHat, Package } from "lucide-react";
@@ -141,7 +141,7 @@ export function HeroSection() {
         </div>
       </div>
 
-      <BottomRightStack />
+      <BottomRightExtras />
     </section>
   );
 }

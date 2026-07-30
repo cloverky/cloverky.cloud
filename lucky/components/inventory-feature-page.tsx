@@ -13,7 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { BottomRightStack } from "@/components/bottom-right-stack";
+import { BottomRightExtras } from "@/components/bottom-right-extras-context";
 import { Footer } from "@/components/footer";
 import { useAuth } from "@/components/auth-context";
 import { useOpenLogin } from "@/components/login-dialog-context";
@@ -898,7 +898,7 @@ export function InventoryFeaturePage() {
       </div>
 
       <Footer />
-      <BottomRightStack />
+      <BottomRightExtras />
     </main>
   );
 }

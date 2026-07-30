@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChefHat, ExternalLink, Loader2, Search, ShoppingCart, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { BottomRightStack } from "@/components/bottom-right-stack";
+import { BottomRightExtras } from "@/components/bottom-right-extras-context";
 import { Footer } from "@/components/footer";
 import { useAuth } from "@/components/auth-context";
 import { useOpenLogin } from "@/components/login-dialog-context";
@@ -414,7 +414,7 @@ export function ShoppingFeaturePage() {
       </div>
 
       <Footer />
-      <BottomRightStack />
+      <BottomRightExtras />
     </main>
   );
 }
