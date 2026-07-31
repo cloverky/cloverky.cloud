@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'landing_screen.dart';
+import 'intro_video_screen.dart';
 import 'theme.dart';
 
 void main() {
@@ -27,7 +27,7 @@ class FridgeAIApp extends StatelessWidget {
           scrolledUnderElevation: 0,
         ),
       ),
-      home: const LandingScreen(),
+      home: const IntroVideoScreen(),
     );
   }
 }
