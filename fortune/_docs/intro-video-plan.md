@@ -8,7 +8,7 @@
 
 **Tech Stack:** Flutter 3.44.8 / Dart 3.12.2, `video_player`, `flutter_test`
 
-**설계 문서:** `fortune/docs/superpowers/specs/2026-07-31-intro-video-design.md`
+**설계 문서:** `fortune/_docs/intro-video-design.md`
 
 ## Global Constraints
 
