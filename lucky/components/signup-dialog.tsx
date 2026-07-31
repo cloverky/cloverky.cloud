@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Refrigerator } from "lucide-react";
+import { SocialLoginButtons } from "@/components/social-login-buttons";
 import { checkUsername, postSignUp } from "@/lib/auth-api";
 import { logSignUpSuccess } from "@/lib/auth-notify";
 import { cn } from "@/lib/utils";
@@ -121,12 +122,20 @@ export function SignUpDialog({ open, onOpenChange, onOpenLogin }: SignUpDialogPr
     const agreeTerms = formProps.agreeTerms === "on";
 
     if (!agreeTerms) {
-      patchForm({ agreeTerms: false });
+      patchForm({
+        agreeTerms: false,
+        error: "서비스 이용약관 및 개인정보 처리방침에 동의해 주세요.",
+      });
       return;
     }
 
     if (!form.usernameChecked || !form.usernameAvailable) {
       patchForm({ error: "아이디 중복 확인을 완료해 주세요." });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      patchForm({ error: "비밀번호가 일치하지 않습니다." });
       return;
     }
 
@@ -171,7 +180,7 @@ export function SignUpDialog({ open, onOpenChange, onOpenLogin }: SignUpDialogPr
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-      <DialogContent className="border-border bg-card sm:max-w-md">
+      <DialogContent className="border-border bg-card sm:max-w-md flex flex-col max-h-[90vh]">
         {form.success ? (
           <div className="py-2 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
@@ -223,7 +232,7 @@ export function SignUpDialog({ open, onOpenChange, onOpenLogin }: SignUpDialogPr
           id="signup-form"
           name="signup"
           onSubmit={handleSubmit}
-          className="mt-4 space-y-4"
+          className="mt-4 space-y-4 overflow-y-auto pr-1"
           noValidate
         >
           <div className="space-y-2">
@@ -360,12 +369,7 @@ export function SignUpDialog({ open, onOpenChange, onOpenLogin }: SignUpDialogPr
           <Button
             type="submit"
             className="w-full bg-foreground text-background hover:bg-foreground/90"
-            disabled={
-              form.isLoading ||
-              !form.agreeTerms ||
-              !form.usernameChecked ||
-              !form.usernameAvailable
-            }
+            disabled={form.isLoading}
           >
             {form.isLoading ? "처리 중..." : "가입하기"}
           </Button>
@@ -384,6 +388,7 @@ export function SignUpDialog({ open, onOpenChange, onOpenLogin }: SignUpDialogPr
             </button>
           </p>
         </form>
+        <SocialLoginButtons onClose={() => handleDialogOpenChange(false)} />
           </>
         )}
       </DialogContent>
