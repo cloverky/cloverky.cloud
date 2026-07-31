@@ -15,18 +15,7 @@ class FridgeAIApp extends StatelessWidget {
     return MaterialApp(
       title: 'FridgeAI',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: kBg,
-        colorScheme: const ColorScheme.light(
-          primary: kAccent,
-          secondary: kBrandText,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-        ),
-      ),
+      theme: buildAppTheme(),
       home: const IntroVideoScreen(),
     );
   }

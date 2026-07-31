@@ -198,9 +198,9 @@ class _BadgePill extends StatelessWidget {
           Text(
             '당신만의 냉장고 도우미',
             style: TextStyle(
+              fontFamily: kFontDisplay,
               fontSize: 13,
               color: kBrandText,
-              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -217,10 +217,10 @@ class _HeroTitle extends StatelessWidget {
     return const Text.rich(
       TextSpan(
         style: TextStyle(
+          fontFamily: kFontDisplay,
           fontSize: 44,
           height: 1.22,
           letterSpacing: -1.0,
-          fontWeight: FontWeight.bold,
         ),
         children: [
           TextSpan(

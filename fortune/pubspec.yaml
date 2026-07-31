@@ -61,6 +61,18 @@ flutter:
   assets:
     - assets/video/intro.mp4
 
+  # Same two families the web frontend loads via next/font/google, bundled so
+  # they render identically on every device and without a network round trip.
+  # NotoSansKR is a variable font: one file covers every weight, where four
+  # static Korean weights would add ~20MB instead.
+  fonts:
+    - family: NotoSansKR
+      fonts:
+        - asset: assets/fonts/NotoSansKR.ttf
+    - family: Jua
+      fonts:
+        - asset: assets/fonts/Jua-Regular.ttf
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
