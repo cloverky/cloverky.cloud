@@ -11,7 +11,9 @@ void main() {
     // 실패하거나, 실패조차 하지 않고 멈춰 있을 수 있다. 두 경우 모두
     // 랜딩으로 빠져나와야 하므로 워치독 시간보다 길게 진행시킨다.
     await tester.pumpAndSettle();
-    await tester.pump(const Duration(seconds: 7));
+    await tester.pump(
+      IntroVideoScreen.initTimeout + const Duration(seconds: 1),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(LandingScreen), findsOneWidget);

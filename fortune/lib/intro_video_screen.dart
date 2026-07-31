@@ -16,7 +16,12 @@ class IntroVideoScreen extends StatefulWidget {
   const IntroVideoScreen({super.key});
 
   /// How long initialization may take before we give up on the video.
-  static const Duration initTimeout = Duration(seconds: 6);
+  ///
+  /// Measured at ~4.5s for a debug build on an API 34 emulator, so a tighter
+  /// budget skips the clip on slow cold starts. Release builds on real hardware
+  /// finish far inside this, which means the wait only ever materialises when
+  /// playback is genuinely broken.
+  static const Duration initTimeout = Duration(seconds: 10);
 
   /// Extra time the clip gets on top of its own duration before we cut it off.
   static const Duration playbackGrace = Duration(seconds: 2);
@@ -45,7 +50,10 @@ class _IntroVideoScreenState extends State<IntroVideoScreen> {
 
     try {
       await controller.initialize();
-      if (!mounted) return;
+      // _navigated matters as much as mounted here: the watchdog may have
+      // already decided to leave while initialize() was still running, and
+      // setting up playback afterwards touches a defunct State.
+      if (!mounted || _navigated) return;
 
       // Re-arm against the real duration. Otherwise a slow initialization eats
       // into the clip's own budget and the watchdog cuts playback short.
@@ -56,6 +64,8 @@ class _IntroVideoScreenState extends State<IntroVideoScreen> {
       );
 
       await controller.setVolume(0);
+      if (!mounted || _navigated) return;
+
       controller.addListener(_onTick);
       setState(() {});
       await controller.play();
@@ -72,7 +82,10 @@ class _IntroVideoScreenState extends State<IntroVideoScreen> {
   void _onTick() {
     final value = _controller?.value;
     if (value == null || !value.isInitialized) return;
-    if (value.position >= value.duration && !value.isPlaying) {
+    // Ask the player whether it finished rather than comparing position against
+    // duration: between initialize() and the first frame both read as zero, and
+    // "position >= duration" is then true, which skips the clip instantly.
+    if (value.isCompleted) {
       _goToLanding();
     }
   }
