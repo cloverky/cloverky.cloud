@@ -41,7 +41,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from users.adapter.user import User, UserRole  # noqa: F401 — create_all 에 테이블 등록
 from users.db_health_adapter import DbHealthAdapter
 from vision.adapter.inbound.api.v1.vision_router import vision_router
-from weather_provider import fetch_seoul_weather
 
 from core.admin_auth import SESSION_SECRET, check_credentials, get_login_html
 from core.matrix.wault_keymaker_serect_manager import get_keymaker
@@ -69,6 +68,7 @@ from titanic.adapter.outbound.orm.passenger_jack_trainer_orm import (
 from titanic.adapter.outbound.orm.passenger_rose_model_strategies_orm import (
     BookingOrm,  # noqa: F401
 )
+from weather.adapter.inbound.api.v1.weather_router import weather_router
 
 keymaker = get_keymaker()
 logger = logging.getLogger(__name__)
@@ -84,16 +84,6 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
-
-
-class WeatherResponse(BaseModel):
-    city: str
-    country: str
-    temp_c: float
-    feels_like_c: float
-    description: str
-    icon: str
-    humidity: int
 
 
 class SignUpRequest(BaseModel):
@@ -351,6 +341,7 @@ app.include_router(push_router, prefix="/messenger")
 app.include_router(vision_router)
 app.include_router(star_craft_router)
 app.include_router(oauth_router)
+app.include_router(weather_router)
 
 
 @app.get("/", include_in_schema=False, response_model=None)
@@ -387,27 +378,6 @@ def chat(req: ChatRequest) -> ChatResponse:
         )
 
     return ChatResponse(reply=text)
-
-
-@app.get("/weather", response_model=WeatherResponse)
-def get_weather(
-    city: str | None = Query(None, description="도시명 (미입력 시 keymaker 기본값)"),
-    country: str | None = Query(None, description="국가 코드 (예: KR)"),
-) -> WeatherResponse:
-    """
-    서울(또는 지정 도시) 날씨. OpenWeather 우선, 실패 시 Open-Meteo·기본값으로 항상 200 응답.
-    """
-    appid = (
-        keymaker.get_openweather_api_key() if keymaker.is_openweather_ready() else None
-    )
-    q_city = (city or keymaker.get_openweather_default_city()).strip()
-    q_country = (country or keymaker.get_openweather_default_country()).strip()
-    payload = fetch_seoul_weather(
-        openweather_appid=appid,
-        city=q_city,
-        country=q_country,
-    )
-    return WeatherResponse(**payload)
 
 
 @app.get("/db-check")
