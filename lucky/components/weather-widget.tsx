@@ -16,8 +16,10 @@ import {
 } from "lucide-react";
 import {
   fetchWeather,
+  readCachedCoords,
   readCachedWeather,
   weatherFallback,
+  writeCachedCoords,
   type WeatherData,
 } from "@/lib/weather-api";
 import { cn } from "@/lib/utils";
@@ -58,7 +60,12 @@ export function WeatherWidget() {
   const load = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true }));
     try {
-      const data = await fetchWeather("Seoul", "KR");
+      const cached = readCachedCoords();
+      const data = await fetchWeather(
+        cached
+          ? { kind: "coords", lat: cached.lat, lon: cached.lon }
+          : { kind: "city", city: "Seoul", country: "KR" },
+      );
       setState({ weather: data, loading: false, stale: false });
     } catch {
       setState({
@@ -81,16 +88,31 @@ export function WeatherWidget() {
     return () => window.clearInterval(id);
   }, [load]);
 
+  const useMyLocation = useCallback(() => {
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        writeCachedCoords(coords.latitude, coords.longitude);
+        void load();
+      },
+      // 거부·타임아웃 모두 조용히 넘어간다. 지금 보이는 날씨가 그대로 남는다.
+      () => undefined,
+      { timeout: 8000, maximumAge: 10 * 60 * 1000 },
+    );
+  }, [load]);
+
   const Icon = weatherIconForCode(state.weather.icon);
 
   return (
-    <aside
+    <button
+      type="button"
+      onClick={useMyLocation}
       className={cn(
         "pointer-events-auto self-end",
         "flex items-center gap-2 rounded-full border border-border/60 bg-card/75 px-3 py-1.5",
         "text-xs text-muted-foreground shadow-sm backdrop-blur-md",
       )}
-      aria-label="서울 날씨"
+      aria-label="현재 위치의 날씨 보기"
     >
       {state.loading && (
         <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-accent" aria-hidden />
@@ -108,10 +130,10 @@ export function WeatherWidget() {
         {Math.round(state.weather.temp_c)}°
       </span>
       <span className="text-foreground/80">{state.weather.description}</span>
-      <span className="text-muted-foreground/80">· 서울</span>
+      <span className="text-muted-foreground/80">· {state.weather.city}</span>
       {state.stale && !state.loading && (
         <span className="sr-only">캐시 또는 기본 날씨 표시</span>
       )}
-    </aside>
+    </button>
   );
 }
