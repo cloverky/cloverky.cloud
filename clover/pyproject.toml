@@ -25,7 +25,15 @@ ignore = [
 "alembic/versions/*.py" = ["N999"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["core", "fridge", "titanic", "secom", "star_craft", "auth"]
+known-first-party = [
+    "core",
+    "fridge",
+    "titanic",
+    "secom",
+    "star_craft",
+    "auth",
+    "weather",
+]
 
 [tool.mypy]
 python_version = "3.12"

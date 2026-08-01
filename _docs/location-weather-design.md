@@ -61,7 +61,7 @@ clover/apps/weather/
 │   ├── ports/
 │   │   ├── input/weather_use_case.py       WeatherUseCase (ABC)
 │   │   └── output/
-│   │       ├── weather_gateway.py          WeatherGateway (ABC), WeatherUnavailable
+│   │       ├── weather_gateway.py          WeatherGateway (ABC), WeatherUnavailableError
 │   │       └── place_name_gateway.py       PlaceNameGateway (ABC)
 │   └── use_cases/weather_interactor.py     WeatherInteractor
 ├── adapter/
@@ -115,7 +115,7 @@ class WeatherResult:
 
 ```python
 # app/ports/output/weather_gateway.py
-class WeatherUnavailable(Exception):
+class WeatherUnavailableError(Exception):
     """이 게이트웨이로는 날씨를 가져오지 못했다 — 다음 후보로 넘어가라는 신호."""
 
 class WeatherGateway(ABC):
@@ -147,7 +147,7 @@ class WeatherInteractor(WeatherUseCase):
         for gateway in self._gateways:
             try:
                 result = gateway.fetch(query)
-            except WeatherUnavailable:
+            except WeatherUnavailableError:
                 continue
             return self._with_korean_name(result, query)
         return self._default
@@ -162,7 +162,7 @@ class WeatherInteractor(WeatherUseCase):
 |---|---|---|
 | `OpenWeatherGateway` | `/data/2.5/weather?lat=&lon=` 또는 `?q=city,country` (`units=metric`, `lang=kr`) | 응답의 `name`을 도시명으로 쓴다 |
 | `OpenWeatherPlaceNameGateway` | `/geo/1.0/reverse?lat=&lon=&limit=1` | `local_names.ko`를 읽는다 |
-| `OpenMeteoGateway` | `/v1/forecast?latitude=&longitude=&current=...&timezone=auto` | **좌표를 인자로 받는다.** 현재의 `SEOUL_LAT/SEOUL_LON` 하드코딩을 제거한다. 좌표가 없는 질의(도시명)는 처리할 수 없으므로 `WeatherUnavailable`을 던진다 |
+| `OpenMeteoGateway` | `/v1/forecast?latitude=&longitude=&current=...&timezone=auto` | **좌표를 인자로 받는다.** 현재의 `SEOUL_LAT/SEOUL_LON` 하드코딩을 제거한다. 좌표가 없는 질의(도시명)는 처리할 수 없으므로 `WeatherUnavailableError`을 던진다 |
 
 `OpenMeteoGateway`는 지명을 모른다. 좌표 질의에서 이 경로를 타면 `city`는 `"현재 위치"`로 채운다.
 

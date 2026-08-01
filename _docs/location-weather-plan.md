@@ -32,7 +32,7 @@
 |---|---|
 | `clover/apps/weather/app/dtos/weather_dto.py` | `WeatherQuery`, `WeatherResult` |
 | `clover/apps/weather/app/ports/input/weather_use_case.py` | `WeatherUseCase` |
-| `clover/apps/weather/app/ports/output/weather_gateway.py` | `WeatherGateway`, `WeatherUnavailable` |
+| `clover/apps/weather/app/ports/output/weather_gateway.py` | `WeatherGateway`, `WeatherUnavailableError` |
 | `clover/apps/weather/app/ports/output/place_name_gateway.py` | `PlaceNameGateway` |
 | `clover/apps/weather/app/use_cases/weather_interactor.py` | 폴백 순서 결정 |
 | `clover/apps/weather/app/use_cases/_defaults.py` | 최종 폴백 상수 |
@@ -70,7 +70,7 @@
   - `WeatherQuery(lat, lon, city, country)` — `has_coords: bool` 프로퍼티
   - `WeatherResult(city, country, temp_c, feels_like_c, description, icon, humidity)`
   - `WeatherUseCase.get_weather(query: WeatherQuery) -> WeatherResult`
-  - `WeatherGateway.fetch(query: WeatherQuery) -> WeatherResult` (실패 시 `WeatherUnavailable`)
+  - `WeatherGateway.fetch(query: WeatherQuery) -> WeatherResult` (실패 시 `WeatherUnavailableError`)
   - `PlaceNameGateway.korean_name(lat: float, lon: float) -> str | None`
   - `WeatherInteractor(gateways, place_names, default)`
   - `SEOUL_DEFAULT: WeatherResult`
@@ -132,7 +132,7 @@ from abc import ABC, abstractmethod
 from weather.app.dtos.weather_dto import WeatherQuery, WeatherResult
 
 
-class WeatherUnavailable(Exception):
+class WeatherUnavailableError(Exception):
     """이 게이트웨이로는 못 가져왔다 — 다음 후보로 넘어가라는 신호."""
 
 
@@ -183,7 +183,7 @@ from __future__ import annotations
 
 from weather.app.dtos.weather_dto import WeatherQuery, WeatherResult
 from weather.app.ports.output.place_name_gateway import PlaceNameGateway
-from weather.app.ports.output.weather_gateway import WeatherGateway, WeatherUnavailable
+from weather.app.ports.output.weather_gateway import WeatherGateway, WeatherUnavailableError
 from weather.app.use_cases._defaults import SEOUL_DEFAULT
 from weather.app.use_cases.weather_interactor import WeatherInteractor
 
@@ -204,7 +204,7 @@ class AlwaysFails(WeatherGateway):
 
     def fetch(self, query: WeatherQuery) -> WeatherResult:
         self.calls += 1
-        raise WeatherUnavailable("nope")
+        raise WeatherUnavailableError("nope")
 
 
 class Succeeds(WeatherGateway):
@@ -317,7 +317,7 @@ from dataclasses import replace
 from weather.app.dtos.weather_dto import WeatherQuery, WeatherResult
 from weather.app.ports.input.weather_use_case import WeatherUseCase
 from weather.app.ports.output.place_name_gateway import PlaceNameGateway
-from weather.app.ports.output.weather_gateway import WeatherGateway, WeatherUnavailable
+from weather.app.ports.output.weather_gateway import WeatherGateway, WeatherUnavailableError
 
 
 class WeatherInteractor(WeatherUseCase):
@@ -337,7 +337,7 @@ class WeatherInteractor(WeatherUseCase):
         for gateway in self._gateways:
             try:
                 result = gateway.fetch(query)
-            except WeatherUnavailable:
+            except WeatherUnavailableError:
                 continue
             return self._with_korean_name(result, query)
         return self._default
@@ -405,7 +405,7 @@ HTTP 호출과 응답 파싱을 나눈다. 파싱은 순수 함수라 샘플 JSO
 - Create: `clover/apps/weather/tests/adapter/test_payload_parsing.py`
 
 **Interfaces:**
-- Consumes: `WeatherQuery`, `WeatherResult`, `WeatherGateway`, `WeatherUnavailable`, `PlaceNameGateway` (Task 1)
+- Consumes: `WeatherQuery`, `WeatherResult`, `WeatherGateway`, `WeatherUnavailableError`, `PlaceNameGateway` (Task 1)
 - Produces:
   - `OpenWeatherGateway(appid: str, default_city: str, default_country: str)`
   - `OpenWeatherPlaceNameGateway(appid: str)`
@@ -502,7 +502,7 @@ from typing import Any
 
 from weather.adapter.outbound.openmeteo import _wmo
 from weather.app.dtos.weather_dto import WeatherQuery, WeatherResult
-from weather.app.ports.output.weather_gateway import WeatherGateway, WeatherUnavailable
+from weather.app.ports.output.weather_gateway import WeatherGateway, WeatherUnavailableError
 
 _ENDPOINT = "https://api.open-meteo.com/v1/forecast"
 _TIMEOUT_SECONDS = 10
@@ -531,7 +531,7 @@ class OpenMeteoGateway(WeatherGateway):
 
     def fetch(self, query: WeatherQuery) -> WeatherResult:
         if not query.has_coords:
-            raise WeatherUnavailable("Open-Meteo needs coordinates")
+            raise WeatherUnavailableError("Open-Meteo needs coordinates")
         params = urllib.parse.urlencode(
             {
                 "latitude": query.lat,
@@ -553,7 +553,7 @@ class OpenMeteoGateway(WeatherGateway):
             TypeError,
             ValueError,
         ) as exc:
-            raise WeatherUnavailable(str(exc)) from exc
+            raise WeatherUnavailableError(str(exc)) from exc
 ```
 
 - [ ] **Step 5: OpenWeather 게이트웨이 구현**
@@ -571,7 +571,7 @@ from typing import Any
 
 from weather.app.dtos.weather_dto import WeatherQuery, WeatherResult
 from weather.app.ports.output.place_name_gateway import PlaceNameGateway
-from weather.app.ports.output.weather_gateway import WeatherGateway, WeatherUnavailable
+from weather.app.ports.output.weather_gateway import WeatherGateway, WeatherUnavailableError
 
 _WEATHER_ENDPOINT = "https://api.openweathermap.org/data/2.5/weather"
 _REVERSE_ENDPOINT = "https://api.openweathermap.org/geo/1.0/reverse"
@@ -626,7 +626,7 @@ class OpenWeatherGateway(WeatherGateway):
             TypeError,
             ValueError,
         ) as exc:
-            raise WeatherUnavailable(str(exc)) from exc
+            raise WeatherUnavailableError(str(exc)) from exc
 
 
 class OpenWeatherPlaceNameGateway(PlaceNameGateway):
