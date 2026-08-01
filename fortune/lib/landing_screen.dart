@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
+import 'weather/location_service.dart';
+import 'weather/weather_api.dart';
+import 'weather/weather_pill.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -125,34 +128,9 @@ class LandingScreen extends StatelessWidget {
           Positioned(
             bottom: 36,
             right: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.wb_sunny_outlined, size: 16, color: kMutedFg),
-                  SizedBox(width: 6),
-                  Text(
-                    '18°  맑음 · 서울',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: kFg,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
+            child: WeatherPill(
+              api: HttpWeatherApi(),
+              location: GeolocatorLocationService(),
             ),
           ),
 
