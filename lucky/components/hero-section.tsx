@@ -74,7 +74,8 @@ export function HeroSection() {
                 </Button>
               ) : (
                 <Button
-                  onClick={onSignUpClick}
+                  // 인자 없이 부른다 — 그냥 넘기면 MouseEvent가 prefill 자리로 들어간다.
+                  onClick={() => onSignUpClick()}
                   size="lg"
                   className="bg-foreground text-background hover:bg-foreground/90"
                 >

@@ -8,7 +8,10 @@ from fastapi.testclient import TestClient
 
 from auth.adapter.inbound.api.auth_router import auth_router
 from auth.app.dtos.auth_dto import (
+    AuthMode,
     CallbackCommand,
+    EmailAlreadyRegisteredError,
+    NotRegisteredError,
     PasswordLoginCommand,
     RefreshCommand,
     StartLoginResult,
@@ -21,7 +24,9 @@ _AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth?state=state-0"
 
 
 class StubAuthUseCase(AuthUseCase):
-    async def start_login(self, provider: str) -> StartLoginResult:
+    async def start_login(
+        self, provider: str, mode: AuthMode = "login"
+    ) -> StartLoginResult:
         if provider != "google":
             raise ValueError(f"지원하지 않는 provider: {provider}")
         return StartLoginResult(authorize_url=_AUTHORIZE_URL, state="state-0")
@@ -75,7 +80,9 @@ class _CallbackStub(AuthUseCase):
     def __init__(self, pair: TokenPairDto) -> None:
         self._pair = pair
 
-    async def start_login(self, provider: str) -> StartLoginResult:
+    async def start_login(
+        self, provider: str, mode: AuthMode = "login"
+    ) -> StartLoginResult:
         return StartLoginResult(authorize_url=_AUTHORIZE_URL, state="state-0")
 
     async def login_with_password(self, cmd: PasswordLoginCommand) -> TokenPairDto:
@@ -135,3 +142,71 @@ def test_callback_redirects_returning_user_to_oauth_callback() -> None:
 
     assert res.status_code == 303
     assert res.headers["location"].startswith("https://cloverky.cloud/oauth/callback?")
+
+
+class _RaisingStub(AuthUseCase):
+    """콜백이 예외를 던질 때 라우터가 무엇으로 바꾸는지 검증하기 위한 스텁."""
+
+    def __init__(self, error: Exception) -> None:
+        self._error = error
+
+    async def start_login(
+        self, provider: str, mode: AuthMode = "login"
+    ) -> StartLoginResult:
+        return StartLoginResult(authorize_url=_AUTHORIZE_URL, state="state-0")
+
+    async def login_with_password(self, cmd: PasswordLoginCommand) -> TokenPairDto:
+        raise NotImplementedError
+
+    async def handle_callback(self, cmd: CallbackCommand) -> TokenPairDto:
+        raise self._error
+
+    async def refresh(self, cmd: RefreshCommand) -> TokenPairDto:
+        raise NotImplementedError
+
+    async def logout(self, refresh_token: str, access_jti: str | None) -> None:
+        raise NotImplementedError
+
+
+def _client_raising(error: Exception) -> TestClient:
+    app = FastAPI()
+    app.include_router(auth_router, prefix="/auth")
+    app.dependency_overrides[get_auth_use_case] = lambda: _RaisingStub(error)
+    return TestClient(app)
+
+
+def test_signup_redirect_sends_browser_to_provider(client: TestClient) -> None:
+    res = client.get("/auth/signup/google", follow_redirects=False)
+
+    assert res.status_code == 302
+    assert res.headers["location"] == _AUTHORIZE_URL
+
+
+def test_callback_redirects_unregistered_user_with_error() -> None:
+    error = NotRegisteredError(
+        provider="kakao", email="new@example.com", name="새 사용자"
+    )
+    res = _client_raising(error).get(
+        "/auth/callback/kakao?code=c&state=s", follow_redirects=False
+    )
+
+    assert res.status_code == 303
+    location = res.headers["location"]
+    assert location.startswith("https://cloverky.cloud/oauth/callback?")
+    assert "error=not_registered" in location
+    assert "provider=kakao" in location
+    assert "email=new%40example.com" in location
+
+
+def test_error_redirect_carries_no_token() -> None:
+    """거부된 흐름에 토큰이 새 나가면 안 된다 — 쿼리에도 쿠키에도."""
+    error = EmailAlreadyRegisteredError(provider="google", email="taken@example.com")
+    res = _client_raising(error).get(
+        "/auth/callback/google?code=c&state=s", follow_redirects=False
+    )
+
+    assert res.status_code == 303
+    assert "error=email_taken" in res.headers["location"]
+    assert "token=" not in res.headers["location"]
+    assert "access_token" not in res.cookies
+    assert "refresh_token" not in res.cookies

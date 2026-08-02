@@ -3,7 +3,10 @@ from __future__ import annotations
 import os
 
 from auth.app.dtos.auth_dto import (
+    AuthMode,
     CallbackCommand,
+    EmailAlreadyRegisteredError,
+    NotRegisteredError,
     PasswordLoginCommand,
     RefreshCommand,
     StartLoginResult,
@@ -53,10 +56,16 @@ class AuthInteractor(AuthUseCase):
             raise ValueError(f"지원하지 않는 provider: {provider}")
         return gateway
 
-    async def start_login(self, provider: str) -> StartLoginResult:
-        state = await self._states.issue()
-        authorize_url = self._provider(provider).build_authorize_url(state)
-        return StartLoginResult(authorize_url=authorize_url, state=state)
+    async def start_login(
+        self, provider: str, mode: AuthMode = "login"
+    ) -> StartLoginResult:
+        # provider 검증을 state 발급보다 먼저 한다 — 잘못된 provider 요청이
+        # Redis에 고아 state를 남기지 않게.
+        gateway = self._provider(provider)
+        state = await self._states.issue(mode)
+        return StartLoginResult(
+            authorize_url=gateway.build_authorize_url(state), state=state
+        )
 
     async def login_with_password(self, cmd: PasswordLoginCommand) -> TokenPairDto:
         """아이디(이메일)·비밀번호 로그인 — 검증 성공 시 JWT 쌍을 발급한다.
@@ -85,22 +94,54 @@ class AuthInteractor(AuthUseCase):
         )
 
     async def handle_callback(self, cmd: CallbackCommand) -> TokenPairDto:
-        if not await self._states.consume(cmd.state):
+        """소셜 콜백 — 연동 기록이 있는 계정만 통과한다.
+
+        가입은 signup 모드로 시작한 흐름에서만 일어난다. login 모드에서 계정을
+        자동 생성하면 소셜 버튼 한 번으로 누구나 회원이 되기 때문이다.
+        """
+        mode = await self._states.consume(cmd.state)
+        if mode is None:
             raise ValueError("유효하지 않거나 만료된 state 입니다.")
 
         identity = await self._provider(cmd.provider).exchange_code(cmd.code)
-        user = await self._users.get_by_email(identity.email)
-        is_new_user = user is None
-        if user is None:
-            user = await self._users.create_oauth_user(identity.email, identity.name)
 
+        link = await self._users.find_link(cmd.provider, identity.provider_sub)
+        if link is None:
+            link = await self._users.claim_backfilled_link(
+                cmd.provider, identity.email, identity.provider_sub
+            )
+
+        if link is not None:
+            user = await self._users.get_by_id(link.user_id)
+            if user is None:
+                raise ValueError("사용자를 찾을 수 없습니다.")
+            return await self._issue_pair(
+                sub=str(user.id),
+                roles=[user.role],
+                name=user.name,
+                email=user.email,
+                username=user.username,
+            )
+
+        if mode == "login":
+            raise NotRegisteredError(
+                provider=cmd.provider, email=identity.email, name=identity.name
+            )
+
+        if await self._users.get_by_email(identity.email) is not None:
+            raise EmailAlreadyRegisteredError(
+                provider=cmd.provider, email=identity.email
+            )
+
+        user = await self._users.create_oauth_user(identity.email, identity.name)
+        await self._users.create_link(user.id, cmd.provider, identity.provider_sub)
         return await self._issue_pair(
             sub=str(user.id),
             roles=[user.role],
             name=user.name,
             email=user.email,
             username=user.username,
-            is_new_user=is_new_user,
+            is_new_user=True,
         )
 
     async def refresh(self, cmd: RefreshCommand) -> TokenPairDto:

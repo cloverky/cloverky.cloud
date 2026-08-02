@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from auth.app.dtos.auth_dto import (
+    AuthMode,
     CallbackCommand,
     PasswordLoginCommand,
     RefreshCommand,
@@ -13,7 +14,9 @@ from auth.app.dtos.auth_dto import (
 
 class AuthUseCase(ABC):
     @abstractmethod
-    async def start_login(self, provider: str) -> StartLoginResult:
+    async def start_login(
+        self, provider: str, mode: AuthMode = "login"
+    ) -> StartLoginResult:
         pass
 
     @abstractmethod

@@ -15,7 +15,11 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/components/auth-context";
 import { useOpenSignUp } from "@/components/sign-up-dialog-context";
-import { SocialLoginButtons } from "@/components/social-login-buttons";
+import {
+  SocialLoginButtons,
+  type OAuthErrorDetail,
+  type OAuthErrorReason,
+} from "@/components/social-login-buttons";
 import { postLogin } from "@/lib/auth-api";
 import { logLoginSuccess } from "@/lib/auth-notify";
 
@@ -48,6 +52,15 @@ const SLOW_HINT_DELAY_MS = 3_000;
 /** 둘러보는 사람이 가입 없이 바로 들어올 수 있게 공개해 둔 계정. */
 const DEMO_EMAIL = "a@a";
 const DEMO_PASSWORD = "aaaaaaaa";
+
+const PROVIDER_LABEL: Record<string, string> = {
+  google: "구글",
+  kakao: "카카오",
+  naver: "네이버",
+};
+
+/** 카카오는 이메일 제공이 선택이라 kakao_{id}@kakao.local 같은 가짜 주소가 온다 — 폼에 넣지 않는다. */
+const isRealEmail = (email: string) => Boolean(email) && !email.endsWith(".local");
 
 export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDialogProps) {
   const { login: authLogin } = useAuth();
@@ -274,7 +287,26 @@ export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDial
           </p>
 
         </form>
-        <SocialLoginButtons onClose={() => onOpenChange(false)} />
+        <SocialLoginButtons
+          mode="login"
+          onClose={() => onOpenChange(false)}
+          onError={(reason: OAuthErrorReason, detail: OAuthErrorDetail) => {
+            if (reason !== "not_registered") {
+              patchForm({
+                error: "로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+              });
+              return;
+            }
+            const label = PROVIDER_LABEL[detail.provider] ?? "소셜";
+            onOpenChange(false);
+            resetForm();
+            openSignUp({
+              email: isRealEmail(detail.email) ? detail.email : undefined,
+              name: detail.name || undefined,
+              notice: `등록되지 않은 계정입니다. ${label} 계정으로 먼저 회원가입해 주세요.`,
+            });
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

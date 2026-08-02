@@ -6,8 +6,9 @@ import secrets
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from users.adapter.user import User, UserRole
+from users.adapter.user_oauth_account import UserOAuthAccount
 
-from auth.app.dtos.auth_dto import AuthUserDto
+from auth.app.dtos.auth_dto import AuthUserDto, OAuthLinkDto
 from auth.app.ports.output.user_repository import UserRepository
 
 _USERNAME_SANITIZE = re.compile(r"[^a-zA-Z0-9_]")
@@ -51,6 +52,47 @@ class UserPgRepository(UserRepository):
         )
         return result.scalar_one_or_none()
 
+    async def find_link(self, provider: str, provider_sub: str) -> OAuthLinkDto | None:
+        result = await self._session.execute(
+            select(UserOAuthAccount).where(
+                UserOAuthAccount.provider == provider,
+                UserOAuthAccount.provider_sub == provider_sub,
+            )
+        )
+        row = result.scalar_one_or_none()
+        return self._to_link_dto(row) if row else None
+
+    async def claim_backfilled_link(
+        self, provider: str, email: str, provider_sub: str
+    ) -> OAuthLinkDto | None:
+        result = await self._session.execute(
+            select(UserOAuthAccount)
+            .join(User, User.id == UserOAuthAccount.user_id)
+            .where(
+                UserOAuthAccount.provider == provider,
+                UserOAuthAccount.provider_sub.is_(None),
+                User.email == email,
+            )
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            return None
+        row.provider_sub = provider_sub
+        await self._session.commit()
+        await self._session.refresh(row)
+        return self._to_link_dto(row)
+
+    async def create_link(
+        self, user_id: int, provider: str, provider_sub: str
+    ) -> OAuthLinkDto:
+        row = UserOAuthAccount(
+            user_id=user_id, provider=provider, provider_sub=provider_sub
+        )
+        self._session.add(row)
+        await self._session.commit()
+        await self._session.refresh(row)
+        return self._to_link_dto(row)
+
     async def _unique_username(self, email: str) -> str:
         base = _USERNAME_SANITIZE.sub("", email.split("@")[0])[:16] or "user"
         candidate = base
@@ -71,4 +113,10 @@ class UserPgRepository(UserRepository):
             name=user.name,
             role=user.role,
             username=user.username,
+        )
+
+    @staticmethod
+    def _to_link_dto(row: UserOAuthAccount) -> OAuthLinkDto:
+        return OAuthLinkDto(
+            user_id=row.user_id, provider=row.provider, provider_sub=row.provider_sub
         )
