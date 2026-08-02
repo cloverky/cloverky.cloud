@@ -166,12 +166,13 @@ export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDial
           className="mt-4 space-y-4 overflow-y-auto pr-1"
           noValidate
         >
-          <div className="rounded-lg border border-accent/25 bg-accent/[0.07] p-3 text-xs leading-relaxed">
-            <p className="font-medium text-brand-text">데모 계정으로 로그인해 보세요</p>
-            <p className="mt-1 text-muted-foreground">
-              이메일 <span className="text-foreground">{DEMO_EMAIL}</span>
-              {" · "}
-              비밀번호 <span className="text-foreground">{DEMO_PASSWORD}</span>
+          <div className="rounded-lg bg-muted/60 p-4">
+            <p className="text-sm font-semibold text-foreground">데모 계정</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              ID : <span className="text-foreground">{DEMO_EMAIL}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              PW : <span className="text-foreground">{DEMO_PASSWORD}</span>
             </p>
           </div>
 
