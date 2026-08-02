@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
 
-from clover.apps.fridge.app.dtos.category_dto import CategoryResponse
+from clover.apps.fridge.app.dtos.category_dto import CategoryItem
 from clover.apps.fridge.app.ports.input.category_use_case import CategoryUseCase
 from clover.apps.fridge.dependencies.category_provider import get_category_use_case
-from fridge.adapter.inbound.api.schemas.category_schema import CategorySchema
 
 """
 카테고리 (Category)
@@ -18,10 +17,5 @@ category_router = APIRouter(prefix="/category", tags=["category"])
 @category_router.get("/list")
 async def get_list(
     category: CategoryUseCase = Depends(get_category_use_case),
-) -> CategoryResponse:
-    return await category.get_list(
-        CategorySchema(
-            name="채소",
-            sort_order=1,
-        )
-    )
+) -> list[CategoryItem]:
+    return await category.list_categories()

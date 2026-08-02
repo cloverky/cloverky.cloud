@@ -1,12 +1,10 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class CategoryQuery:
-    name: str
-
-
-@dataclass(frozen=True)
-class CategoryResponse:
+class CategoryItem:
     id: int
     name: str
+    sort_order: int | None

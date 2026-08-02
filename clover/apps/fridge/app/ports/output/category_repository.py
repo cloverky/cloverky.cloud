@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from clover.apps.fridge.app.dtos.category_dto import CategoryQuery, CategoryResponse
+from clover.apps.fridge.app.dtos.category_dto import CategoryItem
 
 
 class CategoryRepository(ABC):
     @abstractmethod
-    async def get_list(self, query: CategoryQuery) -> CategoryResponse:
+    async def list_categories(self) -> list[CategoryItem]:
         pass
