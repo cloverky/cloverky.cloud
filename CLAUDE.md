@@ -221,3 +221,158 @@ Combine these three models **at every bounded context** (e.g. `fridge`, `titanic
 성공 기준이 명확해야 독립적인 작업이 가능하다. "작동하게 만들기"와 같은 모호한 기준은 불필요한 재질의를 야기한다.
 
 지침 작동 확인: Diff 내 불필요한 변경 감소, 복잡성으로 인한 재작성 빈도 감소, 구현 전 질문을 통한 명확한 의사결정 증대.
+
+---
+
+## 프로젝트 개요 (Stack)
+
+> 정체성은 위 §프로젝트 정체성 참고. 이 절은 **기술 스택과 구성**을 다룬다.
+
+모노레포. 세 개의 독립 런타임으로 구성된다.
+
+| 디렉터리 | 스택 | 진입점 | 포트 |
+|---------|------|--------|------|
+| `clover/` | Python · FastAPI · SQLAlchemy 2.x async (`psycopg`) | `clover/main.py` | 8000 |
+| `clover/` (인증) | 동일 | `clover/auth_main.py` | 9000 |
+| `lucky/` | Next.js 16 (App Router) · React 19 · TypeScript 5.7 · Tailwind + shadcn/ui | `lucky/app/` | 3000 |
+| `fortune/` | Flutter · Dart | `fortune/lib/` | — |
+
+**데이터 · 인프라** (`clover/docker-compose.yaml` — compose 명령은 `clover/` 에서 실행한다)
+
+| 서비스 | 이미지 | 포트 | 용도 |
+|--------|--------|------|------|
+| `pgvector` | `pgvector/pgvector:pg17` | 5432 | 로컬 PostgreSQL + 벡터 |
+| `redis` | `redis:7-alpine` | 6379 | 캐시 |
+| `neo4j` | `neo4j:5-community` | 7474 · 7687 | 그래프 |
+| `qdrant` | `qdrant/qdrant` | 6333 · 6334 | 벡터 DB |
+| `n8n` | `n8nio/n8n` | 5678 | 워크플로 자동화 |
+| `pgadmin` | `dpage/pgadmin4` | 5050 | DB 관리 UI |
+
+프로덕션 DB는 **Neon PostgreSQL** (`clover/CLAUDE.md` 참고).
+
+---
+
+## 명령어 (Commands)
+
+린트·포맷 명령은 위 §하네스 절에 있다. **여기서는 실행·빌드만 다룬다.**
+
+```bash
+# 전체 스택 기동
+cd clover && docker compose up -d
+
+# 백엔드 (로컬)
+cd clover && python main.py                              # 또는
+cd clover && uvicorn clover.main:app --port 8000
+cd clover && uvicorn clover.auth_main:app --port 9000     # 인증 서버
+
+# 프론트엔드
+cd lucky && npm run dev        # 개발 (포트 3000)
+cd lucky && npm run build      # 프로덕션 빌드
+
+# 모바일
+cd fortune && flutter run
+
+# 백엔드 코드 변경 후 (필수)
+cd clover && docker compose build backend && docker compose up -d backend
+
+# import 정합성 확인
+cd clover && python -c "import main"
+cd clover && python -m importlinter     # 스타 토폴로지 의존성 검사
+```
+
+루트에는 `package.json` 스크립트가 없다. **명령은 항상 해당 앱 디렉터리에서 실행**한다.
+
+---
+
+## 테스트 (Testing)
+
+| 영역 | 프레임워크 | 위치 |
+|------|-----------|------|
+| 백엔드 | `pytest` + `pytest-asyncio` | 각 앱의 `tests/` |
+| 모바일 | `flutter test` | `fortune/test/` |
+| 프론트엔드 | **미도입** | — |
+
+```bash
+cd clover && pytest                     # pytest.ini 의 testpaths 기준
+cd clover && pytest apps/fridge/tests   # 특정 앱 전체 실행
+cd fortune && flutter test
+```
+
+**백엔드 규약**
+
+- `asyncio_mode = auto` — async 테스트에 `@pytest.mark.asyncio` 를 붙이지 않는다.
+- `clover/pytest.ini` 의 `testpaths` 는 현재 `apps/titanic/tests` 로 **한정**되어 있다.
+  다른 앱 테스트는 경로를 명시해서 실행한다.
+- 테스트를 둔 앱: `auth`, `fridge`, `titanic`, `moneyball`, `dumb_and_dumber`, `vision`, `star_craft`, `messenger`
+- 테스트 폴더는 헥사고날 레이어를 따라 나눈다 (`tests/app`, `tests/adapter`, `tests/domain`).
+- 마커 `korean_ai` — 한국어 AI 통합 테스트. **ollama + kiwipiepy 필요**하므로 기본 실행에서 제외하려면 `-m "not korean_ai"`.
+
+프론트엔드에 테스트 프레임워크를 새로 도입하는 것은 **별도 논의 후** 진행한다.
+
+---
+
+## 브랜치 전략 (Branching)
+
+현재 리포지토리의 **실제 상태**다.
+
+| 브랜치 | 역할 |
+|--------|------|
+| `main` | 프로덕션 · 기본 브랜치. **PR 대상.** |
+| `feat/<이름>` | 기능 브랜치 (예: `feat/admin-pdf-morningstar`) |
+| `soyeon`, `hi` | 개인 작업 브랜치 |
+
+- **`develop` 브랜치는 존재하지 않는다.** 도입 전까지 PR은 `main` 으로 요청한다.
+- `main` 에서 직접 작업하지 않는다. 브랜치를 먼저 만든다.
+- 커밋·푸시는 **사용자가 요청할 때만** 수행한다.
+
+---
+
+## 환경 변수 (Environment)
+
+| 파일 | 대상 | 커밋 여부 |
+|------|------|----------|
+| `clover/.env` | 백엔드 | ❌ gitignore |
+| `clover/.env.auth` | 인증 서버 | ❌ gitignore |
+| `clover/.env.example` | 템플릿 (AWS 키 3종) | ✅ 유일한 예외 |
+| `lucky/.env.local` | 프론트 로컬 | ❌ gitignore |
+| `lucky/.env.production` | 프론트 배포 | ❌ gitignore |
+
+`.gitignore` 는 `.env`, `.env.*` 를 전부 무시하고 `!.env.example` 만 예외로 허용한다.
+
+**주요 변수**
+
+| 변수 | 범위 |
+|------|------|
+| `NEXT_PUBLIC_API_URL` | 프론트 → 백엔드 base URL |
+| `NEXT_PUBLIC_AUTH_URL` | 프론트 → 인증 서버 base URL |
+| `GOOGLE_API_KEY` | **서버 전용.** `NEXT_PUBLIC_` 접두사 금지 |
+| `AWS_ACCESS_KEY_ID` · `AWS_SECRET_ACCESS_KEY` · `AWS_DEFAULT_REGION` | 백엔드 S3 |
+
+JWT 키 생성: `scripts/generate_jwt_keys.sh`
+
+**비밀값을 코드·문서·커밋에 넣지 않는다.** 새 변수를 추가하면 `.env.example` 에 키만 반영한다.
+
+---
+
+## 주의사항 (Gotchas)
+
+**건드리지 말 것**
+
+| 대상 | 이유 |
+|------|------|
+| `clover/apps/database.py` | 실제 `Base`·engine·`get_db` 구현. 경로 고정 |
+| `clover/apps/fridge/models/database.py` | Alembic·레거시 import 호환 레이어 |
+| `clover/apps/secom/` | 레거시 MVC. 헥사고날 이관은 **별도 요청 시에만** |
+| `lucky/components/ui/` | shadcn 생성 코드. 원본 스타일 유지 |
+
+**아키텍처 제약**
+
+- **스포크 간 직접 import 금지.** 공유 로직은 `star_craft`(Hub) 또는 `clover.core.*` 경유 (§스타 토폴로지).
+- `fridge` 의 모든 `__init__.py` 는 **0바이트**여야 한다.
+- `ingredient_manager` 테이블·모델 **재도입 금지** (A안 `inventory` + `foods` 확정).
+
+**보안**
+
+- `payments` 상당 모듈은 현재 없다. 결제·인증 관련 코드를 추가할 때는 작업 전 사용자에게 확인한다.
+- `clover/docker-compose.yaml` 의 `NEO4J_AUTH` 에 **자격증명이 평문으로 커밋되어 있다.** 새 비밀값을 같은 방식으로 추가하지 말고 `.env` 참조로 작성한다.
+- 실제 비용이 발생하는 작업(클라우드 리소스 생성, 유료 API 대량 호출)은 **실행 전 사용자에게 알린다.**
