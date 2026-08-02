@@ -166,30 +166,13 @@ export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDial
           className="mt-4 space-y-4 overflow-y-auto pr-1"
           noValidate
         >
-          <div className="rounded-lg border border-accent/25 bg-accent/[0.07] p-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-xs leading-relaxed">
-                <p className="font-medium text-brand-text">데모 계정 로그인</p>
-                <p className="mt-0.5 text-muted-foreground">
-                  {DEMO_EMAIL} / {DEMO_PASSWORD}
-                </p>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="shrink-0"
-                onClick={() =>
-                  patchForm({
-                    email: DEMO_EMAIL,
-                    password: DEMO_PASSWORD,
-                    error: null,
-                  })
-                }
-              >
-                입력하기
-              </Button>
-            </div>
+          <div className="rounded-lg border border-accent/25 bg-accent/[0.07] p-3 text-xs leading-relaxed">
+            <p className="font-medium text-brand-text">데모 계정으로 로그인해 보세요</p>
+            <p className="mt-1 text-muted-foreground">
+              이메일 <span className="text-foreground">{DEMO_EMAIL}</span>
+              {" · "}
+              비밀번호 <span className="text-foreground">{DEMO_PASSWORD}</span>
+            </p>
           </div>
 
           <div className="space-y-2">
