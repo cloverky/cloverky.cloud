@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'catalog/catalog_api.dart';
+import 'catalog/catalog_screen.dart';
 import 'theme.dart';
 import 'weather/location_service.dart';
 import 'weather/weather_api.dart';
@@ -252,7 +254,11 @@ class _CtaRow extends StatelessWidget {
       runSpacing: 12,
       children: [
         ElevatedButton(
-          onPressed: () {},
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => CatalogScreen(api: HttpCatalogApi()),
+            ),
+          ),
           style: ElevatedButton.styleFrom(
             backgroundColor: kButtonBg,
             foregroundColor: Colors.white,
@@ -265,25 +271,6 @@ class _CtaRow extends StatelessWidget {
           child: const Text(
             '시작하기',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-        ),
-        OutlinedButton(
-          onPressed: () {},
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: kBorder, width: 1.5),
-            foregroundColor: kFg,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('문서 보기', style: TextStyle(fontSize: 16)),
-              SizedBox(width: 8),
-              Icon(Icons.arrow_forward, size: 16),
-            ],
           ),
         ),
       ],

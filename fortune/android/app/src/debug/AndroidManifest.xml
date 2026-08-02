@@ -4,4 +4,9 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- 개발 중에는 로컬 백엔드를 http 로 부른다.
+         API_BASE_URL 을 http://10.0.2.2:8000 으로 넘길 때 필요하다.
+         디버그 빌드에만 적용되므로 릴리즈는 그대로 https 만 허용한다. -->
+    <application android:usesCleartextTraffic="true"/>
 </manifest>
