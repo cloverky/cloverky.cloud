@@ -1,0 +1,4 @@
+- [Ask before cost](feedback_ask_before_cost.md) — always warn/ask before any action that could incur real money cost, don't just do it
+- [Patterns](patterns.md) — coding conventions live in `.claude/rules/*.md`; read the matching rule file before writing code
+- [Debugging](debugging.md) — CLAUDE.md tells you to run `validate-harness.py` and `pre-commit`, but neither file exists
+- [Auto memory](auto-memory.md) — only the `~/.claude` copy loads (200-line cap on this file); the in-repo copy is an inert mirror

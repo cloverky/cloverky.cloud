@@ -3,6 +3,24 @@
     "hermes": {
       "command": "hermes",
       "args": ["mcp", "serve"]
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "gmail": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@klodr/gmail-mcp"]
+    },
+    "my-internal-tools": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["clover/tools/mcp_server.py"]
     }
   }
 }

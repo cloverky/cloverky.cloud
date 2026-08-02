@@ -42,10 +42,46 @@
       "Bash(~/.local/bin/mypy --config-file pyproject.toml core/lol/t1_mid_faker_orchestrator.py apps/fridge/adapter/inbound/api/v1/assistant_router.py apps/fridge/adapter/outbound/ollama/assistant_gateway.py apps/fridge/app/use_cases/assistant_interactor.py)",
       "Bash(cd /home/hi/projects/cloverky.cloud/clover *)",
       "Bash(~/.local/bin/mypy . --config-file pyproject.toml)",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(pip3 show *)",
+      "Bash(python3 -m pip --version)",
+      "Bash(python3 -m venv --help)",
+      "Bash(docker restart *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/lesson)",
+      "Bash(curl -s http://localhost:8000/docs -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8000/docs)",
+      "Bash(grep -q \"^\\\\.env\\\\.local$\\\\|^\\\\.env\\\\*$\\\\|^\\\\.env$\" /home/soyeon/projects/cloverky.cloud/lucky/.gitignore)",
+      "Bash(git check-ignore *)",
+      "Bash(python3 -c \"import sys; print\\(sys.version\\)\")",
+      "Bash(pip show *)",
+      "Bash(python3 -m venv checkenv)",
+      "Bash(./checkenv/bin/python -m ensurepip --upgrade)",
+      "Bash(python3 -c \"import fastapi\")",
+      "Bash(python3 -c \"import neo4j\")",
+      "Bash(python3 -c \"import qdrant_client\")",
+      "Bash(python3 -m py_compile apps/star_craft/app/dtos/graph_dto.py apps/star_craft/app/dtos/vector_dto.py apps/star_craft/app/ports/output/graph_repository.py apps/star_craft/app/ports/output/vector_repository.py apps/star_craft/app/ports/input/hub_use_case.py apps/star_craft/app/use_cases/hub_interactor.py apps/star_craft/adapter/outbound/graph/neo4j_graph_repository.py apps/star_craft/adapter/outbound/vector/qdrant_vector_repository.py apps/star_craft/dependencies/hub.py apps/star_craft/adapter/inbound/api/v1/hub_router.py apps/star_craft/adapter/inbound/api/star_craft_router.py)",
+      "Bash(python3 -m py_compile apps/star_craft/app/dtos/image_classifier_dto.py apps/star_craft/app/ports/output/image_model_gateway.py apps/star_craft/app/ports/input/image_classifier_use_case.py apps/star_craft/domain/value_objects/classification_result.py apps/star_craft/adapter/outbound/torch/efficientnetv2s_gateway.py apps/star_craft/app/use_cases/image_classifier_interactor.py apps/star_craft/dependencies/image_classifier_provider.py apps/star_craft/adapter/inbound/api/v1/image_classifier_router.py apps/star_craft/adapter/inbound/api/star_craft_router.py apps/star_craft/tests/domain/value_objects/test_classification_result.py apps/star_craft/tests/app/use_cases/test_image_classifier_interactor.py)"
     ],
     "additionalDirectories": [
       "/home/hi/projects/cloverky.cloud/clover/.mypy_cache"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "hermes"
+  ],
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -Command '[reflection.assembly]::LoadWithPartialName(\"System.Windows.Forms\") | Out-Null; $n = New-Object System.Windows.Forms.NotifyIcon; $n.Icon = [System.Drawing.SystemIcons]::Information; $n.Visible = $true; $n.ShowBalloonTip(5000, \"Claude Code\", \"Claude가 응답을 기다리고 있습니다\", \"Info\"); Start-Sleep -Seconds 1; $n.Dispose()' 2>/dev/null || true",
+            "async": true,
+            "statusMessage": "알림 전송 중"
+          }
+        ]
+      }
     ]
   }
 }
