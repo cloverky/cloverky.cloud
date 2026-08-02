@@ -1,4 +1,4 @@
-package com.example.fortune
+package cloud.cloverky.fortune
 
 import io.flutter.embedding.android.FlutterActivity
 

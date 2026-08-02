@@ -7,3 +7,10 @@ lucky/.env.production
 !.env.example
 *.pem
 *.key
+
+# 파이썬 로컬 도구 — 테스트·린트용 venv 와 캐시
+clover/.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

@@ -45,6 +45,10 @@ const INITIAL_FORM_STATE: LoginFormState = {
 
 const SLOW_HINT_DELAY_MS = 3_000;
 
+/** 둘러보는 사람이 가입 없이 바로 들어올 수 있게 공개해 둔 계정. */
+const DEMO_EMAIL = "a@a";
+const DEMO_PASSWORD = "aaaaaaaa";
+
 export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDialogProps) {
   const { login: authLogin } = useAuth();
   const openSignUp = useOpenSignUp();
@@ -162,6 +166,16 @@ export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDial
           className="mt-4 space-y-4 overflow-y-auto pr-1"
           noValidate
         >
+          <div className="rounded-lg bg-muted/60 p-4">
+            <p className="text-sm font-semibold text-foreground">데모 계정</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              ID : <span className="text-foreground">{DEMO_EMAIL}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              PW : <span className="text-foreground">{DEMO_PASSWORD}</span>
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="login-email" className="text-foreground">
               이메일

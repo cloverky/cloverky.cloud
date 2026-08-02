@@ -54,8 +54,15 @@ const FALLBACK_WEATHER: WeatherData = {
   humidity: 55,
 };
 
-export async function fetchWeather(city = "Seoul", country = "KR"): Promise<WeatherData> {
-  const params = new URLSearchParams({ city, country });
+export type WeatherLocation =
+  | { kind: "coords"; lat: number; lon: number }
+  | { kind: "city"; city: string; country: string };
+
+export async function fetchWeather(location: WeatherLocation): Promise<WeatherData> {
+  const params =
+    location.kind === "coords"
+      ? new URLSearchParams({ lat: String(location.lat), lon: String(location.lon) })
+      : new URLSearchParams({ city: location.city, country: location.country });
   const res = await fetch(`${API_BASE}/weather?${params}`, { cache: "no-store" });
   const data = (await res.json()) as WeatherData & FastApiErrorBody;
 
@@ -65,6 +72,28 @@ export async function fetchWeather(city = "Seoul", country = "KR"): Promise<Weat
 
   writeCachedWeather(data);
   return data;
+}
+
+const COORDS_KEY = "cloverky-weather-coords-v1";
+
+/** 한 번 허용한 위치는 기억해 둔다 — 다음 방문에는 탭하지 않아도 그 위치로 조회한다. */
+export function readCachedCoords(): { lat: number; lon: number } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(COORDS_KEY);
+    return raw ? (JSON.parse(raw) as { lat: number; lon: number }) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeCachedCoords(lat: number, lon: number): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(COORDS_KEY, JSON.stringify({ lat, lon }));
+  } catch {
+    /* ignore quota */
+  }
 }
 
 /** API·백엔드 실패 시 기본값 (SSR·hydration용 — 캐시는 컴포넌트 mount 후 적용) */

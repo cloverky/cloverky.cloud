@@ -8,11 +8,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:fortune/intro_video_screen.dart';
 import 'package:fortune/main.dart';
 
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const FridgeAIApp());
     expect(find.byType(MaterialApp), findsOneWidget);
+
+    // home은 이제 타이머를 거는 인트로 화면이다. 정리될 때까지 진행시킨다.
+    await tester.pumpAndSettle();
+    await tester.pump(
+      IntroVideoScreen.initTimeout + const Duration(seconds: 1),
+    );
+    await tester.pumpAndSettle();
   });
 }
