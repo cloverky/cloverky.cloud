@@ -24,3 +24,7 @@ class WeatherResult:
     description: str
     icon: str
     humidity: int
+    # 조회한 지점의 좌표. 도시명으로 물어도 제공자가 좌표를 함께 주므로,
+    # 그 값으로 한글 지명을 찾을 수 있다. 응답 스키마에는 나가지 않는다.
+    lat: float | None = None
+    lon: float | None = None

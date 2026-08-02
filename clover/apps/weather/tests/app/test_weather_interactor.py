@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from weather.app.dtos.weather_dto import WeatherQuery, WeatherResult
 from weather.app.ports.output.place_name_gateway import PlaceNameGateway
 from weather.app.ports.output.weather_gateway import (
@@ -90,8 +92,18 @@ def test_keeps_the_original_name_when_no_korean_name() -> None:
     assert interactor.get_weather(COORDS).city == "Bucheon-si"
 
 
-def test_city_query_leaves_the_name_alone() -> None:
-    """도시명 질의는 역지오코딩을 타지 않는다."""
+def test_city_query_uses_the_coordinates_from_the_result() -> None:
+    """도시명으로 물어도 제공자가 좌표를 주면 한글 지명을 붙인다."""
+    located = replace(SAMPLE, lat=37.5, lon=126.78)
+    interactor = WeatherInteractor([Succeeds(located)], KoreanNames(), SEOUL_DEFAULT)
+
+    result = interactor.get_weather(WeatherQuery(city="Seoul", country="KR"))
+
+    assert result.city == "부천시"
+
+
+def test_city_query_without_coordinates_keeps_the_name() -> None:
+    """좌표가 어디에도 없으면 역지오코딩할 방법이 없으므로 원래 이름을 쓴다."""
     interactor = WeatherInteractor([Succeeds()], KoreanNames(), SEOUL_DEFAULT)
 
     result = interactor.get_weather(WeatherQuery(city="Seoul", country="KR"))

@@ -8,6 +8,7 @@ from weather.adapter.outbound.openweather.openweather_gateway import parse_openw
 OPENWEATHER_SAMPLE = {
     "name": "Bucheon-si",
     "sys": {"country": "KR"},
+    "coord": {"lat": 37.5035, "lon": 126.766},
     "main": {"temp": 21.4, "feels_like": 20.8, "humidity": 40},
     "weather": [{"description": "맑음", "icon": "01d"}],
 }
@@ -32,6 +33,9 @@ def test_openweather_payload_maps_onto_the_dto() -> None:
     assert result.description == "맑음"
     assert result.icon == "01d"
     assert result.humidity == 40
+    # 도시명으로 물었을 때 한글 지명을 찾으려면 이 좌표가 필요하다.
+    assert result.lat == 37.5035
+    assert result.lon == 126.766
 
 
 def test_open_meteo_has_no_place_name() -> None:

@@ -38,9 +38,13 @@ class WeatherInteractor(WeatherUseCase):
         self, result: WeatherResult, query: WeatherQuery
     ) -> WeatherResult:
         # 지명 하나 때문에 날씨 전체를 버리지 않는다.
-        if not query.has_coords or self._place_names is None:
+        if self._place_names is None:
             return result
-        if query.lat is None or query.lon is None:
+        # 도시명으로 물었더라도 제공자가 좌표를 돌려줬다면 그걸로 찾는다.
+        # 그래야 기본 상태에서도 "Seoul" 대신 "서울"이 보인다.
+        lat = query.lat if query.has_coords else result.lat
+        lon = query.lon if query.has_coords else result.lon
+        if lat is None or lon is None:
             return result
-        korean = self._place_names.korean_name(query.lat, query.lon)
+        korean = self._place_names.korean_name(lat, lon)
         return replace(result, city=korean) if korean else result

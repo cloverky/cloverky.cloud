@@ -20,6 +20,7 @@ _TIMEOUT_SECONDS = 10
 
 def parse_openweather(data: dict[str, Any]) -> WeatherResult:
     main = data["weather"][0]
+    coord = data.get("coord") or {}
     return WeatherResult(
         city=data["name"],
         country=data["sys"]["country"],
@@ -28,6 +29,8 @@ def parse_openweather(data: dict[str, Any]) -> WeatherResult:
         description=main["description"],
         icon=main["icon"],
         humidity=int(data["main"]["humidity"]),
+        lat=float(coord["lat"]) if "lat" in coord else None,
+        lon=float(coord["lon"]) if "lon" in coord else None,
     )
 
 
