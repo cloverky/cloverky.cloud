@@ -9,11 +9,15 @@ import { Header } from "@/components/header";
 import { OpenLoginProvider } from "@/components/login-dialog-context";
 import { LoginDialog } from "@/components/login-dialog";
 import { ProfileEditDialog } from "@/components/profile-edit-dialog";
-import { OpenSignUpProvider } from "@/components/sign-up-dialog-context";
+import {
+  OpenSignUpProvider,
+  type SignUpPrefill,
+} from "@/components/sign-up-dialog-context";
 import { SignUpDialog } from "@/components/signup-dialog";
 
 type AuthDialogsState = {
   signUpOpen: boolean;
+  signUpPrefill: SignUpPrefill;
   loginOpen: boolean;
   loginPrefillEmail: string;
   profileEditOpen: boolean;
@@ -21,6 +25,7 @@ type AuthDialogsState = {
 
 const INITIAL_AUTH_DIALOGS: AuthDialogsState = {
   signUpOpen: false,
+  signUpPrefill: {},
   loginOpen: false,
   loginPrefillEmail: "",
   profileEditOpen: false,
@@ -32,7 +37,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const patchDialogs = (patch: Partial<AuthDialogsState>) =>
     setDialogs((prev) => ({ ...prev, ...patch }));
 
-  const openSignUp = useCallback(() => patchDialogs({ signUpOpen: true }), []);
+  const openSignUp = useCallback(
+    (prefill: SignUpPrefill = {}) =>
+      patchDialogs({ signUpOpen: true, signUpPrefill: prefill }),
+    [],
+  );
   const openLogin = useCallback(
     () => patchDialogs({ loginOpen: true, loginPrefillEmail: "" }),
     [],
@@ -54,6 +63,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <BottomRightStack />
               <SignUpDialog
                 open={dialogs.signUpOpen}
+                prefill={dialogs.signUpPrefill}
                 onOpenChange={(signUpOpen) => patchDialogs({ signUpOpen })}
                 onOpenLogin={(email) => {
                   patchDialogs({

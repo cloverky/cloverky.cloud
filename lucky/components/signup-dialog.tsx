@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Refrigerator } from "lucide-react";
-import { SocialLoginButtons } from "@/components/social-login-buttons";
+import type { SignUpPrefill } from "@/components/sign-up-dialog-context";
+import {
+  SocialLoginButtons,
+  type OAuthErrorDetail,
+  type OAuthErrorReason,
+} from "@/components/social-login-buttons";
 import { checkUsername, postSignUp } from "@/lib/auth-api";
 import { logSignUpSuccess } from "@/lib/auth-notify";
 import { cn } from "@/lib/utils";
@@ -22,6 +27,7 @@ interface SignUpDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onOpenLogin?: (email?: string) => void;
+  prefill?: SignUpPrefill;
 }
 
 type SignUpState = {
@@ -37,6 +43,7 @@ type SignUpState = {
   usernameAvailable: boolean;
   usernameHint: string | null;
   error: string | null;
+  notice: string | null;
   success: boolean;
   successMessage: string | null;
 };
@@ -54,15 +61,32 @@ const INITIAL_SIGNUP_STATE: SignUpState = {
   usernameAvailable: false,
   usernameHint: null,
   error: null,
+  notice: null,
   success: false,
   successMessage: null,
 };
 
-export function SignUpDialog({ open, onOpenChange, onOpenLogin }: SignUpDialogProps) {
+export function SignUpDialog({
+  open,
+  onOpenChange,
+  onOpenLogin,
+  prefill,
+}: SignUpDialogProps) {
   const [form, setForm] = useState<SignUpState>(INITIAL_SIGNUP_STATE);
 
   const patchForm = (patch: Partial<SignUpState>) =>
     setForm((prev) => ({ ...prev, ...patch }));
+
+  useEffect(() => {
+    if (!open || !prefill) return;
+    // 모달이 열릴 때만 1회 적용한다 — 이후 사용자가 편집하는 폼 상태를 덮어쓰지 않는다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    patchForm({
+      email: prefill.email ?? "",
+      name: prefill.name ?? "",
+      notice: prefill.notice ?? null,
+    });
+  }, [open, prefill]);
 
   const resetForm = () => setForm(INITIAL_SIGNUP_STATE);
 
@@ -235,6 +259,15 @@ export function SignUpDialog({ open, onOpenChange, onOpenLogin }: SignUpDialogPr
           className="mt-4 space-y-4 overflow-y-auto pr-1"
           noValidate
         >
+          {form.notice && (
+            <div
+              className="rounded-lg border border-accent/40 bg-accent/10 p-3"
+              role="status"
+            >
+              <p className="text-sm text-foreground">{form.notice}</p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="name" className="text-foreground">
               이름
@@ -388,7 +421,18 @@ export function SignUpDialog({ open, onOpenChange, onOpenLogin }: SignUpDialogPr
             </button>
           </p>
         </form>
-        <SocialLoginButtons mode="signup" onClose={() => handleDialogOpenChange(false)} />
+        <SocialLoginButtons
+          mode="signup"
+          onClose={() => handleDialogOpenChange(false)}
+          onError={(reason: OAuthErrorReason, _detail: OAuthErrorDetail) => {
+            patchForm({
+              error:
+                reason === "email_taken"
+                  ? "이미 가입된 이메일입니다. 가입할 때 사용한 방법으로 로그인해 주세요."
+                  : "회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+            });
+          }}
+        />
           </>
         )}
       </DialogContent>
