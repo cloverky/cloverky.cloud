@@ -1,0 +1,32 @@
+# 시크릿 — 절대 이미지에 들어가면 안 됨
+# Dockerfile 의 `COPY . clover/` 가 빌드 컨텍스트 전체를 복사하므로,
+# 여기서 제외하지 않으면 .env / .env.auth 가 이미지 레이어에 그대로 남는다.
+# backend 와 auth 는 같은 컨텍스트(./clover)로 빌드되므로 JWT_PRIVATE_KEY 가
+# backend 이미지에까지 포함된다.
+.env
+.env.*
+!.env.example
+
+# Python 캐시 — 빌드 컨텍스트 58MB 중 39MB 를 차지하고,
+# ruff/mypy 를 돌릴 때마다 mtime 이 바뀌어 COPY 레이어 캐시를 무효화한다.
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.import_linter_cache/
+
+# 가상환경
+.venv/
+venv/
+
+# VCS
+.git/
+.gitignore
+
+# 문서 · 에이전트 보조 파일 (런타임 불필요)
+_docs/
+_claude/
+CLAUDE.md
+README.md

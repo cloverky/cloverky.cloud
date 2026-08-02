@@ -1,11 +1,15 @@
+# 프로젝트명 고정 — 파일 위치(clover/)에서 이름을 유도하면 기존 볼륨
+# cloverkycloud_* 과 연결이 끊겨 데이터가 사라진 것처럼 보인다.
+name: cloverkycloud
+
 services:
   backend:
     build:
-      context: ./clover
+      context: .
     ports:
       - "8000:8000"
     env_file:
-      - ./clover/.env
+      - .env
     environment:
       - OLLAMA_HOST=http://host.docker.internal:11434
       - EXAONE_BASE_URL=http://host.docker.internal:8001/v1
@@ -18,22 +22,22 @@ services:
 
   frontend:
     build:
-      context: ./lucky
+      context: ../lucky
     ports:
       - "3000:3000"
     env_file:
-      - ./lucky/.env.production
+      - ../lucky/.env.production
     restart: always
   # 인증 게이트웨이 — auth.cloverky.cloud (JWT 발급 전용, 개인키는 여기에만)
   auth:
     build:
-      context: ./clover
+      context: .
     command: uvicorn clover.auth_main:app --host 0.0.0.0 --port 9000
     ports:
       - "9000:9000"
     env_file:
-      - ./clover/.env        # 공용 설정 + JWT_PUBLIC_KEY
-      - ./clover/.env.auth   # 개인키·OAuth 시크릿 — auth 컨테이너에만 주입
+      - .env        # 공용 설정 + JWT_PUBLIC_KEY
+      - .env.auth   # 개인키·OAuth 시크릿 — auth 컨테이너에만 주입
     depends_on:
       - pgvector
       - redis
