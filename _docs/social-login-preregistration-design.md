@@ -174,6 +174,8 @@ SignUpDialog:
 
 `SignUpPrefill` 타입: `{ email?: string; name?: string; notice?: string }`.
 
+이메일 프리필은 **`.local` 로 끝나는 주소를 걸러낸다.** 카카오는 이메일 제공이 선택이라 `kakao_{id}@kakao.local` 이 올 수 있는데, 그 가짜 주소를 가입 폼에 채워 넣으면 사용자가 그대로 제출해 쓸 수 없는 계정을 만든다. 이름은 항상 프리필한다.
+
 `sign-up-dialog-context.tsx` 의 `useOpenSignUp` 은 지금 `ctx ?? (() => {})` 로 no-op 폴백을 준다. 인자를 받는 형태로 바꿔도 이 폴백은 그대로 유효하다.
 
 ### 문구
