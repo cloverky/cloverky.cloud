@@ -58,7 +58,7 @@
 
 **Interfaces:**
 - Consumes: 없음
-- Produces: `categories` 8행, `foods` 36행
+- Produces: `categories` 8행, `foods` 34행
 
 - [ ] **Step 1: 스크립트 작성**
 
@@ -150,7 +150,7 @@ cd ~/projects/cloverky.cloud/clover
 docker compose run --rm --no-deps backend sh -c 'cd /project/clover && PYTHONPATH=/project/clover/apps:/project/clover:/project python scripts/seed_fridge_catalog.py'
 ```
 
-기대: `categories: 8`, `foods: 36`
+기대: `categories: 8`, `foods: 34`
 
 컨테이너 이미지에는 아직 이 스크립트가 없다. 먼저 `docker compose build backend` 로 이미지를 새로 만든 뒤 실행한다.
 
@@ -158,7 +158,7 @@ docker compose run --rm --no-deps backend sh -c 'cd /project/clover && PYTHONPAT
 
 같은 명령을 다시 실행한다.
 
-기대: 여전히 `categories: 8`, `foods: 36`. 숫자가 늘면 존재 확인 조건이 틀린 것이다.
+기대: 여전히 `categories: 8`, `foods: 34`. 숫자가 늘면 존재 확인 조건이 틀린 것이다.
 
 - [ ] **Step 4: 커밋**
 
