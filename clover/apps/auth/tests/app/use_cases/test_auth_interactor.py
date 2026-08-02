@@ -5,8 +5,12 @@ from __future__ import annotations
 import pytest
 
 from auth.app.dtos.auth_dto import (
+    AuthMode,
     AuthUserDto,
     CallbackCommand,
+    EmailAlreadyRegisteredError,
+    NotRegisteredError,
+    OAuthLinkDto,
     PasswordLoginCommand,
     ProviderIdentity,
     RefreshCommand,
@@ -31,24 +35,24 @@ class FakeGoogleGateway(OAuthProviderGateway):
 
 class FakeStateStore(OAuthStateRepository):
     def __init__(self) -> None:
-        self.issued: set[str] = set()
+        self.issued: dict[str, AuthMode] = {}
+        self._count = 0
 
-    async def issue(self) -> str:
-        state = f"state-{len(self.issued)}"
-        self.issued.add(state)
+    async def issue(self, mode: AuthMode) -> str:
+        state = f"state-{self._count}"
+        self._count += 1
+        self.issued[state] = mode
         return state
 
-    async def consume(self, state: str) -> bool:
-        if state not in self.issued:
-            return False
-        self.issued.remove(state)
-        return True
+    async def consume(self, state: str) -> AuthMode | None:
+        return self.issued.pop(state, None)
 
 
 class FakeUserRepository(UserRepository):
     def __init__(self) -> None:
         self.rows: dict[int, AuthUserDto] = {}
         self.password_hashes: dict[str, str] = {}
+        self.links: list[OAuthLinkDto] = []
         self._next_id = 1
 
     async def get_by_email(self, email: str) -> AuthUserDto | None:
@@ -74,6 +78,50 @@ class FakeUserRepository(UserRepository):
         self.password_hashes[email] = password_hash
         self._next_id += 1
         return user
+
+    async def find_link(self, provider: str, provider_sub: str) -> OAuthLinkDto | None:
+        return next(
+            (
+                link
+                for link in self.links
+                if link.provider == provider and link.provider_sub == provider_sub
+            ),
+            None,
+        )
+
+    async def claim_backfilled_link(
+        self, provider: str, email: str, provider_sub: str
+    ) -> OAuthLinkDto | None:
+        user = await self.get_by_email(email)
+        if user is None:
+            return None
+        for i, link in enumerate(self.links):
+            if (
+                link.provider == provider
+                and link.provider_sub is None
+                and link.user_id == user.id
+            ):
+                claimed = OAuthLinkDto(
+                    user_id=link.user_id, provider=provider, provider_sub=provider_sub
+                )
+                self.links[i] = claimed
+                return claimed
+        return None
+
+    async def create_link(
+        self, user_id: int, provider: str, provider_sub: str
+    ) -> OAuthLinkDto:
+        link = OAuthLinkDto(
+            user_id=user_id, provider=provider, provider_sub=provider_sub
+        )
+        self.links.append(link)
+        return link
+
+    def add_backfilled_link(self, user_id: int, provider: str) -> None:
+        """마이그레이션 백필과 같은 상태 — provider_sub가 아직 비어 있는 연동 기록."""
+        self.links.append(
+            OAuthLinkDto(user_id=user_id, provider=provider, provider_sub=None)
+        )
 
 
 class FakeRefreshStore(RefreshTokenRepository):
@@ -163,43 +211,6 @@ async def test_password_login_rejects_oauth_only_account(
         )
 
 
-async def test_callback_creates_user_and_issues_pair(
-    rsa_keys: tuple[str, str],
-    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
-) -> None:
-    auth, users, tokens = interactor
-    start = await auth.start_login("google")
-    pair = await auth.handle_callback(
-        CallbackCommand(provider="google", code="c", state=start.state)
-    )
-
-    assert pair.access_token and pair.refresh_token
-    assert pair.token_type == "bearer"
-    assert pair.name == "Tester"
-    assert pair.email == "tester@example.com"
-    assert pair.is_new_user is True
-    assert len(users.rows) == 1
-    assert len(tokens.live) == 1
-
-
-async def test_callback_marks_returning_user_as_not_new(
-    rsa_keys: tuple[str, str],
-    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
-) -> None:
-    auth, _, _ = interactor
-    first_start = await auth.start_login("google")
-    await auth.handle_callback(
-        CallbackCommand(provider="google", code="c", state=first_start.state)
-    )
-
-    second_start = await auth.start_login("google")
-    second = await auth.handle_callback(
-        CallbackCommand(provider="google", code="c", state=second_start.state)
-    )
-
-    assert second.is_new_user is False
-
-
 async def test_callback_rejects_unknown_state(
     rsa_keys: tuple[str, str],
     interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
@@ -220,12 +231,146 @@ async def test_callback_rejects_unknown_provider(
         await auth.start_login("kakao")
 
 
+async def test_login_rejects_unlinked_social_account(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    """가입한 적 없는 소셜 계정은 로그인할 수 없다 — 계정도 만들어지지 않는다."""
+    auth, users, _ = interactor
+    start = await auth.start_login("google")
+
+    with pytest.raises(NotRegisteredError) as exc:
+        await auth.handle_callback(
+            CallbackCommand(provider="google", code="c", state=start.state)
+        )
+
+    assert exc.value.provider == "google"
+    assert exc.value.email == "tester@example.com"
+    assert exc.value.name == "Tester"
+    assert users.rows == {}
+
+
+async def test_login_rejects_account_linked_to_another_provider(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    """카카오로 가입한 계정은 같은 이메일이어도 구글로 로그인할 수 없다."""
+    auth, users, _ = interactor
+    user = await users.create_oauth_user("tester@example.com", "Tester")
+    await users.create_link(user.id, "kakao", "k-1")
+    start = await auth.start_login("google")
+
+    with pytest.raises(NotRegisteredError):
+        await auth.handle_callback(
+            CallbackCommand(provider="google", code="c", state=start.state)
+        )
+
+
+async def test_login_accepts_linked_account(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    auth, users, tokens = interactor
+    user = await users.create_oauth_user("tester@example.com", "Tester")
+    await users.create_link(user.id, "google", "g-1")
+    start = await auth.start_login("google")
+
+    pair = await auth.handle_callback(
+        CallbackCommand(provider="google", code="c", state=start.state)
+    )
+
+    assert pair.access_token and pair.refresh_token
+    assert pair.email == "tester@example.com"
+    assert pair.is_new_user is False
+    assert len(tokens.live) == 1
+
+
+async def test_login_claims_backfilled_link_and_fills_sub(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    """마이그레이션으로 백필된 계정은 첫 로그인에서 통과하고 provider_sub가 채워진다."""
+    auth, users, _ = interactor
+    user = await users.create_oauth_user("tester@example.com", "Tester")
+    users.add_backfilled_link(user.id, "google")
+    start = await auth.start_login("google")
+
+    pair = await auth.handle_callback(
+        CallbackCommand(provider="google", code="c", state=start.state)
+    )
+
+    assert pair.is_new_user is False
+    assert users.links == [
+        OAuthLinkDto(user_id=user.id, provider="google", provider_sub="g-1")
+    ]
+
+
+async def test_signup_creates_user_and_link(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    auth, users, tokens = interactor
+    start = await auth.start_login("google", mode="signup")
+
+    pair = await auth.handle_callback(
+        CallbackCommand(provider="google", code="c", state=start.state)
+    )
+
+    assert pair.is_new_user is True
+    assert pair.email == "tester@example.com"
+    assert len(users.rows) == 1
+    assert users.links == [
+        OAuthLinkDto(user_id=1, provider="google", provider_sub="g-1")
+    ]
+    assert len(tokens.live) == 1
+
+
+async def test_signup_rejects_email_registered_by_another_method(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    """비밀번호로 이미 가입한 이메일은 소셜 가입으로 가로챌 수 없다."""
+    auth, users, _ = interactor
+    users.add_password_user(
+        "tester@example.com", "tester", hash_password("supersecret1")
+    )
+    start = await auth.start_login("google", mode="signup")
+
+    with pytest.raises(EmailAlreadyRegisteredError) as exc:
+        await auth.handle_callback(
+            CallbackCommand(provider="google", code="c", state=start.state)
+        )
+
+    assert exc.value.email == "tester@example.com"
+    assert users.links == []
+
+
+async def test_signup_on_already_linked_account_just_logs_in(
+    rsa_keys: tuple[str, str],
+    interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
+) -> None:
+    """이미 가입된 사람이 가입 버튼을 눌러도 계정이 늘어나지 않는다."""
+    auth, users, _ = interactor
+    user = await users.create_oauth_user("tester@example.com", "Tester")
+    await users.create_link(user.id, "google", "g-1")
+    start = await auth.start_login("google", mode="signup")
+
+    pair = await auth.handle_callback(
+        CallbackCommand(provider="google", code="c", state=start.state)
+    )
+
+    assert pair.is_new_user is False
+    assert len(users.rows) == 1
+    assert len(users.links) == 1
+
+
 async def test_refresh_rotates_token(
     rsa_keys: tuple[str, str],
     interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
 ) -> None:
     auth, _, tokens = interactor
-    start = await auth.start_login("google")
+    # 소셜 콜백은 더 이상 계정을 만들지 않는다 — 세션을 얻으려면 가입 모드로 시작한다.
+    start = await auth.start_login("google", mode="signup")
     first = await auth.handle_callback(
         CallbackCommand(provider="google", code="c", state=start.state)
     )
@@ -241,7 +386,8 @@ async def test_refresh_reuse_revokes_every_session(
     interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
 ) -> None:
     auth, _, tokens = interactor
-    start = await auth.start_login("google")
+    # 소셜 콜백은 더 이상 계정을 만들지 않는다 — 세션을 얻으려면 가입 모드로 시작한다.
+    start = await auth.start_login("google", mode="signup")
     first = await auth.handle_callback(
         CallbackCommand(provider="google", code="c", state=start.state)
     )
@@ -260,7 +406,8 @@ async def test_logout_revokes_sessions_and_blacklists_access_token(
     interactor: tuple[AuthInteractor, FakeUserRepository, FakeRefreshStore],
 ) -> None:
     auth, _, tokens = interactor
-    start = await auth.start_login("google")
+    # 소셜 콜백은 더 이상 계정을 만들지 않는다 — 세션을 얻으려면 가입 모드로 시작한다.
+    start = await auth.start_login("google", mode="signup")
     pair = await auth.handle_callback(
         CallbackCommand(provider="google", code="c", state=start.state)
     )

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from auth.adapter.inbound.api.auth_router import auth_router
 from auth.app.dtos.auth_dto import (
+    AuthMode,
     CallbackCommand,
     PasswordLoginCommand,
     RefreshCommand,
@@ -21,7 +22,9 @@ _AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth?state=state-0"
 
 
 class StubAuthUseCase(AuthUseCase):
-    async def start_login(self, provider: str) -> StartLoginResult:
+    async def start_login(
+        self, provider: str, mode: AuthMode = "login"
+    ) -> StartLoginResult:
         if provider != "google":
             raise ValueError(f"지원하지 않는 provider: {provider}")
         return StartLoginResult(authorize_url=_AUTHORIZE_URL, state="state-0")
@@ -75,7 +78,9 @@ class _CallbackStub(AuthUseCase):
     def __init__(self, pair: TokenPairDto) -> None:
         self._pair = pair
 
-    async def start_login(self, provider: str) -> StartLoginResult:
+    async def start_login(
+        self, provider: str, mode: AuthMode = "login"
+    ) -> StartLoginResult:
         return StartLoginResult(authorize_url=_AUTHORIZE_URL, state="state-0")
 
     async def login_with_password(self, cmd: PasswordLoginCommand) -> TokenPairDto:
