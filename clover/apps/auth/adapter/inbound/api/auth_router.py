@@ -18,6 +18,8 @@ from auth.adapter.inbound.api.schemas.auth_schema import (
 )
 from auth.app.dtos.auth_dto import (
     CallbackCommand,
+    EmailAlreadyRegisteredError,
+    NotRegisteredError,
     PasswordLoginCommand,
     RefreshCommand,
     TokenPairDto,
@@ -44,6 +46,21 @@ def _build_frontend_redirect(pair: TokenPairDto) -> str:
         f"&username={quote(pair.username)}"
     )
     return f"{_FRONTEND_URL}{path}{query}"
+
+
+def _build_error_redirect(error: str, provider: str, email: str, name: str) -> str:
+    """실패도 프론트 콜백 경로로 되돌린다.
+
+    콜백은 팝업 안 브라우저다 — 여기서 401 JSON을 던지면 사용자가 raw JSON을
+    보게 된다. 토큰은 쿼리에도 쿠키에도 싣지 않는다.
+    """
+    query = (
+        f"?error={quote(error)}"
+        f"&provider={quote(provider)}"
+        f"&email={quote(email)}"
+        f"&name={quote(name)}"
+    )
+    return f"{_FRONTEND_URL}/oauth/callback{query}"
 
 
 def _set_token_cookies(response: Response, pair: TokenPairDto) -> None:
@@ -119,6 +136,21 @@ async def login_redirect(
     return RedirectResponse(url=result.authorize_url, status_code=302)
 
 
+@auth_router.get("/signup/{provider}", response_model=None)
+async def signup_redirect(
+    provider: str,
+    auth: AuthUseCase = Depends(get_auth_use_case),
+) -> RedirectResponse:
+    """소셜 회원가입 진입점 — 여기서 시작한 흐름만 새 계정을 만들 수 있다."""
+    try:
+        result = await auth.start_login(provider, mode="signup")
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
+    return RedirectResponse(url=result.authorize_url, status_code=302)
+
+
 @auth_router.get("/callback/{provider}", response_model=None)
 async def callback(
     provider: str,
@@ -130,6 +162,16 @@ async def callback(
     try:
         pair = await auth.handle_callback(
             CallbackCommand(provider=provider, code=code, state=state)
+        )
+    except NotRegisteredError as e:
+        return RedirectResponse(
+            url=_build_error_redirect("not_registered", e.provider, e.email, e.name),
+            status_code=303,
+        )
+    except EmailAlreadyRegisteredError as e:
+        return RedirectResponse(
+            url=_build_error_redirect("email_taken", e.provider, e.email, ""),
+            status_code=303,
         )
     except ValueError as e:
         raise HTTPException(
