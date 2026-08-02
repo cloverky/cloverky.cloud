@@ -52,7 +52,6 @@ from fridge.adapter.outbound.orm.inventory_orm import InventoryOrm  # noqa: F401
 from fridge.adapter.outbound.orm.receipt_line_orm import ReceiptLineOrm  # noqa: F401
 from fridge.adapter.outbound.orm.receipt_orm import ReceiptOrm  # noqa: F401
 from fridge.models.database import Base, dispose_engine, engine, get_db
-from secom.adapter.inbound.api.v1.oauth_router import oauth_router
 from secom.app.controllers.user_controller import UserController
 from secom.app.schemas.user_schema import (
     ChangePasswordSchema,
@@ -340,7 +339,6 @@ app.include_router(messenger_router)
 app.include_router(push_router, prefix="/messenger")
 app.include_router(vision_router)
 app.include_router(star_craft_router)
-app.include_router(oauth_router)
 app.include_router(weather_router)
 
 

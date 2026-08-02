@@ -1082,10 +1082,10 @@ Expected: 출력 없음.
 `import main` 은 로컬 venv로는 불가능하다(의존성이 이미지에만 있다). 이미지를 **빌드만** 하고 일회용 컨테이너로 확인한다. 라이브 backend 컨테이너를 먼저 교체하면 실패 시 API가 죽는다.
 
 ```bash
-cd /home/soyeon/projects/cloverky.cloud/clover && docker compose build backend && docker compose run --rm --no-deps backend python -c "import main; print('import ok')"
+cd /home/soyeon/projects/cloverky.cloud/clover && docker compose build backend && docker compose run --rm --no-deps backend python -c "import clover.main; print('import ok')"
 ```
 
-Expected: 마지막 줄에 `import ok`.
+Expected: 마지막 줄에 `import ok`. 그 앞의 `titanic 라우터 로드 실패 — … No module named 'pandas'` 경고 6줄은 기존 현상이다 — 선택 의존성이 `requirements-docker.txt` 에 없어서 나며 앱이 잡아서 흘려보낸다. 이 작업과 무관하다.
 
 - [ ] **Step 5: 커밋**
 
