@@ -45,6 +45,10 @@ const INITIAL_FORM_STATE: LoginFormState = {
 
 const SLOW_HINT_DELAY_MS = 3_000;
 
+/** 둘러보는 사람이 가입 없이 바로 들어올 수 있게 공개해 둔 계정. */
+const DEMO_EMAIL = "a@a";
+const DEMO_PASSWORD = "aaaaaaaa";
+
 export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDialogProps) {
   const { login: authLogin } = useAuth();
   const openSignUp = useOpenSignUp();
@@ -162,6 +166,32 @@ export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDial
           className="mt-4 space-y-4 overflow-y-auto pr-1"
           noValidate
         >
+          <div className="rounded-lg border border-accent/25 bg-accent/[0.07] p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs leading-relaxed">
+                <p className="font-medium text-brand-text">데모 계정 로그인</p>
+                <p className="mt-0.5 text-muted-foreground">
+                  {DEMO_EMAIL} / {DEMO_PASSWORD}
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+                onClick={() =>
+                  patchForm({
+                    email: DEMO_EMAIL,
+                    password: DEMO_PASSWORD,
+                    error: null,
+                  })
+                }
+              >
+                입력하기
+              </Button>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="login-email" className="text-foreground">
               이메일
