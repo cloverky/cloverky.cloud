@@ -1,13 +1,11 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class FoodsQuery:
-    category_id: int
-    name: str
-
-
-@dataclass(frozen=True)
-class FoodCatalogResponse:
+class FoodItem:
     id: int
     name: str
+    category_id: int | None
+    default_unit: str | None

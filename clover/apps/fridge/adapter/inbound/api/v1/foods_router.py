@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
-from clover.apps.fridge.app.dtos.foods_dto import FoodCatalogResponse
+from clover.apps.fridge.app.dtos.foods_dto import FoodItem
 from clover.apps.fridge.app.ports.input.foods_use_case import FoodsUseCase
 from clover.apps.fridge.dependencies.foods_provider import get_foods_use_case
-from fridge.adapter.inbound.api.schemas.foods_schema import FoodCatalogSchema
 
 """
 식재료 카탈로그 (Foods Catalog)
@@ -17,12 +16,7 @@ foods_router = APIRouter(prefix="/food", tags=["food"])
 
 @foods_router.get("/catalog")
 async def get_catalog(
+    category_id: int | None = Query(None, description="카테고리로 거르기"),
     food: FoodsUseCase = Depends(get_foods_use_case),
-) -> FoodCatalogResponse:
-    return await food.get_catalog(
-        FoodCatalogSchema(
-            category_id=1,
-            name="사과",
-            default_unit="개",
-        )
-    )
+) -> list[FoodItem]:
+    return await food.list_foods(category_id)

@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from clover.apps.fridge.app.dtos.foods_dto import FoodCatalogResponse
-from fridge.adapter.inbound.api.schemas.foods_schema import FoodCatalogSchema
+from clover.apps.fridge.app.dtos.foods_dto import FoodItem
 
 
 class FoodsUseCase(ABC):
     @abstractmethod
-    async def get_catalog(self, schema: FoodCatalogSchema) -> FoodCatalogResponse:
+    async def list_foods(self, category_id: int | None) -> list[FoodItem]:
         pass
