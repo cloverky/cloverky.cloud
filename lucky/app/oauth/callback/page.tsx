@@ -9,6 +9,27 @@ function OAuthHandler() {
   const { login } = useAuth();
 
   useEffect(() => {
+    const error = params.get('error');
+    if (error) {
+      // 가입 강제에 걸린 흐름 — 토큰이 없다. 오프너가 안내를 띄우게 넘긴다.
+      if (window.opener) {
+        window.opener.postMessage(
+          {
+            type: 'oauth_error',
+            reason: error,
+            provider: params.get('provider') ?? '',
+            email: params.get('email') ?? '',
+            name: params.get('name') ?? '',
+          },
+          window.location.origin,
+        );
+        window.close();
+      } else {
+        router.replace('/');
+      }
+      return;
+    }
+
     const token = params.get('token');
     const name = params.get('name') ?? '';
     const email = params.get('email') ?? '';

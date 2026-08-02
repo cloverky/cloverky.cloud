@@ -2,19 +2,30 @@
 
 import { useAuth } from '@/components/auth-context';
 
+export type OAuthErrorReason = 'not_registered' | 'email_taken' | 'unknown';
+
+export type OAuthErrorDetail = {
+  provider: string;
+  email: string;
+  name: string;
+};
+
 interface Props {
   onClose: () => void;
+  /** 'login'은 기존 연동 계정만 통과시킨다. 새 계정은 'signup'에서만 만들어진다. */
+  mode: 'login' | 'signup';
+  onError?: (reason: OAuthErrorReason, detail: OAuthErrorDetail) => void;
 }
 
-const GATEWAY_PROVIDERS = new Set(['google', 'naver', 'kakao']);
+const AUTH_BASE = process.env.NEXT_PUBLIC_AUTH_URL ?? 'https://auth.cloverky.cloud';
 
-export function SocialLoginButtons({ onClose }: Props) {
+const KNOWN_REASONS = new Set<string>(['not_registered', 'email_taken']);
+
+export function SocialLoginButtons({ onClose, mode, onError }: Props) {
   const { login } = useAuth();
 
   const handleSocialLogin = (provider: string) => {
-    const url = GATEWAY_PROVIDERS.has(provider)
-      ? (process.env.NEXT_PUBLIC_AUTH_URL ?? 'https://auth.cloverky.cloud') + '/auth/login/' + provider
-      : (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.cloverky.cloud') + '/auth/' + provider;
+    const url = `${AUTH_BASE}/auth/${mode}/${provider}`;
     const w = 480, h = 600;
     const left = Math.round(window.screenX + (window.outerWidth - w) / 2);
     const top = Math.round(window.screenY + (window.outerHeight - h) / 2);
@@ -32,6 +43,19 @@ export function SocialLoginButtons({ onClose }: Props) {
           login({ username, name: name || username, email }, true);
         }
         onClose();
+      }
+      if (e.data?.type === 'oauth_error') {
+        window.removeEventListener('message', onMsg);
+        const raw = String(e.data.reason ?? '');
+        // 서버가 나중에 새 에러를 추가해도 사용자가 빈 화면을 보지 않게 한다.
+        const reason: OAuthErrorReason = KNOWN_REASONS.has(raw)
+          ? (raw as OAuthErrorReason)
+          : 'unknown';
+        onError?.(reason, {
+          provider: String(e.data.provider ?? ''),
+          email: String(e.data.email ?? ''),
+          name: String(e.data.name ?? ''),
+        });
       }
     };
     window.addEventListener('message', onMsg);

@@ -274,7 +274,7 @@ export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDial
           </p>
 
         </form>
-        <SocialLoginButtons onClose={() => onOpenChange(false)} />
+        <SocialLoginButtons mode="login" onClose={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
   );

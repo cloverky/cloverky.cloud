@@ -388,7 +388,7 @@ export function SignUpDialog({ open, onOpenChange, onOpenLogin }: SignUpDialogPr
             </button>
           </p>
         </form>
-        <SocialLoginButtons onClose={() => handleDialogOpenChange(false)} />
+        <SocialLoginButtons mode="signup" onClose={() => handleDialogOpenChange(false)} />
           </>
         )}
       </DialogContent>
