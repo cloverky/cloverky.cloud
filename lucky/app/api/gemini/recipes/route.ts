@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     return fallbackFor(body);
   }
 
-  const modelName = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+  const modelName = process.env.GEMINI_MODEL ?? "gemini-flash-latest";
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: modelName });
 
