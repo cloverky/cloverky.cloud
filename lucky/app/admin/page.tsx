@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AreaChart,
   Area,
@@ -34,6 +35,7 @@ import {
   Refrigerator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isAdmin, useAuth } from "@/components/auth-context";
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -147,6 +149,23 @@ function StatCard({
 
 export default function AdminPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, isReady } = useAuth();
+  const router = useRouter();
+
+  // 버튼을 숨기는 것만으로는 URL 직접 입력을 막지 못한다 — 페이지에서도 막는다.
+  useEffect(() => {
+    if (isReady && !isAdmin(user)) router.replace("/");
+  }, [isReady, user, router]);
+
+  if (!isReady || !isAdmin(user)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-muted-foreground">
+          {isReady ? "관리자만 접근할 수 있습니다." : "확인 중..."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-muted/30">

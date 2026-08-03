@@ -104,7 +104,8 @@ export type LoginResponse = {
   name: string;
   username: string;
   email: string;
-  role: string;
+  /** 레거시 로그인 경로는 role 을 안 내려준다 — 없으면 일반 사용자로 본다. */
+  role?: string;
 };
 
 const LOGIN_TIMEOUT_MS = 15_000;
