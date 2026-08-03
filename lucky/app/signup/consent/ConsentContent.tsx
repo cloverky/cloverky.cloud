@@ -51,10 +51,11 @@ export default function ConsentContent() {
     if (window.opener) {
       // 이 창(팝업)의 sessionStorage는 팝업이 닫히면 사라지므로, 신원 정보를
       // postMessage에 실어 오프너가 자신의 login()을 호출하도록 한다.
-      window.opener.postMessage({ type: 'oauth_done', username, name, email }, window.location.origin);
+      // 신규 가입자는 항상 일반 사용자다 — 관리자 승격은 서버에서만 일어난다.
+      window.opener.postMessage({ type: 'oauth_done', username, name, email, role: 'user' }, window.location.origin);
       window.close();
     } else {
-      login({ username, name, email }, true);
+      login({ username, name, email, role: 'user' }, true);
       router.replace('/');
     }
   };

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Refrigerator } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/auth-context";
+import { isAdmin, useAuth } from "@/components/auth-context";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { HeaderMobileNav } from "@/components/header-mobile-nav";
 import { FridgeGame } from "@/components/fridge-game";
@@ -96,14 +96,16 @@ export function Header({ onSignUpClick, onLoginClick, onProfileEditClick }: Head
             </>
           )}
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 border-border bg-transparent px-3 text-sm text-foreground hover:bg-secondary"
-            asChild
-          >
-            <Link href="/admin">admin</Link>
-          </Button>
+          {isAdmin(user) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 border-border bg-transparent px-3 text-sm text-foreground hover:bg-secondary"
+              asChild
+            >
+              <Link href="/admin">admin</Link>
+            </Button>
+          )}
 
           <ThemeToggle className="h-9 w-9 shadow-sm" />
         </div>

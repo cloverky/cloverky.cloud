@@ -198,4 +198,6 @@ class AuthInteractor(AuthUseCase):
             email=email,
             is_new_user=is_new_user,
             username=username,
+            # 프론트가 admin 전용 UI를 가리는 데 쓴다 — 토큰 안 roles와 같은 값이다.
+            role=roles[0] if roles else "user",
         )

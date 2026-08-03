@@ -104,6 +104,7 @@ export type LoginResponse = {
   name: string;
   username: string;
   email: string;
+  role: string;
 };
 
 const LOGIN_TIMEOUT_MS = 15_000;

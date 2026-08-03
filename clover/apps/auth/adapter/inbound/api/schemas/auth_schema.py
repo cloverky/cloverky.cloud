@@ -24,6 +24,7 @@ class PasswordLoginResponse(BaseModel):
     name: str
     username: str
     email: str
+    role: str
     expires_in: int
 
 

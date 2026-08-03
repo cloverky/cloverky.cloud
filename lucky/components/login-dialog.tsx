@@ -132,6 +132,7 @@ export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDial
           username: result.username,
           name: result.name,
           email: result.email,
+          role: result.role ?? "user",
         },
         remember,
       );

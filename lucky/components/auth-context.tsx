@@ -15,7 +15,15 @@ export type AuthUser = {
   username: string;
   name: string;
   email: string;
+  /** "admin" 이면 관리자 전용 UI가 보인다. 서버가 안 내려주면 일반 사용자로 본다. */
+  role: string;
 };
+
+export const ADMIN_ROLE = "admin";
+
+export function isAdmin(user: AuthUser | null): boolean {
+  return user?.role === ADMIN_ROLE;
+}
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -62,6 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               username: parsed.username,
               name: parsed.name ?? parsed.username,
               email: parsed.email,
+              // role 없이 저장된 옛 세션은 일반 사용자로 복원한다.
+              role: parsed.role ?? "user",
             },
           });
         }

@@ -56,6 +56,7 @@ class TokenPairDto:
     email: str
     is_new_user: bool = False
     username: str = ""
+    role: str = "user"
 
 
 @dataclass(frozen=True)

@@ -44,6 +44,7 @@ def _build_frontend_redirect(pair: TokenPairDto) -> str:
         f"&name={quote(pair.name)}"
         f"&email={quote(pair.email)}"
         f"&username={quote(pair.username)}"
+        f"&role={quote(pair.role)}"
     )
     return f"{_FRONTEND_URL}{path}{query}"
 
@@ -117,6 +118,7 @@ async def login_with_password(
         name=pair.name,
         username=pair.username,
         email=pair.email,
+        role=pair.role,
         expires_in=pair.expires_in,
     )
 

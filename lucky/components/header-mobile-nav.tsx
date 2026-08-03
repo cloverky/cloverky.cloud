@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { isAdmin, type AuthUser } from "@/components/auth-context";
 import { HEADER_NAV_MENUS } from "@/lib/header-nav";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type HeaderMobileNavProps = {
-  user: { username: string } | null;
+  user: AuthUser | null;
   onLoginClick: () => void;
   onSignUpClick: () => void;
   onProfileEditClick: () => void;
@@ -106,11 +107,13 @@ export function HeaderMobileNav({
               lesson
             </Link>
           </Button>
-          <Button variant="outline" className="h-12 w-full text-base" asChild>
-            <Link href="/admin" onClick={close}>
-              admin
-            </Link>
-          </Button>
+          {isAdmin(user) && (
+            <Button variant="outline" className="h-12 w-full text-base" asChild>
+              <Link href="/admin" onClick={close}>
+                admin
+              </Link>
+            </Button>
+          )}
           {user ? (
             <>
               <p className="px-1 text-sm text-muted-foreground">
