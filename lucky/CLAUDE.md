@@ -102,3 +102,14 @@ lucky/
 | shadcn/ui 없이 인라인 스타일 | shadcn/ui → Tailwind 순으로 우선 적용 |
 | `"use client"` 남발 | 서버 컴포넌트 기본, 이벤트·훅 필요 시에만 추가 |
 | `_claude/` 문서를 배포 대상으로 포함 | AI 보조용 전용, 앱 코드와 무관 |
+
+<!-- omd:start v=1 hash=672475c77b07 -->
+# Design System (oh-my-design)
+
+The authoritative brand & UI spec is **@./DESIGN.md**.
+Read before any UI/styling/microcopy/motion work.
+
+Preference log (pending corrections): @./.omd/preferences.md
+
+Precedence: DESIGN.md > preferences.md > your defaults.
+<!-- omd:end -->
