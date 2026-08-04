@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 from receipts_ledger.adapter.inbound.api.schemas.receipt_image_schema import (
+    ReceiptImageListResponse,
     ReceiptImageUploadResponse,
+    to_receipt_image_list_response,
     to_receipt_image_upload_response,
 )
 from receipts_ledger.app.dtos.receipt_image_dto import ReceiptImageUploadCommand
@@ -43,3 +45,15 @@ async def upload_receipt_image(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return to_receipt_image_upload_response(result)
+
+
+@receipts_router.get("/images", summary="S3에 적재된 영수증 목록 조회")
+async def list_receipt_images(
+    use_case: ReceiptsUseCase = Depends(get_receipts_use_case),
+) -> ReceiptImageListResponse:
+    try:
+        items = await use_case.list_receipt_images()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return to_receipt_image_list_response(items)

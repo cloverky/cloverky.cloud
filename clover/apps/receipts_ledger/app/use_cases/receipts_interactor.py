@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from receipts_ledger.app.dtos.receipt_image_dto import (
+    ReceiptImageListItem,
     ReceiptImageUploadCommand,
     ReceiptImageUploadResult,
 )
@@ -32,3 +33,6 @@ class ReceiptsInteractor(ReceiptsUseCase):
             s3_key=stored.key,
             s3_url=stored.url,
         )
+
+    async def list_receipt_images(self) -> list[ReceiptImageListItem]:
+        return await self._storage.list_images()

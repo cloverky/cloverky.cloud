@@ -5,12 +5,21 @@ import { LessonMobileNav } from "@/components/lesson-mobile-nav";
 import { TitanicPassengerList } from "@/components/titanic-passenger-list";
 import { TitanicCsvUploadSection } from "@/components/titanic-csv-upload-section";
 import { SmithCaptainChat } from "@/components/smith-captain-chat";
+import { ReceiptImageList } from "@/components/receipt-image-list";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { BarChart3, Brain, ChevronDown, Database, Ship, Sparkles } from "lucide-react";
+import {
+  BarChart3,
+  Brain,
+  ChevronDown,
+  Database,
+  ReceiptText,
+  Ship,
+  Sparkles,
+} from "lucide-react";
 
 const lessonGoals = [
   "데이터 수집 및 전처리 기술 습득",
@@ -37,7 +46,9 @@ export default function LessonPage() {
   const [hasUploadedCsv, setHasUploadedCsv] = useState(false);
   const [passengerListRequested, setPassengerListRequested] = useState(false);
   const [showCaptainChat, setShowCaptainChat] = useState(false);
+  const [receiptsRequested, setReceiptsRequested] = useState(false);
   const captainChatRef = useRef<HTMLElement>(null);
+  const receiptsRef = useRef<HTMLElement>(null);
 
   const openPassengerList = useCallback(() => {
     setPassengerListRequested(true);
@@ -47,6 +58,13 @@ export default function LessonPage() {
     setShowCaptainChat(true);
     setTimeout(() => {
       captainChatRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }, []);
+
+  const openReceipts = useCallback(() => {
+    setReceiptsRequested(true);
+    setTimeout(() => {
+      receiptsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
   }, []);
 
@@ -125,6 +143,14 @@ export default function LessonPage() {
                 </ul>
               </CollapsibleContent>
             </Collapsible>
+
+            <button
+              type="button"
+              className="block w-full rounded-md py-1 text-left font-semibold text-foreground transition-colors hover:text-accent"
+              onClick={openReceipts}
+            >
+              영수증 확인
+            </button>
 
             <a
               className="block rounded-md py-1 text-left font-semibold text-foreground transition-colors hover:text-accent"
@@ -219,6 +245,22 @@ export default function LessonPage() {
                 <SmithCaptainChat />
               </section>
             )}
+
+            <section
+              id="receipts"
+              ref={receiptsRef}
+              className="scroll-mt-28 rounded-2xl border border-border bg-card/50 p-5 shadow-sm"
+            >
+              <div className="mb-4 flex items-center gap-2">
+                <ReceiptText className="h-5 w-5 text-accent" />
+                <h2 className="text-lg font-bold">영수증 확인</h2>
+              </div>
+              <p className="text-sm leading-7 text-muted-foreground">
+                S3에 저장된 영수증 이미지를 최신순으로 보여줍니다. 이미지를 누르면 원본을
+                새 탭에서 확인할 수 있습니다.
+              </p>
+              <ReceiptImageList fetchEnabled={receiptsRequested} />
+            </section>
 
             <section
               id="model-prediction"
