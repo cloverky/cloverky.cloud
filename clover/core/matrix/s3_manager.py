@@ -6,8 +6,17 @@ from functools import lru_cache
 from typing import Any
 
 import boto3
+from botocore.config import Config
 
 from core.matrix.keymaker_api import get_keymaker
+
+# presigned URL 이 글로벌 호스트(bucket.s3.amazonaws.com)로 만들어지면 S3 가 리전
+# 엔드포인트로 307 리다이렉트를 보내면서 서명이 깨진다. 서명 방식과 주소 형식을
+# 명시해 리전 호스트로 고정한다.
+_S3_CLIENT_CONFIG = Config(
+    signature_version="s3v4",
+    s3={"addressing_style": "virtual"},
+)
 
 
 class S3Manager:
@@ -30,6 +39,7 @@ class S3Manager:
                 aws_access_key_id=access_key or None,
                 aws_secret_access_key=secret_key or None,
                 region_name=self._keymaker.get_aws_default_region(),
+                config=_S3_CLIENT_CONFIG,
             )
         return self._client
 

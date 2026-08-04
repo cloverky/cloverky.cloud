@@ -37,6 +37,18 @@ class Keymaker:
     def get_openweather_default_country(self) -> str:
         return os.getenv("OPENWEATHER_DEFAULT_COUNTRY", "KR")
 
+    def is_aws_ready(self) -> bool:
+        return bool(os.getenv("AWS_ACCESS_KEY_ID", "").strip())
+
+    def get_aws_access_key_id(self) -> str:
+        return os.getenv("AWS_ACCESS_KEY_ID", "")
+
+    def get_aws_secret_access_key(self) -> str:
+        return os.getenv("AWS_SECRET_ACCESS_KEY", "")
+
+    def get_aws_default_region(self) -> str:
+        return os.getenv("AWS_DEFAULT_REGION", "ap-northeast-2")
+
 
 @lru_cache(maxsize=1)
 def get_keymaker() -> Keymaker:
