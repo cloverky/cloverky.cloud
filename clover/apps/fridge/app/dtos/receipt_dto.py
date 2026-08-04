@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 
@@ -23,5 +25,5 @@ class ReceiptLineParsedDto:
 @dataclass(frozen=True)
 class ReceiptParseResultDto:
     store_name: str | None
-    purchased_date: object  # datetime.date | None
-    items: list
+    purchased_date: str | None  # ISO "YYYY-MM-DD"
+    items: list[ReceiptLineParsedDto]
