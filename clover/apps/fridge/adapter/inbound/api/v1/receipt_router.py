@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from datetime import date
 
@@ -9,7 +10,7 @@ from pydantic import BaseModel
 
 receipt_router = APIRouter(prefix="/receipt", tags=["receipt"])
 
-_MODEL = "gemini-2.0-flash"
+_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 _PROMPT = """이 영수증 이미지에서 구매 정보를 추출하세요.
 반드시 아래 JSON 형식만 출력하고 다른 설명은 하지 마세요.
 {
