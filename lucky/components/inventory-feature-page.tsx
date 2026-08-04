@@ -57,11 +57,11 @@ import {
   isPackCountFood,
   suggestUnitForName,
   unitForPackStyle,
-  scanReceipt,
+  uploadReceiptImage,
   type InventoryItem,
   type InventoryStats,
   type PackCountStyle,
-  type ReceiptScanResult,
+  type ReceiptImageUploadResult,
 } from "@/lib/inventory-api";
 import { cn } from "@/lib/utils";
 
@@ -146,10 +146,9 @@ export function InventoryFeaturePage() {
   const openLogin = useOpenLogin();
 
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [receiptScanning, setReceiptScanning] = useState(false);
-  const [receiptResult, setReceiptResult] = useState<ReceiptScanResult | null>(null);
-  const [receiptSelected, setReceiptSelected] = useState<Set<number>>(new Set());
-  const [receiptAdding, setReceiptAdding] = useState(false);
+  const [receiptUploading, setReceiptUploading] = useState(false);
+  const [receiptUploadResult, setReceiptUploadResult] =
+    useState<ReceiptImageUploadResult | null>(null);
 
     const [page, setPage] = useState<InventoryPageState>(INITIAL_PAGE);
   const [form, setForm] = useState<InventoryAddFormState>(createInitialAddForm);
@@ -241,54 +240,20 @@ export function InventoryFeaturePage() {
     return () => clearTimeout(timer);
   }, [dateMode, name, purchasedDate, storage, patchForm]);
 
-  const handleScanReceipt = async (file: File) => {
+  const handleUploadReceipt = async (file: File) => {
+    if (!user?.email) return;
     setReceiptFile(file);
-    setReceiptResult(null);
-    setReceiptSelected(new Set());
-    setReceiptScanning(true);
+    setReceiptUploadResult(null);
+    setReceiptUploading(true);
     try {
-      const result = await scanReceipt(file);
-      setReceiptResult(result);
-      setReceiptSelected(new Set(result.items.map((_, i) => i)));
+      const result = await uploadReceiptImage(user.email, file);
+      setReceiptUploadResult(result);
+      toast.success("영수증을 업로드했습니다. 곧 자동으로 인식되어 반영됩니다.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "영수증 인식에 실패했습니다.");
+      toast.error(err instanceof Error ? err.message : "영수증 업로드에 실패했습니다.");
     } finally {
-      setReceiptScanning(false);
+      setReceiptUploading(false);
     }
-  };
-
-  const handleAddFromReceipt = async () => {
-    if (!user?.email || !receiptResult) return;
-    const purchasedDate = receiptResult.purchased_date ?? todayIso();
-    const toAdd = receiptResult.items.filter((_, i) => receiptSelected.has(i));
-    if (toAdd.length === 0) {
-      toast.error("추가할 품목을 선택해 주세요.");
-      return;
-    }
-    setReceiptAdding(true);
-    let added = 0;
-    for (const item of toAdd) {
-      try {
-        await createInventoryItem(user.email, {
-          name: item.name,
-          quantity: item.quantity,
-          unit: item.unit,
-          storage: "냉장",
-          purchased_date: purchasedDate,
-          expiry_date: null,
-          min_quantity: 1,
-        });
-        added++;
-      } catch {
-        // continue
-      }
-    }
-    setReceiptAdding(false);
-    toast.success(`${added}개 품목을 냉장고에 추가했습니다.`);
-    setReceiptResult(null);
-    setReceiptFile(null);
-    patchForm({ addMode: "manual" });
-    await load();
   };
 
   const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -534,10 +499,10 @@ export function InventoryFeaturePage() {
                       htmlFor="receipt-upload"
                       className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border py-10 text-muted-foreground transition-colors hover:border-accent hover:text-accent"
                     >
-                      {receiptScanning ? (
+                      {receiptUploading ? (
                         <>
                           <Loader2 className="h-8 w-8 animate-spin" />
-                          <span className="text-sm">영수증 인식 중…</span>
+                          <span className="text-sm">영수증 업로드 중…</span>
                         </>
                       ) : receiptFile ? (
                         <>
@@ -561,52 +526,13 @@ export function InventoryFeaturePage() {
                       className="sr-only"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) void handleScanReceipt(file);
+                        if (file) void handleUploadReceipt(file);
                       }}
                     />
-                    {receiptResult && (
-                      <div className="space-y-3">
-                        {receiptResult.store_name && (
-                          <p className="text-sm text-muted-foreground">
-                            매장: <span className="font-medium text-foreground">{receiptResult.store_name}</span>
-                            {receiptResult.purchased_date && (
-                              <> · 구매일: <span className="font-medium text-foreground">{receiptResult.purchased_date}</span></>
-                            )}
-                          </p>
-                        )}
-                        <p className="text-sm font-medium">인식된 품목 ({receiptResult.items.length}개)</p>
-                        <div className="divide-y divide-border rounded-md border">
-                          {receiptResult.items.map((item, i) => (
-                            <label key={i} className="flex cursor-pointer items-center gap-3 px-4 py-2.5 hover:bg-muted/50">
-                              <input
-                                type="checkbox"
-                                checked={receiptSelected.has(i)}
-                                onChange={(e) => {
-                                  const next = new Set(receiptSelected);
-                                  if (e.target.checked) next.add(i); else next.delete(i);
-                                  setReceiptSelected(next);
-                                }}
-                                className="h-4 w-4 accent-foreground"
-                              />
-                              <span className="flex-1 text-sm">{item.name}</span>
-                              <span className="text-sm text-muted-foreground">{item.quantity}{item.unit}</span>
-                            </label>
-                          ))}
-                        </div>
-                        <Button
-                          type="button"
-                          disabled={receiptAdding || receiptSelected.size === 0}
-                          onClick={() => void handleAddFromReceipt()}
-                          className="w-full"
-                        >
-                          {receiptAdding ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <Plus className="mr-2 h-4 w-4" />
-                          )}
-                          선택한 {receiptSelected.size}개 냉장고에 추가
-                        </Button>
-                      </div>
+                    {receiptUploadResult && (
+                      <p className="rounded-md border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-brand-text">
+                        업로드 완료 — 자동 인식 후 재고에 반영되면 알려드립니다.
+                      </p>
                     )}
                   </div>
                 ) : (

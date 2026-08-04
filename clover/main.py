@@ -35,6 +35,10 @@ from messenger.adapter.outbound.orm.juso_orm import ContactOrm  # noqa: F401
 from messenger.adapter.outbound.orm.mail_orm import MailInboxOrm  # noqa: F401
 from messenger.adapter.outbound.orm.push_orm import PushSubscriptionOrm  # noqa: F401
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from receipts_ledger.adapter.inbound.api.v1.receipts_router import receipts_router
+from receipts_ledger.adapter.outbound.orm.receipt_image_orm import (
+    ReceiptImageOrm,  # noqa: F401
+)
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.sessions import SessionMiddleware
@@ -333,6 +337,7 @@ async def custom_openapi(request: Request):
 
 
 app.include_router(fridge_router)
+app.include_router(receipts_router)
 app.include_router(titanic_router)
 app.include_router(silicon_valley_router)
 app.include_router(messenger_router)

@@ -14,6 +14,7 @@ root_packages =
     core
     auth
     weather
+    receipts_ledger
 
 [importlinter:contract:auth-isolation]
 # Harness Rule: apps/auth 는 auth_main 엔트리포인트 전용이다.
@@ -34,6 +35,7 @@ source_modules =
     users
     star_craft
     weather
+    receipts_ledger
 forbidden_modules =
     auth
 
@@ -54,6 +56,7 @@ modules =
     silicon_valley
     users
     weather
+    receipts_ledger
 
 [importlinter:contract:clean-arch-inbound-no-outbound]
 # Harness Rule: 클린 아키텍처 — inbound adapter는 outbound를 직접 import 불가
@@ -87,4 +90,4 @@ name = Hub (star_craft) is allowed to import any spoke
 type = layers
 layers =
     star_craft
-    fridge | titanic | secom | doro | friday_13th | imitation_game | inception | lion_king | silicon_valley | users | weather
+    fridge | titanic | secom | doro | friday_13th | imitation_game | inception | lion_king | silicon_valley | users | weather | receipts_ledger
