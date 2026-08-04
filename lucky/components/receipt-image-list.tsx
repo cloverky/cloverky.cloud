@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ExternalLink, ImageOff, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  fetchMyReceiptImages,
   fetchReceiptImages,
   formatFileSize,
   formatUploadedAt,
@@ -17,13 +18,21 @@ type ListState =
   | { kind: "success"; items: ReceiptImageItem[] }
   | { kind: "error"; message: string };
 
-export function ReceiptImageList({ fetchEnabled = false }: { fetchEnabled?: boolean }) {
+type Props = {
+  fetchEnabled?: boolean;
+  /** 지정하면 해당 회원이 올린 영수증만 조회한다. 없으면 S3 전체를 조회한다. */
+  userEmail?: string;
+};
+
+export function ReceiptImageList({ fetchEnabled = false, userEmail }: Props) {
   const [state, setState] = useState<ListState>({ kind: "idle" });
 
   const load = useCallback(async () => {
     setState({ kind: "loading" });
     try {
-      const data = await fetchReceiptImages();
+      const data = userEmail
+        ? await fetchMyReceiptImages(userEmail)
+        : await fetchReceiptImages();
       setState({ kind: "success", items: data.items });
     } catch (e) {
       setState({
@@ -31,7 +40,7 @@ export function ReceiptImageList({ fetchEnabled = false }: { fetchEnabled?: bool
         message: e instanceof Error ? e.message : "영수증 목록을 불러오지 못했습니다.",
       });
     }
-  }, []);
+  }, [userEmail]);
 
   useEffect(() => {
     if (!fetchEnabled) return;

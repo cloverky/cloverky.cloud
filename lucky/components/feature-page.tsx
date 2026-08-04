@@ -24,6 +24,7 @@ import {
 import { InventoryFeaturePage } from "@/components/inventory-feature-page";
 import { RecipeFeaturePage } from "@/components/recipe-feature-page";
 import { ShoppingFeaturePage } from "@/components/shopping-feature-page";
+import { MyReceiptsSection } from "@/components/my-receipts-section";
 import {
   FEATURE_PAGES,
   type FeatureSection,
@@ -236,6 +237,13 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
             <FeatureSectionBlock key={section.title} section={section} />
           ))}
         </div>
+
+        {/* 소비 패턴 분석은 영수증이 원본 근거라 이 화면에서 바로 확인할 수 있게 둔다. */}
+        {slug === "analytics" ? (
+          <div className="mt-12">
+            <MyReceiptsSection />
+          </div>
+        ) : null}
 
         <p className="mt-10 text-center text-xs text-muted-foreground">
           데모 화면입니다. 실제 데이터 연동은 이후 단계에서 진행합니다.

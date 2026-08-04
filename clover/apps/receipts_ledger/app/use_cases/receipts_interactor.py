@@ -36,3 +36,13 @@ class ReceiptsInteractor(ReceiptsUseCase):
 
     async def list_receipt_images(self) -> list[ReceiptImageListItem]:
         return await self._storage.list_images()
+
+    async def list_user_receipt_images(
+        self, user_email: str
+    ) -> list[ReceiptImageListItem]:
+        # 소유자 판별은 업로드 기록(DB)이 근거다. S3 키에는 회원 정보가 없으므로
+        # 전체 목록을 회원의 키 집합으로 걸러 남의 영수증이 섞이지 않게 한다.
+        owned_keys = set(await self._repository.find_keys_by_user_email(user_email))
+        if not owned_keys:
+            return []
+        return [i for i in await self._storage.list_images() if i.key in owned_keys]

@@ -28,10 +28,13 @@ export type ReceiptImageListResponse = {
   total: number;
 };
 
-export async function fetchReceiptImages(): Promise<ReceiptImageListResponse> {
+async function request(
+  path: string,
+  headers?: HeadersInit,
+): Promise<ReceiptImageListResponse> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}/api/receipts/images`, { cache: "no-store" });
+    res = await fetch(`${API_BASE}${path}`, { cache: "no-store", headers });
   } catch {
     throw new Error("백엔드 서버에 연결할 수 없습니다.");
   }
@@ -40,6 +43,18 @@ export async function fetchReceiptImages(): Promise<ReceiptImageListResponse> {
     throw new Error(parseApiError(data, res.status));
   }
   return data;
+}
+
+/** S3에 적재된 전체 영수증 (lesson 실습 화면용). */
+export function fetchReceiptImages(): Promise<ReceiptImageListResponse> {
+  return request("/api/receipts/images");
+}
+
+/** 해당 회원이 올린 영수증만 조회한다. */
+export function fetchMyReceiptImages(
+  email: string,
+): Promise<ReceiptImageListResponse> {
+  return request("/api/receipts/images/mine", { "X-User-Email": email });
 }
 
 export function formatFileSize(bytes: number): string {

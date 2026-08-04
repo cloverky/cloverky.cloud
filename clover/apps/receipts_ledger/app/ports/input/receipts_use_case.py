@@ -21,3 +21,10 @@ class ReceiptsUseCase(ABC):
     async def list_receipt_images(self) -> list[ReceiptImageListItem]:
         """S3에 적재된 영수증 이미지 목록을 최신순으로 반환한다."""
         pass
+
+    @abstractmethod
+    async def list_user_receipt_images(
+        self, user_email: str
+    ) -> list[ReceiptImageListItem]:
+        """해당 회원이 업로드한 영수증만 최신순으로 반환한다."""
+        pass

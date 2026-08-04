@@ -57,3 +57,16 @@ async def list_receipt_images(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return to_receipt_image_list_response(items)
+
+
+@receipts_router.get("/images/mine", summary="내가 올린 영수증 목록 조회")
+async def list_my_receipt_images(
+    x_user_email: str = Header(..., alias="X-User-Email"),
+    use_case: ReceiptsUseCase = Depends(get_receipts_use_case),
+) -> ReceiptImageListResponse:
+    try:
+        items = await use_case.list_user_receipt_images(x_user_email)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return to_receipt_image_list_response(items)
