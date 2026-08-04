@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -71,6 +72,9 @@ export function HeaderMobileNav({
       <SheetContent side="left" className="flex w-[min(80vw,22rem)] flex-col gap-0 p-0">
         <SheetHeader className="border-b border-border px-4 py-4 text-left">
           <SheetTitle className="text-base">메뉴</SheetTitle>
+          <SheetDescription className="sr-only">
+            사이트의 주요 기능과 계정 메뉴로 이동합니다.
+          </SheetDescription>
         </SheetHeader>
         <nav className="flex-1 overflow-y-auto px-2 py-2" aria-label="주요 메뉴">
           <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

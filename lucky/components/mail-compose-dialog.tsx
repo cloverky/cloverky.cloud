@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -150,6 +151,9 @@ export function MailComposeDialog({ open, onOpenChange }: Props) {
               </span>
               이메일 작성
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              받는 사람·제목·내용을 입력해 이메일을 보냅니다.
+            </DialogDescription>
           </DialogHeader>
 
           {sent ? (

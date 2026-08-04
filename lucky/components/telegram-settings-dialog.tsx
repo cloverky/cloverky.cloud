@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -63,6 +64,9 @@ export function TelegramSettingsDialog({ open, onOpenChange }: Props) {
             </span>
             텔레그램 알림 설정
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            이메일 발송 확인 알림을 받을 텔레그램 Chat ID를 설정합니다.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 p-6">

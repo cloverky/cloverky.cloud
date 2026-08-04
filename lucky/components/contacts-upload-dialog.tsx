@@ -13,6 +13,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -132,6 +133,9 @@ export function ContactsUploadDialog({ open, onOpenChange, onImported }: Props) 
             </span>
             주소록 CSV 업로드
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            email 컬럼이 있는 CSV 파일을 올려 주소록에 연락처를 추가합니다.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="p-6">

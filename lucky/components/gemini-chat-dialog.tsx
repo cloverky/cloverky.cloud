@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -139,6 +140,9 @@ export function GeminiChatDialog({ open, onOpenChange }: GeminiChatDialogProps) 
             </span>
             Gemini
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Gemini와 대화하는 채팅 창입니다.
+          </DialogDescription>
         </DialogHeader>
 
         <div

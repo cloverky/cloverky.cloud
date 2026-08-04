@@ -1,5 +1,6 @@
+import { notifySessionExpired, refreshAccessToken } from "@/lib/auth-session";
+
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
-const AUTH_BASE = (process.env.NEXT_PUBLIC_AUTH_URL ?? "https://auth.cloverky.cloud").replace(/\/$/, "");
 
 type FastApiErrorBody = { detail?: string | { msg?: string }[] };
 
@@ -87,21 +88,6 @@ export async function fetchExpiryEstimate(
   return data;
 }
 
-/** 액세스 토큰은 10분짜리다 — 만료 시 리프레시 쿠키로 한 번 갱신한다. */
-async function refreshAccessToken(): Promise<boolean> {
-  try {
-    const res = await fetch(`${AUTH_BASE}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({}),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
 async function request<T>(
   email: string,
   path: string,
@@ -128,6 +114,13 @@ async function request<T>(
     throw new Error(
       "백엔드 서버에 연결할 수 없습니다. python main.py 가 실행 중인지 확인해 주세요.",
     );
+  }
+
+  if (res.status === 401) {
+    // 갱신해도 통과 못 하면 세션은 끝난 것이다. 화면은 sessionStorage만 보고
+    // 계속 로그인 상태로 남으므로, 여기서 알려 주지 않으면 401만 반복된다.
+    notifySessionExpired();
+    throw new Error("세션이 만료되었습니다. 다시 로그인해 주세요.");
   }
 
   if (res.status === 204) {

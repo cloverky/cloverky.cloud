@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -92,6 +93,9 @@ export function TelegramComposeDialog({ open, onOpenChange }: Props) {
             </span>
             텔레그램 메시지 전송
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Chat ID와 메시지를 입력해 텔레그램으로 전송합니다.
+          </DialogDescription>
         </DialogHeader>
 
         {sent ? (

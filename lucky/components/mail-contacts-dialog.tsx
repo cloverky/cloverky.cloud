@@ -13,6 +13,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -121,6 +122,9 @@ export function MailContactsDialog({ open, onOpenChange, onSelect }: Props) {
             </span>
             메일관리 — 주소록 CSV 불러오기
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            저장된 주소록에서 받는 사람을 고르거나 CSV로 새로 불러옵니다.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-6 p-6">

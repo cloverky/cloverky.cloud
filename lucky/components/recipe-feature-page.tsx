@@ -10,7 +10,13 @@ import { useAuth } from "@/components/auth-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fetchInventory } from "@/lib/inventory-api";
 import type { RecipeSummary, RecipeDetail, MealSuggestion } from "@/app/api/gemini/recipes/route";
@@ -348,6 +354,9 @@ export function RecipeFeaturePage() {
               <Utensils className="h-5 w-5 text-accent" />
               {selectedRecipe?.name}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              선택한 레시피의 재료와 조리 순서를 보여줍니다.
+            </DialogDescription>
           </DialogHeader>
 
           {detailLoading && (

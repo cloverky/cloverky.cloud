@@ -8,6 +8,9 @@ import {
   useMemo,
   useState,
 } from "react";
+import { toast } from "sonner";
+
+import { SESSION_EXPIRED_EVENT } from "@/lib/auth-session";
 
 const STORAGE_KEY = "fridgeai-auth";
 
@@ -91,6 +94,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     patchAuth({ user: null });
     sessionStorage.removeItem(STORAGE_KEY);
   }, []);
+
+  useEffect(() => {
+    // 여기 로그인 상태는 sessionStorage라 만료가 없다. 실제 자격증명인
+    // access_token 쿠키가 죽으면 API가 알려 주고, 그때 화면도 같이 내린다.
+    if (!auth.user) return;
+    const onExpired = () => {
+      logout();
+      toast.error("세션이 만료되었습니다", {
+        description: "다시 로그인해 주세요.",
+      });
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, [auth.user, logout]);
 
   const updateUser = useCallback((patch: Partial<AuthUser>) => {
     setAuth((prev) => {

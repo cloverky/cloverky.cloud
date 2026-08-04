@@ -10,6 +10,7 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -51,6 +52,9 @@ export function LessonMobileNav({
         <SheetContent side="right" className="w-[18rem] gap-0 p-0">
           <SheetHeader className="border-b border-border px-5 py-5 text-left">
             <SheetTitle className="text-base">수업</SheetTitle>
+            <SheetDescription className="sr-only">
+              수업 목차에서 원하는 실습 페이지로 이동합니다.
+            </SheetDescription>
           </SheetHeader>
           <nav className="px-5 py-6 text-sm" aria-label="모바일 수업 목차">
             <Collapsible defaultOpen>
