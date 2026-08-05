@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ReceiptScanReview } from "@/components/receipt-scan-review";
 import { BottomRightExtras } from "@/components/bottom-right-extras-context";
 import { Footer } from "@/components/footer";
 import { useAuth } from "@/components/auth-context";
@@ -59,10 +60,11 @@ import {
   unitForPackStyle,
   uploadReceiptImage,
   type InventoryItem,
+  type InventoryItemPayload,
   type InventoryStats,
   type PackCountStyle,
-  type ReceiptImageUploadResult,
 } from "@/lib/inventory-api";
+import { scanReceiptByKey, type ReceiptScanResult } from "@/lib/receipt-scan-api";
 import { cn } from "@/lib/utils";
 
 function statusBadgeClass(status: string) {
@@ -145,10 +147,11 @@ export function InventoryFeaturePage() {
   const { user, isReady } = useAuth();
   const openLogin = useOpenLogin();
 
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [receiptUploading, setReceiptUploading] = useState(false);
-  const [receiptUploadResult, setReceiptUploadResult] =
-    useState<ReceiptImageUploadResult | null>(null);
+  type ScanStage = "idle" | "uploading" | "scanning" | "review";
+  const [scanStage, setScanStage] = useState<ScanStage>("idle");
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [scanResult, setScanResult] = useState<ReceiptScanResult | null>(null);
+  const [lastUploadFile, setLastUploadFile] = useState<File | null>(null);
 
     const [page, setPage] = useState<InventoryPageState>(INITIAL_PAGE);
   const [form, setForm] = useState<InventoryAddFormState>(createInitialAddForm);
@@ -240,19 +243,49 @@ export function InventoryFeaturePage() {
     return () => clearTimeout(timer);
   }, [dateMode, name, purchasedDate, storage, patchForm]);
 
+  const runScan = async (bucket: string, key: string) => {
+    if (!user?.email) return;
+    setScanStage("scanning");
+    setScanError(null);
+    try {
+      const result = await scanReceiptByKey(user.email, bucket, key);
+      setScanResult(result);
+      setScanStage("review");
+    } catch (err) {
+      setScanError(err instanceof Error ? err.message : "영수증 인식에 실패했습니다.");
+      setScanStage("idle");
+    }
+  };
+
   const handleUploadReceipt = async (file: File) => {
     if (!user?.email) return;
-    setReceiptFile(file);
-    setReceiptUploadResult(null);
-    setReceiptUploading(true);
+    setLastUploadFile(file);
+    setScanError(null);
+    setScanStage("uploading");
     try {
       const result = await uploadReceiptImage(user.email, file);
-      setReceiptUploadResult(result);
-      toast.success("영수증을 업로드했습니다. 곧 자동으로 인식되어 반영됩니다.");
+      await runScan(result.s3_bucket, result.s3_key);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "영수증 업로드에 실패했습니다.");
+      setScanError(err instanceof Error ? err.message : "영수증 업로드에 실패했습니다.");
+      setScanStage("idle");
+    }
+  };
+
+  const handleConfirmScanned = async (payloads: InventoryItemPayload[]) => {
+    if (!user?.email) return;
+    patchPage({ submitting: true });
+    try {
+      await Promise.all(payloads.map((p) => createInventoryItem(user.email!, p)));
+      toast.success(`내 냉장고 속으로 들어갑니다! ${payloads.length}개 식재료를 등록했습니다.`);
+      setScanStage("idle");
+      setScanResult(null);
+      setLastUploadFile(null);
+      patchForm({ addMode: "manual" });
+      await load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "등록에 실패했습니다.");
     } finally {
-      setReceiptUploading(false);
+      patchPage({ submitting: false });
     }
   };
 
@@ -494,20 +527,42 @@ export function InventoryFeaturePage() {
               </CardHeader>
               <CardContent>
                 {addMode === "receipt" ? (
+                  scanStage === "review" && scanResult ? (
+                    <ReceiptScanReview
+                      scanResult={scanResult}
+                      submitting={submitting}
+                      onConfirm={handleConfirmScanned}
+                      onCancel={() => {
+                        setScanStage("idle");
+                        setScanResult(null);
+                        setLastUploadFile(null);
+                      }}
+                    />
+                  ) : (
                   <div className="space-y-4">
                     <label
                       htmlFor="receipt-upload"
-                      className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border py-10 text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+                      className={cn(
+                        "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border py-10 text-muted-foreground transition-colors",
+                        scanStage === "idle" && "hover:border-accent hover:text-accent",
+                        (scanStage === "uploading" || scanStage === "scanning") && "cursor-default opacity-60",
+                      )}
                     >
-                      {receiptUploading ? (
+                      {scanStage === "uploading" ? (
                         <>
                           <Loader2 className="h-8 w-8 animate-spin" />
                           <span className="text-sm">영수증 업로드 중…</span>
                         </>
-                      ) : receiptFile ? (
+                      ) : scanStage === "scanning" ? (
+                        <>
+                          <Loader2 className="h-8 w-8 animate-spin" />
+                          <span className="text-sm font-medium">영수증 인식 중…</span>
+                          <span className="text-xs">3~7초 정도 걸릴 수 있습니다</span>
+                        </>
+                      ) : lastUploadFile ? (
                         <>
                           <ScanLine className="h-8 w-8" />
-                          <span className="text-sm font-medium">{receiptFile.name}</span>
+                          <span className="text-sm font-medium">{lastUploadFile.name}</span>
                           <span className="text-xs">다른 파일을 선택하려면 클릭</span>
                         </>
                       ) : (
@@ -524,17 +579,29 @@ export function InventoryFeaturePage() {
                       accept="image/*"
                       capture="environment"
                       className="sr-only"
+                      disabled={scanStage === "uploading" || scanStage === "scanning"}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) void handleUploadReceipt(file);
                       }}
                     />
-                    {receiptUploadResult && (
-                      <p className="rounded-md border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-brand-text">
-                        업로드 완료 — 자동 인식 후 재고에 반영되면 알려드립니다.
-                      </p>
+                    {scanError && (
+                      <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                        <span className="flex-1">{scanError}</span>
+                        {lastUploadFile && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => void handleUploadReceipt(lastUploadFile)}
+                          >
+                            재시도
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
+                  )
                 ) : (
                 <form
                   onSubmit={(e) => void handleAdd(e)}
