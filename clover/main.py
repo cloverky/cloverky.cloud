@@ -356,25 +356,30 @@ async def read_root(request: Request):
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest) -> ChatResponse:
     """
-    JSON 본문 `{"message": "..."}` 를 받아 Gemini 답변 문자열을 반환합니다.
+    JSON 본문 `{"message": "..."}` 를 받아 EXAONE 답변 문자열을 반환합니다.
+
+    EXAONE 은 데스크탑 WSL 에서 vLLM 으로 서빙되며 OpenAI 호환 API 를 노출합니다.
     """
+    import httpx
+
     logger.info("채팅 수신: %r", req.message)
-    if not keymaker.is_gemini_ready():
-        raise HTTPException(
-            status_code=503,
-            detail="GEMINI_API_KEY가 설정되지 않았습니다. backend/.env 에 키를 넣어 주세요.",
-        )
+    base_url = os.getenv("EXAONE_BASE_URL", "http://host.docker.internal:8001/v1")
+    model = os.getenv("EXAONE_MODEL", "exaone")
 
-    client = keymaker.get_gemini_client()
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=req.message,
+        response = httpx.post(
+            f"{base_url}/chat/completions",
+            json={
+                "model": model,
+                "messages": [{"role": "user", "content": req.message}],
+            },
+            timeout=60.0,
         )
+        response.raise_for_status()
+        text = (response.json()["choices"][0]["message"]["content"] or "").strip()
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Gemini 호출 실패: {e!s}") from e
+        raise HTTPException(status_code=502, detail=f"EXAONE 호출 실패: {e!s}") from e
 
-    text = (response.text or "").strip()
     if not text:
         raise HTTPException(
             status_code=502, detail="모델이 비어 있는 응답을 반환했습니다."
