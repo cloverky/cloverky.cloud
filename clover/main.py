@@ -378,11 +378,14 @@ def chat(req: ChatRequest) -> ChatResponse:
         response.raise_for_status()
         text = (response.json()["choices"][0]["message"]["content"] or "").strip()
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"EXAONE 호출 실패: {e!s}") from e
+        # 502 가 아니라 503 을 쓴다. Cloudflare 는 오리진이 낸 502/504 를 자기 오류
+        # 페이지로 갈아치우면서 CORS 헤더까지 없애서, 브라우저에는 아래 detail 대신
+        # 엉뚱한 CORS 에러가 뜬다. 503 은 본문 그대로 프론트까지 도달한다.
+        raise HTTPException(status_code=503, detail=f"EXAONE 호출 실패: {e!s}") from e
 
     if not text:
         raise HTTPException(
-            status_code=502, detail="모델이 비어 있는 응답을 반환했습니다."
+            status_code=503, detail="모델이 비어 있는 응답을 반환했습니다."
         )
 
     return ChatResponse(reply=text)

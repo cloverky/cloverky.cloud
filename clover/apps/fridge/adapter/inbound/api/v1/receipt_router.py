@@ -11,6 +11,12 @@ receipt_router = APIRouter(prefix="/receipt", tags=["receipt"])
 _ALLOWED = {"image/jpeg", "image/png", "image/webp", "image/heic"}
 _MAX_BYTES = 10 * 1024 * 1024
 
+# 외부 호출(OCR) 실패는 502 가 아니라 503 으로 낸다.
+# Cloudflare 는 오리진이 낸 502/504 를 자기 오류 페이지로 갈아치우면서 CORS 헤더까지
+# 없애 버린다. 그러면 브라우저에는 진짜 원인 대신 "No Access-Control-Allow-Origin"
+# 이라는 엉뚱한 CORS 에러만 보인다. 503 은 그대로 통과해서 detail 이 프론트까지 간다.
+_UPSTREAM_FAILED = 503
+
 
 class ParsedItem(BaseModel):
     name: str
@@ -56,7 +62,7 @@ async def scan_receipt(
     try:
         result = await use_case.scan_bytes(data, mime)
     except ValueError as e:
-        raise HTTPException(status_code=502, detail=str(e)) from e
+        raise HTTPException(status_code=_UPSTREAM_FAILED, detail=str(e)) from e
 
     return _to_response(result)
 
@@ -72,6 +78,6 @@ async def scan_receipt_by_key(
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except ValueError as e:
-        raise HTTPException(status_code=502, detail=str(e)) from e
+        raise HTTPException(status_code=_UPSTREAM_FAILED, detail=str(e)) from e
 
     return _to_response(result)
