@@ -1,0 +1,33 @@
+# EXAONE(vLLM) 자동 기동 — 데스크탑 WSL 의 systemd **user** 유닛.
+#
+# 설치 위치는 /etc/systemd/system 이 아니라 ~/.config/systemd/user 다.
+# 데스크탑의 hi 계정에는 무암호 sudo 가 없어서 시스템 유닛을 만들 수 없었고,
+# 대신 loginctl enable-linger 로 로그인 없이도 user 인스턴스가 뜨게 해 두었다.
+#
+#   cp clover/exaone.service ~/.config/systemd/user/exaone.service
+#   loginctl enable-linger hi
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now exaone
+#
+# 로그는 journalctl --user -u exaone -f 로 본다.
+
+[Unit]
+Description=EXAONE (vLLM OpenAI-compatible server, port 8001)
+Documentation=https://api.cloverky.cloud/docs
+After=network-online.target
+Wants=network-online.target
+# GPU 가 없거나 모자라 연속 실패하면 10분에 5번까지만 재시도하고 멈춘다.
+StartLimitIntervalSec=600
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=/home/hi/start_exaone.sh
+# 모델 적재에 60~90초 걸린다. 그 사이 backend /chat 은 502 를 돌려준다.
+Restart=on-failure
+RestartSec=30
+# nvidia-smi 등 WSL GPU 도구 경로를 포함시킨다 (systemd 는 프로필을 읽지 않는다).
+Environment=PATH=/usr/lib/wsl/lib:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+[Install]
+WantedBy=default.target
