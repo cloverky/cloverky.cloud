@@ -253,6 +253,17 @@ async def _migrate_tables() -> None:
                 "NOT NULL DEFAULT '냉장'"
             ),
         )
+        # create_all 은 이미 있는 테이블에 컬럼을 붙여 주지 않는다.
+        # receipt_images 는 먼저 만들어졌으므로 OCR 결과 컬럼은 여기서 보강한다.
+        for column_ddl in (
+            "store_name VARCHAR",
+            "purchased_date DATE",
+            "parsed_items JSONB",
+            "parsed_at TIMESTAMPTZ",
+        ):
+            await conn.execute(
+                text(f"ALTER TABLE receipt_images ADD COLUMN IF NOT EXISTS {column_ddl}")
+            )
 
 
 @asynccontextmanager

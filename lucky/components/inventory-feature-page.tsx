@@ -65,6 +65,7 @@ import {
   type PackCountStyle,
 } from "@/lib/inventory-api";
 import { scanReceiptByKey, type ReceiptScanResult } from "@/lib/receipt-scan-api";
+import { saveReceiptParseResult } from "@/lib/receipts-api";
 import { cn } from "@/lib/utils";
 
 function statusBadgeClass(status: string) {
@@ -251,6 +252,15 @@ export function InventoryFeaturePage() {
       const result = await scanReceiptByKey(user.email, bucket, key);
       setScanResult(result);
       setScanStage("review");
+
+      // 인식 결과를 영수증에 붙여 두면 소비 패턴 분석 화면에서 사진과 함께 보인다.
+      // 여기서 실패해도 스캔 자체는 성공이므로 흐름을 막지 않는다.
+      void saveReceiptParseResult(user.email, {
+        s3_key: key,
+        store_name: result.store_name,
+        purchased_date: result.purchased_date,
+        items: result.items,
+      }).catch(() => undefined);
     } catch (err) {
       setScanError(err instanceof Error ? err.message : "영수증 인식에 실패했습니다.");
       setScanStage("idle");

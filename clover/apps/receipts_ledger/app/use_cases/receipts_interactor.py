@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from receipts_ledger.app.dtos.receipt_image_dto import (
     ReceiptImageListItem,
     ReceiptImageUploadCommand,
     ReceiptImageUploadResult,
+    ReceiptParseSaveCommand,
 )
 from receipts_ledger.app.ports.input.receipts_use_case import ReceiptsUseCase
 from receipts_ledger.app.ports.output.receipt_image_storage_port import (
@@ -45,4 +48,22 @@ class ReceiptsInteractor(ReceiptsUseCase):
         owned_keys = set(await self._repository.find_keys_by_user_email(user_email))
         if not owned_keys:
             return []
-        return [i for i in await self._storage.list_images() if i.key in owned_keys]
+
+        # 파일 정보는 S3, 인식 결과는 DB 에 있어 키를 기준으로 합친다.
+        parsed = await self._repository.find_parse_results_by_user_email(user_email)
+        return [
+            replace(item, parsed=parsed.get(item.key))
+            for item in await self._storage.list_images()
+            if item.key in owned_keys
+        ]
+
+    async def save_parse_result(self, command: ReceiptParseSaveCommand) -> bool:
+        return await self._repository.save_parse_result(command)
+
+    async def delete_receipt_image(self, user_email: str, s3_key: str) -> bool:
+        # DB 를 먼저 지운다. S3 삭제가 실패하면 고아 객체가 남지만,
+        # 반대로 하면 목록에 열 수 없는 영수증이 남아 사용자에게 더 나쁘다.
+        if not await self._repository.delete_by_key(user_email, s3_key):
+            return False
+        await self._storage.delete(s3_key)
+        return True

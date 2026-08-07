@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from receipts_ledger.adapter.inbound.api.schemas.receipt_image_schema import (
     ReceiptImageListResponse,
     ReceiptImageUploadResponse,
+    ReceiptParseSaveRequest,
     to_receipt_image_list_response,
     to_receipt_image_upload_response,
+    to_receipt_parse_save_command,
 )
 from receipts_ledger.app.dtos.receipt_image_dto import ReceiptImageUploadCommand
 from receipts_ledger.app.ports.input.receipts_use_case import ReceiptsUseCase
@@ -67,6 +69,42 @@ async def list_my_receipt_images(
     try:
         items = await use_case.list_user_receipt_images(x_user_email)
     except RuntimeError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     return to_receipt_image_list_response(items)
+
+
+@receipts_router.post("/images/parsed", summary="영수증 인식 결과 저장")
+async def save_receipt_parse_result(
+    body: ReceiptParseSaveRequest,
+    x_user_email: str = Header(..., alias="X-User-Email"),
+    use_case: ReceiptsUseCase = Depends(get_receipts_use_case),
+) -> dict[str, bool]:
+    """스캔에 성공한 영수증에 가게명·품목을 붙여 목록에서 사진과 함께 보이게 한다."""
+    try:
+        saved = await use_case.save_parse_result(
+            to_receipt_parse_save_command(x_user_email, body)
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    if not saved:
+        raise HTTPException(status_code=404, detail="영수증을 찾을 수 없습니다.")
+    return {"saved": True}
+
+
+@receipts_router.delete("/images", summary="내가 올린 영수증 삭제")
+async def delete_receipt_image(
+    key: str = Query(..., description="삭제할 영수증의 S3 키"),
+    x_user_email: str = Header(..., alias="X-User-Email"),
+    use_case: ReceiptsUseCase = Depends(get_receipts_use_case),
+) -> dict[str, bool]:
+    """S3 오브젝트와 업로드 기록을 함께 지운다. 남의 영수증은 404 로 막힌다."""
+    try:
+        deleted = await use_case.delete_receipt_image(x_user_email, key)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="영수증을 찾을 수 없습니다.")
+    return {"deleted": True}

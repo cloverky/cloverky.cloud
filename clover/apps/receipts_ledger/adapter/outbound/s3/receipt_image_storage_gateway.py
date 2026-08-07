@@ -67,6 +67,29 @@ class ReceiptImageStorageGateway(ReceiptImageStoragePort):
         url = f"https://{self._bucket}.s3.{client.meta.region_name}.amazonaws.com/{key}"
         return ReceiptImageStorageResult(bucket=self._bucket, key=key, url=url)
 
+    async def delete(self, key: str) -> None:
+        if not self._manager.is_ready():
+            raise RuntimeError("AWS 자격증명이 설정되어 있지 않습니다.")
+
+        client = self._manager.get_client()
+        try:
+            # delete_object 는 없는 키에도 성공을 돌려준다. 재시도해도 안전하다.
+            await asyncio.to_thread(
+                client.delete_object, Bucket=self._bucket, Key=key
+            )
+        except (BotoCoreError, ClientError) as exc:
+            logger.error(
+                "[ReceiptsLedger] S3 삭제 실패 — bucket=%s key=%s: %s",
+                self._bucket,
+                key,
+                exc,
+            )
+            raise RuntimeError("영수증 이미지를 삭제하지 못했습니다.") from exc
+
+        logger.info(
+            "[ReceiptsLedger] S3 삭제 완료 — bucket=%s key=%s", self._bucket, key
+        )
+
     async def list_images(self) -> list[ReceiptImageListItem]:
         if not self._manager.is_ready():
             raise RuntimeError("AWS 자격증명이 설정되어 있지 않습니다.")
