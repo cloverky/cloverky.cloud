@@ -409,10 +409,8 @@ export function InventoryFeaturePage() {
             <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">
               {config.title}
             </h1>
+            {/* tagline 은 메타 설명 전용 — feature-page.tsx 주석 참고 */}
             <p className="mt-2 text-lg text-muted-foreground">{config.subtitle}</p>
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              {config.tagline}
-            </p>
             {user ? (
               <p className="mt-3 text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">{user.username}</span>

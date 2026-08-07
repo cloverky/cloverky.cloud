@@ -66,7 +66,10 @@ export type FeaturePageConfig = {
   geminiPrompt: string;
 };
 
-export const FEATURE_PAGES: Partial<Record<FeatureSlug, FeaturePageConfig>> = {
+// Partial 이 아니라 전체 Record 로 둔다. 슬러그마다 설정이 반드시 있어야 하고,
+// FeatureSlug 에 새 값을 추가하면서 설정을 빠뜨리면 컴파일 단계에서 걸린다.
+// (Partial 이면 모든 조회가 undefined 가능이 되어 화면 쪽에 타입 에러가 번진다.)
+export const FEATURE_PAGES: Record<FeatureSlug, FeaturePageConfig> = {
   inventory: {
     slug: "inventory",
     icon: Package,

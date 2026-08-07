@@ -191,10 +191,9 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
             <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">
               {config.title}
             </h1>
+            {/* tagline 은 subtitle 과 사실상 같은 말이라 본문에 함께 두면 두 줄이 겹쳐
+                보인다. 검색 결과용 메타 설명으로만 쓴다 — app/features/[slug]/page.tsx */}
             <p className="mt-2 text-lg text-muted-foreground">{config.subtitle}</p>
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              {config.tagline}
-            </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-3">
             <Button variant="outline" asChild>
@@ -203,21 +202,24 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
           </div>
         </div>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-3">
-          {config.stats.map((stat) => (
-            <Card key={stat.label}>
-              <CardHeader className="pb-2">
-                <CardDescription>{stat.label}</CardDescription>
-                <CardTitle className="text-2xl">{stat.value}</CardTitle>
-              </CardHeader>
-              {stat.hint ? (
-                <CardContent className="pt-0 text-xs text-muted-foreground">
-                  {stat.hint}
-                </CardContent>
-              ) : null}
-            </Card>
-          ))}
-        </div>
+        {/* 비어 있으면 아예 렌더하지 않는다 — 빈 div 라도 mt-12 는 남아서 허공이 생긴다. */}
+        {config.stats.length > 0 ? (
+          <div className="mt-12 grid gap-4 sm:grid-cols-3">
+            {config.stats.map((stat) => (
+              <Card key={stat.label}>
+                <CardHeader className="pb-2">
+                  <CardDescription>{stat.label}</CardDescription>
+                  <CardTitle className="text-2xl">{stat.value}</CardTitle>
+                </CardHeader>
+                {stat.hint ? (
+                  <CardContent className="pt-0 text-xs text-muted-foreground">
+                    {stat.hint}
+                  </CardContent>
+                ) : null}
+              </Card>
+            ))}
+          </div>
+        ) : null}
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {config.highlights.map((h) => (
@@ -232,11 +234,13 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
           ))}
         </div>
 
-        <div className="mt-12 space-y-8">
-          {config.sections.map((section) => (
-            <FeatureSectionBlock key={section.title} section={section} />
-          ))}
-        </div>
+        {config.sections.length > 0 ? (
+          <div className="mt-12 space-y-8">
+            {config.sections.map((section) => (
+              <FeatureSectionBlock key={section.title} section={section} />
+            ))}
+          </div>
+        ) : null}
 
         {/* 소비 패턴 분석은 영수증이 원본 근거라 이 화면에서 바로 확인할 수 있게 둔다. */}
         {slug === "analytics" ? (
