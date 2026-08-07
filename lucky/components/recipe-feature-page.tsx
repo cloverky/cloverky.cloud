@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChefHat, Clock, Loader2, RefreshCw, Utensils, Sunrise, Sun, Moon } from "lucide-react";
+import { ArrowLeft, ChefHat, Clock, Loader2, RefreshCw, ThumbsDown, ThumbsUp, Utensils, Sunrise, Sun, Moon } from "lucide-react";
 import { CloverIcon } from "@/components/clover-icon";
 import { BottomRightExtras } from "@/components/bottom-right-extras-context";
 import { Footer } from "@/components/footer";
@@ -19,6 +19,12 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fetchInventory } from "@/lib/inventory-api";
+import {
+  fetchRecipeFeedback,
+  putRecipeFeedback,
+  type Verdict,
+} from "@/lib/recipe-feedback-api";
+import { cn } from "@/lib/utils";
 import type { RecipeSummary, RecipeDetail, MealSuggestion } from "@/app/api/gemini/recipes/route";
 
 function difficultyClass(difficulty: string) {
@@ -28,6 +34,52 @@ function difficultyClass(difficulty: string) {
 }
 
 type Mode = "fridge" | "meal";
+
+/** 레시피 한 줄에 붙는 좋아요·싫어요. 같은 버튼을 다시 누르면 취소된다. */
+function RecipeVote({
+  verdict,
+  onRate,
+}: {
+  verdict?: Verdict;
+  onRate: (verdict: Verdict) => void;
+}) {
+  return (
+    <span
+      className="inline-flex gap-1"
+      // 행 클릭은 레시피 상세를 여는 동작이라 여기서 멈춘다.
+      onClick={(e) => e.stopPropagation()}
+    >
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        aria-label="이 레시피 좋아요"
+        aria-pressed={verdict === "up"}
+        className={cn(
+          "h-8 px-2 text-muted-foreground hover:text-accent",
+          verdict === "up" && "text-accent",
+        )}
+        onClick={() => onRate("up")}
+      >
+        <ThumbsUp className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        aria-label="이 레시피 싫어요 — 추천에서 제외"
+        aria-pressed={verdict === "down"}
+        className={cn(
+          "h-8 px-2 text-muted-foreground hover:text-destructive",
+          verdict === "down" && "text-destructive",
+        )}
+        onClick={() => onRate("down")}
+      >
+        <ThumbsDown className="h-4 w-4" />
+      </Button>
+    </span>
+  );
+}
 
 function currentMeal(): "아침" | "점심" | "저녁" {
   const h = new Date().getHours();
@@ -63,6 +115,9 @@ export function RecipeFeaturePage() {
   const [activeMeal] = useState<"아침" | "점심" | "저녁">(currentMeal());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 레시피 이름 → 평가. 싫어요를 준 레시피는 목록에서 빠진다.
+  const [verdicts, setVerdicts] = useState<Record<string, Verdict>>({});
 
   const [selectedRecipe, setSelectedRecipe] = useState<{ name: string } | null>(null);
   const [detail, setDetail] = useState<RecipeDetail | null>(null);
@@ -137,6 +192,44 @@ export function RecipeFeaturePage() {
     };
     void load();
   }, [user, fetchRecipes, fetchMeals]);
+
+  // 지금까지 남긴 평가를 불러온다. 실패해도 추천 자체는 보여 준다.
+  useEffect(() => {
+    if (!user?.email) return;
+    void fetchRecipeFeedback(user.email)
+      .then((f) => {
+        const next: Record<string, Verdict> = {};
+        f.liked.forEach((n) => (next[n] = "up"));
+        f.disliked.forEach((n) => (next[n] = "down"));
+        setVerdicts(next);
+      })
+      .catch(() => undefined);
+  }, [user]);
+
+  const rate = useCallback(
+    async (recipeName: string, verdict: Verdict) => {
+      if (!user?.email) return;
+      // 응답을 기다리지 않고 먼저 반영한다 — 실패하면 되돌린다.
+      const before = verdicts[recipeName];
+      setVerdicts((prev) => {
+        const next = { ...prev };
+        if (before === verdict) delete next[recipeName];
+        else next[recipeName] = verdict;
+        return next;
+      });
+      try {
+        await putRecipeFeedback(user.email, recipeName, verdict);
+      } catch {
+        setVerdicts((prev) => {
+          const next = { ...prev };
+          if (before) next[recipeName] = before;
+          else delete next[recipeName];
+          return next;
+        });
+      }
+    },
+    [user, verdicts],
+  );
 
   const openDetail = async (name: string) => {
     setSelectedRecipe({ name });
@@ -246,10 +339,16 @@ export function RecipeFeaturePage() {
                         <TableHead>시간</TableHead>
                         <TableHead>난이도</TableHead>
                         <TableHead>사용 재료</TableHead>
+                        {user?.email ? (
+                          <TableHead className="text-right">평가</TableHead>
+                        ) : null}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {recipes.map((recipe) => (
+                      {/* 싫어요를 준 레시피는 다시 보여 주지 않는다. */}
+                      {recipes
+                        .filter((recipe) => verdicts[recipe.name] !== "down")
+                        .map((recipe) => (
                         <TableRow
                           key={recipe.name}
                           className="cursor-pointer hover:bg-accent/5"
@@ -267,6 +366,14 @@ export function RecipeFeaturePage() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">{recipe.ingredients}</TableCell>
+                          {user?.email ? (
+                            <TableCell className="text-right">
+                              <RecipeVote
+                                verdict={verdicts[recipe.name]}
+                                onRate={(v) => void rate(recipe.name, v)}
+                              />
+                            </TableCell>
+                          ) : null}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -311,7 +418,10 @@ export function RecipeFeaturePage() {
                 {error && <p className="py-8 text-center text-sm text-destructive">{error}</p>}
                 {!loading && !error && mealData && (
                   <div className="space-y-3">
-                    {mealData.recipes.map((r) => (
+                    {/* 싫어요를 준 메뉴는 다시 권하지 않는다. */}
+                    {mealData.recipes
+                      .filter((r) => verdicts[r.name] !== "down")
+                      .map((r) => (
                       <Card
                         key={r.name}
                         className="cursor-pointer transition-shadow hover:shadow-md hover:ring-1 hover:ring-accent/30"
@@ -320,13 +430,19 @@ export function RecipeFeaturePage() {
                         <CardHeader className="py-4">
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-base text-accent">{r.name}</CardTitle>
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-2">
                               <Badge variant="outline" className="font-normal text-xs">
                                 <Clock className="mr-1 h-3 w-3" />{r.time}
                               </Badge>
                               <Badge variant="outline" className={`font-normal text-xs ${difficultyClass(r.difficulty)}`}>
                                 {r.difficulty}
                               </Badge>
+                              {user?.email ? (
+                                <RecipeVote
+                                  verdict={verdicts[r.name]}
+                                  onRate={(v) => void rate(r.name, v)}
+                                />
+                              ) : null}
                             </div>
                           </div>
                         </CardHeader>

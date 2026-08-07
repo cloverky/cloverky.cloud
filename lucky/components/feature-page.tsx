@@ -25,6 +25,7 @@ import { InventoryFeaturePage } from "@/components/inventory-feature-page";
 import { RecipeFeaturePage } from "@/components/recipe-feature-page";
 import { ShoppingFeaturePage } from "@/components/shopping-feature-page";
 import { MyReceiptsSection } from "@/components/my-receipts-section";
+import { MyRecipeFeedbackSection } from "@/components/my-recipe-feedback-section";
 import {
   FEATURE_PAGES,
   type FeatureSection,
@@ -249,9 +250,19 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
           </div>
         ) : null}
 
-        <p className="mt-10 text-center text-xs text-muted-foreground">
-          데모 화면입니다. 실제 데이터 연동은 이후 단계에서 진행합니다.
-        </p>
+        {/* 취향 화면의 "피드백 학습"은 레시피 평가가 실제 데이터다. */}
+        {slug === "personalization" ? (
+          <div className="mt-12">
+            <MyRecipeFeedbackSection />
+          </div>
+        ) : null}
+
+        {/* 실제 데이터를 붙인 화면에는 데모 안내를 띄우지 않는다. */}
+        {slug === "analytics" || slug === "personalization" ? null : (
+          <p className="mt-10 text-center text-xs text-muted-foreground">
+            데모 화면입니다. 실제 데이터 연동은 이후 단계에서 진행합니다.
+          </p>
+        )}
       </div>
 
       <Footer />

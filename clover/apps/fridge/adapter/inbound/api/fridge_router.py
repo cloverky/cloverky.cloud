@@ -16,6 +16,7 @@ _routers = [
     ("fridge.adapter.inbound.api.v1.category_router", "category_router"),
     ("fridge.adapter.inbound.api.v1.assistant_router", "assistant_router"),
     ("fridge.adapter.inbound.api.v1.game_score_router", "game_score_router"),
+    ("fridge.adapter.inbound.api.v1.recipe_feedback_router", "recipe_feedback_router"),
 ]
 
 for _mod, _attr in _routers:

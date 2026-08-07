@@ -190,7 +190,7 @@ export const FEATURE_PAGES: Record<FeatureSlug, FeaturePageConfig> = {
       },
       {
         title: "피드백 학습",
-        description: "추천에 대한 👍👎로 정확도를 높입니다.",
+        description: "👎 를 준 레시피는 다음 추천부터 빠집니다.",
       },
       {
         title: "프라이버시",
