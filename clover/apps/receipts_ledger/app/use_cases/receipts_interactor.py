@@ -30,11 +30,14 @@ class ReceiptsInteractor(ReceiptsUseCase):
         stored = await self._storage.upload(
             command.filename, command.content, command.content_type
         )
+        # 이름을 따로 주지 않으면 올린 파일명이 곧 이름이다.
+        name = (command.display_name or "").strip() or command.filename
         return await self._repository.create(
             user_email=command.user_email,
             s3_bucket=stored.bucket,
             s3_key=stored.key,
             s3_url=stored.url,
+            display_name=name,
         )
 
     async def list_receipt_images(self) -> list[ReceiptImageListItem]:
@@ -45,20 +48,28 @@ class ReceiptsInteractor(ReceiptsUseCase):
     ) -> list[ReceiptImageListItem]:
         # 소유자 판별은 업로드 기록(DB)이 근거다. S3 키에는 회원 정보가 없으므로
         # 전체 목록을 회원의 키 집합으로 걸러 남의 영수증이 섞이지 않게 한다.
-        owned_keys = set(await self._repository.find_keys_by_user_email(user_email))
-        if not owned_keys:
+        # 파일 정보는 S3, 이름과 인식 결과는 DB 라서 키를 기준으로 합친다.
+        details = await self._repository.find_details_by_user_email(user_email)
+        if not details:
             return []
 
-        # 파일 정보는 S3, 인식 결과는 DB 에 있어 키를 기준으로 합친다.
-        parsed = await self._repository.find_parse_results_by_user_email(user_email)
-        return [
-            replace(item, parsed=parsed.get(item.key))
-            for item in await self._storage.list_images()
-            if item.key in owned_keys
-        ]
+        merged: list[ReceiptImageListItem] = []
+        for item in await self._storage.list_images():
+            detail = details.get(item.key)
+            if detail is None:
+                continue
+            merged.append(
+                replace(item, display_name=detail.display_name, parsed=detail.parsed)
+            )
+        return merged
 
     async def save_parse_result(self, command: ReceiptParseSaveCommand) -> bool:
         return await self._repository.save_parse_result(command)
+
+    async def rename_receipt_image(
+        self, user_email: str, s3_key: str, display_name: str
+    ) -> bool:
+        return await self._repository.rename(user_email, s3_key, display_name)
 
     async def delete_receipt_image(self, user_email: str, s3_key: str) -> bool:
         # DB 를 먼저 지운다. S3 삭제가 실패하면 고아 객체가 남지만,

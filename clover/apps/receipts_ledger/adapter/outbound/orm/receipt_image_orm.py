@@ -17,6 +17,9 @@ class ReceiptImageOrm(Base):
     s3_bucket: Mapped[str] = mapped_column(String, nullable=False)
     s3_key: Mapped[str] = mapped_column(String, nullable=False)
     s3_url: Mapped[str] = mapped_column(String, nullable=False)
+    # 사용자가 붙인 이름. S3 키는 충돌·경로조작을 막으려고 UUID 라서 사람이 읽을 수
+    # 없다. 기본값은 올린 파일명이고 목록에서 언제든 바꿀 수 있다.
+    display_name: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

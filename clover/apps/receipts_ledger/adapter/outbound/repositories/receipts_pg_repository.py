@@ -5,6 +5,7 @@ from datetime import date, datetime, timezone
 from receipts_ledger.adapter.outbound.orm.receipt_image_orm import ReceiptImageOrm
 from receipts_ledger.app.dtos.receipt_image_dto import (
     ParsedItem,
+    ReceiptImageDetail,
     ReceiptImageUploadResult,
     ReceiptParseResult,
     ReceiptParseSaveCommand,
@@ -29,13 +30,19 @@ class ReceiptsPgRepository(ReceiptsRepository):
         self.session = session
 
     async def create(
-        self, user_email: str, s3_bucket: str, s3_key: str, s3_url: str
+        self,
+        user_email: str,
+        s3_bucket: str,
+        s3_key: str,
+        s3_url: str,
+        display_name: str | None = None,
     ) -> ReceiptImageUploadResult:
         row = ReceiptImageOrm(
             user_email=user_email,
             s3_bucket=s3_bucket,
             s3_key=s3_key,
             s3_url=s3_url,
+            display_name=display_name,
             status="pending",
         )
         self.session.add(row)
@@ -49,38 +56,51 @@ class ReceiptsPgRepository(ReceiptsRepository):
             status=row.status,
         )
 
-    async def find_keys_by_user_email(self, user_email: str) -> list[str]:
-        result = await self.session.execute(
-            select(ReceiptImageOrm.s3_key).where(
-                ReceiptImageOrm.user_email == user_email
-            )
-        )
-        return list(result.scalars().all())
-
-    async def find_parse_results_by_user_email(
+    async def find_details_by_user_email(
         self, user_email: str
-    ) -> dict[str, ReceiptParseResult]:
+    ) -> dict[str, ReceiptImageDetail]:
         result = await self.session.execute(
             select(ReceiptImageOrm).where(ReceiptImageOrm.user_email == user_email)
         )
-        parsed: dict[str, ReceiptParseResult] = {}
+        details: dict[str, ReceiptImageDetail] = {}
         for row in result.scalars().all():
-            if row.parsed_at is None:
-                continue
-            parsed[row.s3_key] = ReceiptParseResult(
-                store_name=row.store_name,
-                purchased_date=row.purchased_date,
-                items=[
-                    ParsedItem(
-                        name=str(i.get("name", "")),
-                        quantity=int(i.get("quantity", 0) or 0),
-                        unit=str(i.get("unit", "")),
+            details[row.s3_key] = ReceiptImageDetail(
+                display_name=row.display_name,
+                parsed=(
+                    ReceiptParseResult(
+                        store_name=row.store_name,
+                        purchased_date=row.purchased_date,
+                        items=[
+                            ParsedItem(
+                                name=str(i.get("name", "")),
+                                quantity=int(i.get("quantity", 0) or 0),
+                                unit=str(i.get("unit", "")),
+                            )
+                            for i in (row.parsed_items or [])
+                        ],
+                        parsed_at=row.parsed_at,
                     )
-                    for i in (row.parsed_items or [])
-                ],
-                parsed_at=row.parsed_at,
+                    # 아직 스캔하지 않았으면 인식 결과 자체가 없다.
+                    if row.parsed_at is not None
+                    else None
+                ),
             )
-        return parsed
+        return details
+
+    async def rename(self, user_email: str, s3_key: str, display_name: str) -> bool:
+        result = await self.session.execute(
+            select(ReceiptImageOrm).where(
+                ReceiptImageOrm.user_email == user_email,
+                ReceiptImageOrm.s3_key == s3_key,
+            )
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            return False
+
+        row.display_name = display_name
+        await self.session.commit()
+        return True
 
     async def save_parse_result(self, command: ReceiptParseSaveCommand) -> bool:
         # user_email 을 함께 걸어 남의 영수증에 결과를 덮어쓰지 못하게 한다.

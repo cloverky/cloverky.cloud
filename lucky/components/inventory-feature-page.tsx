@@ -148,8 +148,10 @@ export function InventoryFeaturePage() {
   const { user, isReady } = useAuth();
   const openLogin = useOpenLogin();
 
-  type ScanStage = "idle" | "uploading" | "scanning" | "review";
+  // naming: 파일을 고른 뒤 이름을 정하는 단계. 여기서 확인해야 업로드가 시작된다.
+  type ScanStage = "idle" | "naming" | "uploading" | "scanning" | "review";
   const [scanStage, setScanStage] = useState<ScanStage>("idle");
+  const [receiptName, setReceiptName] = useState("");
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<ReceiptScanResult | null>(null);
   const [lastUploadFile, setLastUploadFile] = useState<File | null>(null);
@@ -267,17 +269,25 @@ export function InventoryFeaturePage() {
     }
   };
 
-  const handleUploadReceipt = async (file: File) => {
+  /** 파일을 고르면 바로 올리지 않고 이름부터 받는다. 기본값은 파일명. */
+  const handlePickReceipt = (file: File) => {
+    setLastUploadFile(file);
+    setReceiptName(file.name);
+    setScanError(null);
+    setScanStage("naming");
+  };
+
+  const handleUploadReceipt = async (file: File, displayName: string) => {
     if (!user?.email) return;
     setLastUploadFile(file);
     setScanError(null);
     setScanStage("uploading");
     try {
-      const result = await uploadReceiptImage(user.email, file);
+      const result = await uploadReceiptImage(user.email, file, displayName);
       await runScan(result.s3_bucket, result.s3_key);
     } catch (err) {
       setScanError(err instanceof Error ? err.message : "영수증 업로드에 실패했습니다.");
-      setScanStage("idle");
+      setScanStage("naming");
     }
   };
 
@@ -290,6 +300,7 @@ export function InventoryFeaturePage() {
       setScanStage("idle");
       setScanResult(null);
       setLastUploadFile(null);
+      setReceiptName("");
       patchForm({ addMode: "manual" });
       await load();
     } catch (err) {
@@ -544,6 +555,7 @@ export function InventoryFeaturePage() {
                         setScanStage("idle");
                         setScanResult(null);
                         setLastUploadFile(null);
+                        setReceiptName("");
                       }}
                     />
                   ) : (
@@ -570,7 +582,9 @@ export function InventoryFeaturePage() {
                       ) : lastUploadFile ? (
                         <>
                           <ScanLine className="h-8 w-8" />
-                          <span className="text-sm font-medium">{lastUploadFile.name}</span>
+                          <span className="text-sm font-medium">
+                            {receiptName.trim() || lastUploadFile.name}
+                          </span>
                           <span className="text-xs">다른 파일을 선택하려면 클릭</span>
                         </>
                       ) : (
@@ -590,9 +604,45 @@ export function InventoryFeaturePage() {
                       disabled={scanStage === "uploading" || scanStage === "scanning"}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) void handleUploadReceipt(file);
+                        if (file) handlePickReceipt(file);
                       }}
                     />
+
+                    {/* 올리기 전에 이름을 정한다. S3 키는 UUID 라 나중에 못 알아본다. */}
+                    {scanStage === "naming" && lastUploadFile && (
+                      <div className="space-y-2">
+                        <Label htmlFor="receipt-name">영수증 이름</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="receipt-name"
+                            value={receiptName}
+                            maxLength={100}
+                            placeholder="예: 8월 4일 이마트 장보기"
+                            onChange={(e) => setReceiptName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                void handleUploadReceipt(lastUploadFile, receiptName);
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            className="shrink-0"
+                            onClick={() =>
+                              void handleUploadReceipt(lastUploadFile, receiptName)
+                            }
+                          >
+                            <ScanLine className="mr-2 h-4 w-4" />
+                            스캔 시작
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          나중에 소비 패턴 분석 화면에서도 바꿀 수 있습니다.
+                        </p>
+                      </div>
+                    )}
+
                     {scanError && (
                       <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                         <span className="flex-1">{scanError}</span>
@@ -601,7 +651,9 @@ export function InventoryFeaturePage() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => void handleUploadReceipt(lastUploadFile)}
+                            onClick={() =>
+                              void handleUploadReceipt(lastUploadFile, receiptName)
+                            }
                           >
                             재시도
                           </Button>

@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ImageOff, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { ImageOff, Loader2, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +21,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -28,6 +31,8 @@ import {
   fetchReceiptImages,
   formatFileSize,
   formatUploadedAt,
+  receiptLabel,
+  renameReceiptImage,
   type ReceiptImageItem,
 } from "@/lib/receipts-api";
 
@@ -93,6 +98,9 @@ export function ReceiptImageList({ fetchEnabled = false, userEmail }: Props) {
   const [zoomed, setZoomed] = useState<ReceiptImageItem | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ReceiptImageItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [renaming, setRenaming] = useState<ReceiptImageItem | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   const load = useCallback(async () => {
     setState({ kind: "loading" });
@@ -135,6 +143,32 @@ export function ReceiptImageList({ fetchEnabled = false, userEmail }: Props) {
       setDeleting(false);
     }
   }, [pendingDelete, userEmail]);
+
+  const confirmRename = useCallback(async () => {
+    if (!renaming || !userEmail) return;
+    const name = renameValue.trim();
+    if (!name) return;
+    setSavingName(true);
+    try {
+      await renameReceiptImage(userEmail, renaming.key, name);
+      setState((prev) =>
+        prev.kind === "success"
+          ? {
+              ...prev,
+              items: prev.items.map((i) =>
+                i.key === renaming.key ? { ...i, display_name: name } : i,
+              ),
+            }
+          : prev,
+      );
+      toast.success("이름을 바꿨습니다.");
+      setRenaming(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "이름을 바꾸지 못했습니다.");
+    } finally {
+      setSavingName(false);
+    }
+  }, [renaming, renameValue, userEmail]);
 
   if (state.kind === "idle") {
     return (
@@ -209,19 +243,27 @@ export function ReceiptImageList({ fetchEnabled = false, userEmail }: Props) {
               type="button"
               onClick={() => setZoomed(item)}
               className="group h-28 w-24 shrink-0 overflow-hidden rounded-lg bg-muted"
-              aria-label={`${item.filename} 크게 보기`}
+              aria-label={`${receiptLabel(item)} 크게 보기`}
             >
               {/* presigned URL 은 매 조회마다 새로 발급되는 임시 링크라 next/image 최적화 대상이 아니다. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.view_url}
-                alt={item.filename}
+                alt={receiptLabel(item)}
                 className="h-full w-full object-cover transition-transform group-hover:scale-105"
               />
             </button>
 
             <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
-              <ParsedSummary item={item} />
+              <div className="min-w-0 space-y-1.5">
+                <p
+                  className="truncate text-sm font-medium text-foreground"
+                  title={receiptLabel(item)}
+                >
+                  {receiptLabel(item)}
+                </p>
+                <ParsedSummary item={item} />
+              </div>
               <div className="flex items-end justify-between gap-2">
                 <p className="text-[11px] leading-tight text-muted-foreground">
                   {formatUploadedAt(item.uploaded_at)}
@@ -229,16 +271,31 @@ export function ReceiptImageList({ fetchEnabled = false, userEmail }: Props) {
                   {formatFileSize(item.size_bytes)}
                 </p>
                 {userEmail ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 shrink-0 px-2 text-muted-foreground hover:text-destructive"
-                    onClick={() => setPendingDelete(item)}
-                    aria-label={`${item.filename} 삭제`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-muted-foreground hover:text-accent"
+                      onClick={() => {
+                        setRenameValue(receiptLabel(item));
+                        setRenaming(item);
+                      }}
+                      aria-label={`${receiptLabel(item)} 이름 바꾸기`}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-muted-foreground hover:text-destructive"
+                      onClick={() => setPendingDelete(item)}
+                      aria-label={`${receiptLabel(item)} 삭제`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ) : null}
               </div>
             </div>
@@ -254,7 +311,9 @@ export function ReceiptImageList({ fetchEnabled = false, userEmail }: Props) {
       <Dialog open={zoomed !== null} onOpenChange={(open) => !open && setZoomed(null)}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="truncate">{zoomed?.filename}</DialogTitle>
+            <DialogTitle className="truncate">
+              {zoomed ? receiptLabel(zoomed) : null}
+            </DialogTitle>
             <DialogDescription>
               {zoomed ? formatUploadedAt(zoomed.uploaded_at) : null}
             </DialogDescription>
@@ -264,11 +323,59 @@ export function ReceiptImageList({ fetchEnabled = false, userEmail }: Props) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={zoomed.view_url}
-                alt={zoomed.filename}
+                alt={receiptLabel(zoomed)}
                 className="mx-auto h-auto w-full object-contain"
               />
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={renaming !== null}
+        onOpenChange={(open) => !open && setRenaming(null)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>영수증 이름 바꾸기</DialogTitle>
+            <DialogDescription>
+              목록과 확대 화면에 이 이름이 보입니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="receipt-rename">이름</Label>
+            <Input
+              id="receipt-rename"
+              value={renameValue}
+              maxLength={100}
+              placeholder="예: 8월 4일 이마트 장보기"
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void confirmRename();
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRenaming(null)}
+              disabled={savingName}
+            >
+              취소
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void confirmRename()}
+              disabled={savingName || renameValue.trim().length === 0}
+            >
+              {savingName ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              저장
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -280,8 +387,9 @@ export function ReceiptImageList({ fetchEnabled = false, userEmail }: Props) {
           <AlertDialogHeader>
             <AlertDialogTitle>이 영수증을 삭제할까요?</AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingDelete?.filename} 을(를) 지웁니다. 사진과 인식 결과가 함께
-              사라지며 되돌릴 수 없습니다. 이미 등록한 재고는 그대로 남습니다.
+              {pendingDelete ? receiptLabel(pendingDelete) : ""} 을(를) 지웁니다.
+              사진과 인식 결과가 함께 사라지며 되돌릴 수 없습니다. 이미 등록한 재고는
+              그대로 남습니다.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

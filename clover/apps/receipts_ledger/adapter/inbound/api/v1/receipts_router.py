@@ -1,10 +1,20 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 from receipts_ledger.adapter.inbound.api.schemas.receipt_image_schema import (
     ReceiptImageListResponse,
     ReceiptImageUploadResponse,
     ReceiptParseSaveRequest,
+    ReceiptRenameRequest,
     to_receipt_image_list_response,
     to_receipt_image_upload_response,
     to_receipt_parse_save_command,
@@ -23,6 +33,9 @@ _MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 async def upload_receipt_image(
     x_user_email: str = Header(..., alias="X-User-Email"),
     file: UploadFile = File(...),
+    display_name: str | None = Form(
+        None, description="영수증에 붙일 이름. 비우면 파일명을 쓴다."
+    ),
     use_case: ReceiptsUseCase = Depends(get_receipts_use_case),
 ) -> ReceiptImageUploadResponse:
     if file.content_type not in _ALLOWED_CONTENT_TYPES:
@@ -41,10 +54,11 @@ async def upload_receipt_image(
                 filename=file.filename or "receipt",
                 content=content,
                 content_type=file.content_type,
+                display_name=display_name,
             )
         )
     except RuntimeError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     return to_receipt_image_upload_response(result)
 
@@ -91,6 +105,25 @@ async def save_receipt_parse_result(
     if not saved:
         raise HTTPException(status_code=404, detail="영수증을 찾을 수 없습니다.")
     return {"saved": True}
+
+
+@receipts_router.patch("/images/name", summary="영수증 이름 변경")
+async def rename_receipt_image(
+    body: ReceiptRenameRequest,
+    x_user_email: str = Header(..., alias="X-User-Email"),
+    use_case: ReceiptsUseCase = Depends(get_receipts_use_case),
+) -> dict[str, bool]:
+    """S3 키는 UUID 라서 사람이 못 읽는다. 목록에 보일 이름만 바꾼다."""
+    try:
+        renamed = await use_case.rename_receipt_image(
+            x_user_email, body.s3_key, body.display_name.strip()
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    if not renamed:
+        raise HTTPException(status_code=404, detail="영수증을 찾을 수 없습니다.")
+    return {"renamed": True}
 
 
 @receipts_router.delete("/images", summary="내가 올린 영수증 삭제")

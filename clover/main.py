@@ -256,6 +256,7 @@ async def _migrate_tables() -> None:
         # create_all 은 이미 있는 테이블에 컬럼을 붙여 주지 않는다.
         # receipt_images 는 먼저 만들어졌으므로 OCR 결과 컬럼은 여기서 보강한다.
         for column_ddl in (
+            "display_name VARCHAR",
             "store_name VARCHAR",
             "purchased_date DATE",
             "parsed_items JSONB",

@@ -266,9 +266,14 @@ export type ReceiptImageUploadResult = {
 export async function uploadReceiptImage(
   email: string,
   imageFile: File,
+  /** 영수증에 붙일 이름. 비우면 서버가 파일명을 쓴다. */
+  displayName?: string,
 ): Promise<ReceiptImageUploadResult> {
   const form = new FormData();
   form.append("file", imageFile);
+  if (displayName?.trim()) {
+    form.append("display_name", displayName.trim());
+  }
   const res = await fetch(`${API_BASE}/api/receipts/images`, {
     method: "POST",
     credentials: "include",

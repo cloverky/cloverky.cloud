@@ -46,7 +46,8 @@ class ReceiptParseSchema(BaseModel):
 
 class ReceiptImageItemResponse(BaseModel):
     key: str = Field(..., description="S3 오브젝트 키")
-    filename: str = Field(..., description="파일명")
+    filename: str = Field(..., description="S3 오브젝트 파일명(UUID)")
+    display_name: str | None = Field(None, description="사용자가 붙인 이름")
     size_bytes: int = Field(..., description="파일 크기(바이트)")
     uploaded_at: datetime = Field(..., description="S3 적재 시각")
     view_url: str = Field(..., description="임시 열람 링크(1시간 후 만료)")
@@ -68,6 +69,7 @@ def to_receipt_image_list_response(
             ReceiptImageItemResponse(
                 key=i.key,
                 filename=i.filename,
+                display_name=i.display_name,
                 size_bytes=i.size_bytes,
                 uploaded_at=i.uploaded_at,
                 view_url=i.view_url,
@@ -90,6 +92,13 @@ def to_receipt_image_list_response(
             for i in items
         ],
         total=len(items),
+    )
+
+
+class ReceiptRenameRequest(BaseModel):
+    s3_key: str = Field(..., description="이름을 바꿀 영수증의 S3 키")
+    display_name: str = Field(
+        ..., min_length=1, max_length=100, description="새 이름"
     )
 
 

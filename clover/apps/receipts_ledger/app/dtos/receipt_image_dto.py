@@ -8,6 +8,8 @@ class ReceiptImageUploadCommand:
     filename: str
     content: bytes
     content_type: str
+    # 사용자가 붙인 이름. 비우면 올린 파일명을 그대로 쓴다.
+    display_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -57,6 +59,14 @@ class ReceiptParseResult:
 
 
 @dataclass(frozen=True)
+class ReceiptImageDetail:
+    """S3 에는 없고 DB 에만 있는 정보. 목록을 만들 때 S3 키로 붙인다."""
+
+    display_name: str | None = None
+    parsed: ReceiptParseResult | None = None
+
+
+@dataclass(frozen=True)
 class ReceiptImageListItem:
     """S3에 적재된 영수증 이미지 1건. view_url 은 만료되는 임시 열람 링크다."""
 
@@ -65,5 +75,6 @@ class ReceiptImageListItem:
     size_bytes: int
     uploaded_at: datetime
     view_url: str
-    # S3 에는 인식 결과가 없다. 목록을 만들 때 DB 기록에서 채워 넣는다.
+    # S3 에는 이름도 인식 결과도 없다. 목록을 만들 때 DB 기록에서 채워 넣는다.
+    display_name: str | None = None
     parsed: ReceiptParseResult | None = None

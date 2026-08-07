@@ -36,6 +36,13 @@ class ReceiptsUseCase(ABC):
         pass
 
     @abstractmethod
+    async def rename_receipt_image(
+        self, user_email: str, s3_key: str, display_name: str
+    ) -> bool:
+        """영수증에 붙인 이름을 바꾼다. 소유자가 아니면 False."""
+        pass
+
+    @abstractmethod
     async def delete_receipt_image(self, user_email: str, s3_key: str) -> bool:
         """영수증을 S3와 DB 양쪽에서 지운다. 소유자가 아니면 False."""
         pass

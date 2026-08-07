@@ -30,13 +30,21 @@ export type ReceiptParse = {
 
 export type ReceiptImageItem = {
   key: string;
+  /** S3 오브젝트 파일명 — 충돌 방지용 UUID라 사람이 읽을 수 없다. */
   filename: string;
+  /** 사용자가 붙인 이름. 화면에는 이걸 우선 보여 준다. */
+  display_name: string | null;
   size_bytes: number;
   uploaded_at: string;
   /** presigned GET URL — 발급 후 1시간이 지나면 만료된다. */
   view_url: string;
   parsed: ReceiptParse | null;
 };
+
+/** 목록·다이얼로그에 보일 이름. 이름이 없던 옛 영수증은 파일명으로 떨어진다. */
+export function receiptLabel(item: ReceiptImageItem): string {
+  return item.display_name?.trim() || item.filename;
+}
 
 export type ReceiptImageListResponse = {
   items: ReceiptImageItem[];
@@ -93,6 +101,22 @@ export function deleteReceiptImage(email: string, key: string): Promise<void> {
   return mutate(`/api/receipts/images?key=${encodeURIComponent(key)}`, {
     method: "DELETE",
     headers: { "X-User-Email": email },
+  });
+}
+
+/** 영수증에 붙인 이름을 바꾼다. 남의 영수증은 서버가 404로 막는다. */
+export function renameReceiptImage(
+  email: string,
+  key: string,
+  displayName: string,
+): Promise<void> {
+  return mutate("/api/receipts/images/name", {
+    method: "PATCH",
+    headers: {
+      "X-User-Email": email,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ s3_key: key, display_name: displayName }),
   });
 }
 
