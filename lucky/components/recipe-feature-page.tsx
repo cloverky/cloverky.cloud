@@ -118,6 +118,9 @@ export function RecipeFeaturePage() {
 
   // 레시피 이름 → 평가. 싫어요를 준 레시피는 목록에서 빠진다.
   const [verdicts, setVerdicts] = useState<Record<string, Verdict>>({});
+  // AI 호출이 실패해 준비된 레시피로 대체됐을 때 서버가 내려주는 안내 문구.
+  // 이걸 숨기면 사용자는 고정 목록을 AI 추천으로 오해한다.
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
 
   const [selectedRecipe, setSelectedRecipe] = useState<{ name: string } | null>(null);
   const [detail, setDetail] = useState<RecipeDetail | null>(null);
@@ -133,9 +136,15 @@ export function RecipeFeaturePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "list", ingredients: ingredientList }),
       });
-      const data = (await res.json()) as { recipes?: RecipeSummary[]; error?: string };
+      const data = (await res.json()) as {
+        recipes?: RecipeSummary[];
+        error?: string;
+        fallback?: boolean;
+        notice?: string;
+      };
       if (!res.ok || data.error) throw new Error(data.error ?? "레시피 로드 실패");
       setRecipes(data.recipes ?? []);
+      setFallbackNotice(data.fallback ? (data.notice ?? null) : null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
     } finally {
@@ -153,9 +162,15 @@ export function RecipeFeaturePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "meal", ingredients: ingredientList }),
       });
-      const data = (await res.json()) as { meals?: MealSuggestion[]; error?: string };
+      const data = (await res.json()) as {
+        meals?: MealSuggestion[];
+        error?: string;
+        fallback?: boolean;
+        notice?: string;
+      };
       if (!res.ok || data.error) throw new Error(data.error ?? "식사 추천 실패");
       setMeals(data.meals ?? []);
+      setFallbackNotice(data.fallback ? (data.notice ?? null) : null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
     } finally {
@@ -312,6 +327,13 @@ export function RecipeFeaturePage() {
                 +{ingredients.length - 10}개
               </Badge>
             )}
+          </div>
+        )}
+
+        {/* AI 추천이 아니라 준비된 목록이라는 사실을 숨기지 않는다. */}
+        {!loading && fallbackNotice && (
+          <div className="mt-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
+            {fallbackNotice}
           </div>
         )}
 
