@@ -211,7 +211,9 @@ export default function VisionPage() {
               </p>
             )}
 
-            {state === "done" && result && (
+            {/* result 는 그대로 찍기만 하는 임의 JSON 이라 unknown 이다.
+                truthy 검사로 두면 조건식 자체가 unknown 이 되어 ReactNode 로 못 쓴다. */}
+            {state === "done" && result !== null && (
               <div className="rounded-xl border border-border bg-card/50 p-4">
                 <p className="mb-2 text-xs font-semibold text-muted-foreground">응답</p>
                 <pre className="overflow-x-auto text-xs text-foreground">

@@ -292,10 +292,12 @@ export function InventoryFeaturePage() {
   };
 
   const handleConfirmScanned = async (payloads: InventoryItemPayload[]) => {
-    if (!user?.email) return;
+    // 콜백 안에서는 user?.email 의 좁힘이 풀린다. 여기서 한 번 붙잡아 쓴다.
+    const email = user?.email;
+    if (!email) return;
     patchPage({ submitting: true });
     try {
-      await Promise.all(payloads.map((p) => createInventoryItem(user.email!, p)));
+      await Promise.all(payloads.map((p) => createInventoryItem(email, p)));
       toast.success(`내 냉장고 속으로 들어갑니다! ${payloads.length}개 식재료를 등록했습니다.`);
       setScanStage("idle");
       setScanResult(null);
