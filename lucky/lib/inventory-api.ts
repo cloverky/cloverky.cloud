@@ -1,3 +1,4 @@
+import { connectionErrorMessage } from "@/lib/api-errors";
 import { notifySessionExpired, refreshAccessToken } from "@/lib/auth-session";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
@@ -79,7 +80,7 @@ export async function fetchExpiryEstimate(
   try {
     res = await fetch(`${API_BASE}/api/fridge/inventory/estimate-expiry?${params}`);
   } catch {
-    throw new Error("백엔드에 연결할 수 없습니다.");
+    throw new Error(connectionErrorMessage());
   }
   const data = (await res.json()) as ExpiryEstimate & FastApiErrorBody;
   if (!res.ok) {
@@ -111,9 +112,7 @@ async function request<T>(
       res = await send();
     }
   } catch {
-    throw new Error(
-      "백엔드 서버에 연결할 수 없습니다. python main.py 가 실행 중인지 확인해 주세요.",
-    );
+    throw new Error(connectionErrorMessage());
   }
 
   if (res.status === 401) {

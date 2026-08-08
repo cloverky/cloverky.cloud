@@ -18,6 +18,7 @@ import {
   scrollChatLists,
   useGeminiChat,
 } from "@/components/gemini-chat-context";
+import { connectionErrorMessage } from "@/lib/api-errors";
 import { postGeminiChat } from "@/lib/chat-api";
 import { cn } from "@/lib/utils";
 
@@ -70,7 +71,7 @@ export function useGeminiSend() {
       let msg = "요청에 실패했습니다. 잠시 후 다시 시도해 주세요.";
       if (e instanceof Error) {
         if (/failed to fetch|networkerror|load failed/i.test(e.message)) {
-          msg = "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.";
+          msg = connectionErrorMessage();
         } else if (/EXAONE|503|Service Unavailable/i.test(e.message)) {
           // 모델 서버(vLLM)가 아직 안 떴거나 내려간 경우. 사용자는 기다리는 것 말고
           // 할 수 있는 게 없으므로 내부 사정은 알리지 않는다.

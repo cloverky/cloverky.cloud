@@ -1,3 +1,5 @@
+import { connectionErrorMessage } from "@/lib/api-errors";
+
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(
   /\/$/,
   "",
@@ -27,7 +29,7 @@ async function call<T>(path: string, init: RequestInit): Promise<T> {
   try {
     res = await fetch(`${API_BASE}${path}`, { cache: "no-store", ...init });
   } catch {
-    throw new Error("백엔드 서버에 연결할 수 없습니다.");
+    throw new Error(connectionErrorMessage());
   }
   const data = (await res.json().catch(() => ({}))) as T & FastApiErrorBody;
   if (!res.ok) {

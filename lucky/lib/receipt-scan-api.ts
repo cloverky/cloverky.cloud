@@ -1,3 +1,4 @@
+import { connectionErrorMessage } from "@/lib/api-errors";
 import { notifySessionExpired, refreshAccessToken } from "@/lib/auth-session";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
@@ -52,7 +53,7 @@ export async function scanReceiptByKey(
     if (err instanceof DOMException && err.name === "TimeoutError") {
       throw new Error("영수증 인식 시간이 초과됐습니다. 다시 시도해 주세요.");
     }
-    throw new Error("서버에 연결할 수 없습니다.");
+    throw new Error(connectionErrorMessage());
   }
 
   if (res.status === 401) {
