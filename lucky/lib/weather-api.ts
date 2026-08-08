@@ -44,16 +44,6 @@ export function writeCachedWeather(data: WeatherData): void {
   }
 }
 
-const FALLBACK_WEATHER: WeatherData = {
-  city: "Seoul",
-  country: "KR",
-  temp_c: 18,
-  feels_like_c: 18,
-  description: "맑음",
-  icon: "01d",
-  humidity: 55,
-};
-
 export type WeatherLocation =
   | { kind: "coords"; lat: number; lon: number }
   | { kind: "city"; city: string; country: string };
@@ -96,10 +86,9 @@ export function writeCachedCoords(lat: number, lon: number): void {
   }
 }
 
-/** API·백엔드 실패 시 기본값 (SSR·hydration용 — 캐시는 컴포넌트 mount 후 적용) */
-export function weatherFallback(): WeatherData {
-  return FALLBACK_WEATHER;
-}
+// 조회에 실패했을 때 쓰던 기본값(Seoul 18° 맑음)은 없앴다. 그럴듯한 숫자라
+// 사용자가 실제 날씨로 믿게 되는데, 화면에는 진짜와 구분할 표시가 없었다.
+// 지금은 받아 둔 캐시가 있으면 "최근"으로 표시하고, 없으면 없다고 말한다.
 
 export function weatherIconUrl(icon: string): string {
   return `https://openweathermap.org/img/wn/${icon}@2x.png`;
