@@ -3,6 +3,12 @@ const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").re
 /** JWT 발급은 auth 컨테이너에서만 일어난다 — 로그인은 이쪽으로 보낸다. */
 const AUTH_BASE = (process.env.NEXT_PUBLIC_AUTH_URL ?? "https://auth.cloverky.cloud").replace(/\/$/, "");
 
+// 로그인 화면을 보는 사람은 uvicorn 도 백엔드도 모른다. 서버가 내려간 상황에서
+// 사용자가 할 수 있는 일은 재시도뿐이므로 그것만 안내한다.
+const CONNECTION_ERROR =
+  "서버에 연결할 수 없습니다. 네트워크 상태를 확인하고 잠시 후 다시 시도해 주세요.";
+const TIMEOUT_ERROR = "서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.";
+
 type FastApiErrorBody = { detail?: string | { msg?: string }[] };
 
 function parseApiError(data: FastApiErrorBody, status: number): string {
@@ -41,9 +47,7 @@ export async function postSignUp(payload: SignUpPayload): Promise<SignUpResponse
       }),
     });
   } catch {
-    throw new Error(
-      "백엔드 서버에 연결할 수 없습니다. uvicorn이 실행 중인지 확인해 주세요.",
-    );
+    throw new Error(CONNECTION_ERROR);
   }
 
   const data = (await res.json()) as SignUpResponse & FastApiErrorBody;
@@ -75,11 +79,9 @@ export async function checkUsername(username: string): Promise<UsernameCheckResu
     });
   } catch (e) {
     if (e instanceof Error && e.name === "AbortError") {
-      throw new Error("서버 응답이 너무 느립니다. 백엔드를 재시작한 뒤 다시 시도해 주세요.");
+      throw new Error(TIMEOUT_ERROR);
     }
-    throw new Error(
-      "백엔드 서버에 연결할 수 없습니다. uvicorn이 실행 중인지 확인해 주세요.",
-    );
+    throw new Error(CONNECTION_ERROR);
   } finally {
     clearTimeout(timeoutId);
   }
@@ -138,13 +140,9 @@ export async function postLogin(
       if (signal?.aborted) {
         throw new Error("로그인이 취소되었습니다.");
       }
-      throw new Error(
-        "로그인 응답이 너무 느립니다. 백엔드(uvicorn)가 실행 중인지 확인한 뒤 다시 시도해 주세요.",
-      );
+      throw new Error("로그인 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.");
     }
-    throw new Error(
-      "백엔드 서버에 연결할 수 없습니다. uvicorn이 실행 중인지 확인해 주세요.",
-    );
+    throw new Error(CONNECTION_ERROR);
   } finally {
     clearTimeout(timeoutId);
     signal?.removeEventListener("abort", onExternalAbort);

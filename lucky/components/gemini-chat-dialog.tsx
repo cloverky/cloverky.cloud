@@ -71,12 +71,10 @@ export function useGeminiSend() {
       if (e instanceof Error) {
         if (/failed to fetch|networkerror|load failed/i.test(e.message)) {
           msg = "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.";
-        } else if (/404.*gemini|not found for API/i.test(e.message)) {
-          msg =
-            "Gemini 모델을 찾을 수 없습니다.\n.env.local 에 GEMINI_MODEL=gemini-2.5-flash 를 설정한 뒤 서버를 재시작해 주세요.";
-        } else if (/429|quota|rate.?limit/i.test(e.message)) {
-          msg =
-            "Gemini API 사용 한도에 도달했습니다.\nGoogle AI Studio에서 할당량·결제를 확인하거나, 잠시 후 다시 시도해 주세요.";
+        } else if (/EXAONE|503|Service Unavailable/i.test(e.message)) {
+          // 모델 서버(vLLM)가 아직 안 떴거나 내려간 경우. 사용자는 기다리는 것 말고
+          // 할 수 있는 게 없으므로 내부 사정은 알리지 않는다.
+          msg = "AI 응답 서버가 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.";
         } else {
           msg = e.message;
         }
