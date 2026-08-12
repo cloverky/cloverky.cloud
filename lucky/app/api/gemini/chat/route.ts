@@ -37,21 +37,35 @@ export async function POST(request: Request) {
     });
 
     if (!res.ok) {
-      const detail = await res.text();
+      // 오리진이 내려가 있으면 Cloudflare 가 HTML 오류 페이지를 돌려준다.
+      // 그걸 그대로 잘라 화면에 뿌리면 사용자에게는 <!DOCTYPE html> 만 보인다.
+      // 백엔드가 준 detail 이 있을 때만 쓰고, 아니면 사실만 말한다.
+      const detail = await readDetail(res);
       return NextResponse.json(
-        { error: `백엔드 오류 (${res.status}): ${detail.slice(0, 200)}` },
-        { status: 502 },
+        { error: detail ?? "AI 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+        { status: 503 },
       );
     }
 
     const data = (await res.json()) as { reply: string };
     return NextResponse.json({ reply: data.reply });
-  } catch (e) {
-    const raw = e instanceof Error ? e.message : "알 수 없는 오류";
-    const message =
-      raw.length > 200
-        ? `${raw.slice(0, 200)}…\n\n(메시지가 잘렸습니다. 터미널 로그를 함께 확인해 주세요.)`
-        : raw;
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch {
+    // fetch 자체가 실패한 경우 — 원인을 모르므로 내부 메시지를 노출하지 않는다.
+    return NextResponse.json(
+      { error: "AI 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 },
+    );
+  }
+}
+
+/** 백엔드(FastAPI)가 준 detail 만 꺼낸다. JSON 이 아니면 null. */
+async function readDetail(res: Response): Promise<string | null> {
+  try {
+    const body = (await res.json()) as { detail?: unknown };
+    return typeof body.detail === "string" && body.detail.trim()
+      ? body.detail
+      : null;
+  } catch {
+    return null;
   }
 }
