@@ -20,6 +20,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { fetchInventory, type InventoryItem } from "@/lib/inventory-api";
 
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(
+  /\/$/,
+  "",
+);
+
 const SHOPS = [
   {
     name: "네이버",
@@ -68,7 +73,32 @@ async function requestIngredients(dish: string): Promise<string[]> {
     .filter(Boolean);
 }
 
+/** 큐레이션된 레시피에서 재료를 찾는다. 목록에 없는 음식이면 null. */
+async function lookupIngredients(dish: string): Promise<string[] | null> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/fridge/recipe-ingredients?dish=${encodeURIComponent(dish)}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      core?: string[];
+      sub?: string[];
+    };
+    // pantry(소금·후추 같은 기본 양념)는 장보기 목록에서 뺀다 — 보통 집에 있다.
+    const names = [...(data.core ?? []), ...(data.sub ?? [])];
+    return names.length > 0 ? names : null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchIngredients(dish: string): Promise<string[]> {
+  // "크림파스타에 뭐가 들어가지" 는 지어낼 문제가 아니라 찾아볼 문제다.
+  // 등록된 레시피면 모델을 거치지 않고 정확한 재료를 그대로 쓴다.
+  const known = await lookupIngredients(dish);
+  if (known) return known;
+
   let names = await requestIngredients(dish);
 
   // 결과가 매번 달라서 한 번 더 물어보면 멀쩡한 답이 나오는 경우가 많다.
