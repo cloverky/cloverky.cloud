@@ -141,8 +141,10 @@ export const FEATURE_PAGES: Record<FeatureSlug, FeaturePageConfig> = {
         description: "자주 쓰는 재료가 떨어지기 전에 알립니다.",
       },
       {
+        // 카드 폭(약 259px)에 한 줄로 들어가는 길이. 원래 문구는 289px 라
+        // "제안합니다." 만 둘째 줄에 남았다.
         title: "레시피 연동",
-        description: "임박 재료로 만들 수 있는 요리를 함께 제안합니다.",
+        description: "임박한 재료로 만들 요리를 제안합니다.",
       },
     ],
     stats: [],
@@ -164,7 +166,7 @@ export const FEATURE_PAGES: Record<FeatureSlug, FeaturePageConfig> = {
       },
       {
         title: "장보기 리스트",
-        description: "패턴 기반으로 다음 구매 목록을 제안합니다.",
+        description: "소비 패턴으로 구매 목록을 제안합니다.",
       },
       {
         title: "절약 인사이트",
@@ -186,11 +188,11 @@ export const FEATURE_PAGES: Record<FeatureSlug, FeaturePageConfig> = {
     highlights: [
       {
         title: "취향 프로필",
-        description: "알레르기, 매운맛, 조리 시간 선호를 저장합니다.",
+        description: "알레르기와 입맛, 조리 시간을 기억합니다.",
       },
       {
         title: "피드백 학습",
-        description: "👎 를 준 레시피는 다음 추천부터 빠집니다.",
+        description: "👎 를 준 레시피는 추천에서 빠집니다.",
       },
       {
         title: "프라이버시",
@@ -212,11 +214,11 @@ export const FEATURE_PAGES: Record<FeatureSlug, FeaturePageConfig> = {
     highlights: [
       {
         title: "부족 재료 감지",
-        description: "재고가 기준 이하로 내려가면 자동으로 감지합니다.",
+        description: "재고가 기준 아래로 내려가면 감지합니다.",
       },
       {
         title: "쇼핑몰 연결",
-        description: "쿠팡·마켓컬리 등 주요 쇼핑몰로 바로 이동합니다.",
+        description: "쿠팡·마켓컬리 등으로 바로 이동합니다.",
       },
       {
         title: "장바구니 목록",
