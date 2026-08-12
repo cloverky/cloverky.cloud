@@ -41,8 +41,15 @@ type MissingIngredient = {
   quantity?: string;
 };
 
-async function fetchIngredients(dish: string): Promise<string[]> {
-  const prompt = `"${dish}"을(를) 만들기 위한 재료 목록을 JSON 배열로만 출력해줘. 예: ["재료1","재료2"]. 설명 없이 배열만.`;
+// 한자(CJK 통합 한자) 범위. 지금 쓰는 모델이 한국어 단어 중간에 중국어 글자를
+// 끼워 넣는 일이 있다 — "양파"를 "양葱", "양념장"을 "양념汁" 으로 내놓는 식이다.
+// 장보기 목록에 쓸 재료명에 한자가 들어갈 일은 없으므로 오염 신호로 본다.
+const HANJA = /[一-鿿]/;
+
+async function requestIngredients(dish: string): Promise<string[]> {
+  const prompt = `"${dish}"을(를) 만들기 위한 재료 목록을 JSON 배열로만 출력해줘.
+반드시 한국어로만 쓰고 한자나 영어를 섞지 마. 예: ["양파","마늘"]
+설명 없이 배열만.`;
   const res = await fetch("/api/gemini/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -53,7 +60,31 @@ async function fetchIngredients(dish: string): Promise<string[]> {
   const raw = data.reply ?? "";
   const match = raw.match(/\[[\s\S]*?\]/);
   if (!match) throw new Error("재료 목록을 파싱하지 못했습니다.");
-  return JSON.parse(match[0]) as string[];
+  const parsed = JSON.parse(match[0]) as unknown;
+  if (!Array.isArray(parsed)) throw new Error("재료 목록을 파싱하지 못했습니다.");
+  return parsed
+    .filter((v): v is string => typeof v === "string")
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+async function fetchIngredients(dish: string): Promise<string[]> {
+  let names = await requestIngredients(dish);
+
+  // 결과가 매번 달라서 한 번 더 물어보면 멀쩡한 답이 나오는 경우가 많다.
+  if (names.some((n) => HANJA.test(n))) {
+    try {
+      names = await requestIngredients(dish);
+    } catch {
+      // 재시도가 실패하면 첫 응답을 그대로 걸러 쓴다.
+    }
+  }
+
+  // 그래도 한자가 남으면 그 항목은 버린다. "양葱" 처럼 고칠 수 없는 말이
+  // 장바구니에 담기는 것보다 하나 빠지는 편이 낫다.
+  const clean = names.filter((n) => !HANJA.test(n));
+  if (clean.length === 0) throw new Error("재료 목록을 파싱하지 못했습니다.");
+  return clean;
 }
 
 function ShoppingItemRow({
