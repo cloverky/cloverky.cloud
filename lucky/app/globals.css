@@ -145,6 +145,13 @@ input, textarea {
   body {
     @apply bg-background text-foreground;
     overflow-x: clip;
+    /* 한글은 기본값(word-break: normal)에서 글자 단위로 아무 데나 끊긴다.
+       "제안합니다" 가 "제안합 / 니다" 로 갈라지는 이유다. keep-all 로 어절을
+       유지하고 띄어쓰기에서만 줄을 바꾼다.
+       단독으로 쓰면 긴 URL·UUID 처럼 공백 없는 문자열이 컨테이너를 뚫으므로
+       overflow-wrap 을 함께 걸어 그럴 때만 강제로 끊기게 한다. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
   /* Radix Dialog 등 열릴 때 스크롤 잠금 padding 보정으로 인한 가로 시프트 방지 */
   html[data-scroll-locked],
