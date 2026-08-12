@@ -42,7 +42,10 @@ function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-description"
-      className={cn('text-muted-foreground text-sm', className)}
+      // text-balance: 두 줄이 되면 길이를 고르게 나눈다. 전역 text-wrap: pretty
+      // 만으로는 마지막 줄에 어절 하나만 남는 걸 다 막지 못하는데, 카드처럼
+      // 폭이 좁을수록 심하다. 카드 설명은 짧아서 balance 가 잘 듣는다.
+      className={cn('text-muted-foreground text-sm text-balance', className)}
       {...props}
     />
   )

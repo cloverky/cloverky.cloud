@@ -13,7 +13,8 @@ export function Footer() {
               <Refrigerator className="h-6 w-6 text-accent" />
               <span className="text-xl font-bold text-foreground">FridgeAI</span>
             </div>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+            {/* 두 줄로 떨어지는 문구라 마지막 줄이 짧게 남지 않도록 균형을 준다. */}
+            <p className="mt-4 max-w-md text-balance text-sm leading-relaxed text-muted-foreground">
               AI 기반 냉장고 재고 관리 및 맞춤 레시피 서비스로
               더 스마트한 주방 생활을 경험하세요.
             </p>

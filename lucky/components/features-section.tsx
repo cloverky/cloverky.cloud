@@ -32,7 +32,8 @@ export function FeaturesSection() {
               <h3 className="mt-3 text-sm font-semibold text-foreground sm:mt-4 sm:text-lg">
                 {feature.title}
               </h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground sm:mt-2 sm:text-sm">
+              {/* 카드 폭이 좁아 두 줄로 떨어진다. 줄 길이를 고르게 나눈다. */}
+              <p className="mt-1 text-balance text-xs leading-relaxed text-muted-foreground sm:mt-2 sm:text-sm">
                 {feature.description.replace(/\n/g, " ")}
               </p>
               <span className="mt-auto inline-flex items-center pt-3 text-xs font-medium text-accent opacity-0 transition-opacity group-hover:opacity-100 sm:pt-4 sm:text-sm">
