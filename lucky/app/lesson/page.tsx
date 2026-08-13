@@ -217,7 +217,7 @@ export default function LessonPage() {
               className="scroll-mt-28 rounded-2xl border border-border bg-card/50 p-5 shadow-sm"
             >
               <h2 className="text-lg font-bold">승객 목록</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+              <p className="mt-3 text-balance text-sm leading-7 text-muted-foreground">
                 업로드한 타이타닉 데이터를 바탕으로 성별, 연령, 객실 등급, 탑승 요금
                 등이 생존 여부와 어떤 관계가 있는지 살펴봅니다.
               </p>
@@ -255,9 +255,9 @@ export default function LessonPage() {
                 <ReceiptText className="h-5 w-5 text-accent" />
                 <h2 className="text-lg font-bold">영수증 확인</h2>
               </div>
-              <p className="text-sm leading-7 text-muted-foreground">
-                S3에 저장된 영수증 이미지를 최신순으로 보여줍니다. 이미지를 누르면 원본을
-                새 탭에서 확인할 수 있습니다.
+              <p className="text-balance text-sm leading-7 text-muted-foreground">
+                S3에 저장된 영수증 이미지를 최신순으로 보여줍니다. 이미지를 누르면
+                크게 볼 수 있습니다.
               </p>
               <ReceiptImageList fetchEnabled={receiptsRequested} />
             </section>
@@ -267,7 +267,7 @@ export default function LessonPage() {
               className="scroll-mt-28 rounded-2xl border border-border bg-card/50 p-5 shadow-sm"
             >
               <h2 className="text-lg font-bold">모델 예측</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+              <p className="mt-3 text-balance text-sm leading-7 text-muted-foreground">
                 전처리한 데이터를 사용해 머신러닝 분류 모델을 만들고, 승객별 생존
                 가능성을 예측한 뒤 정확도와 해석 결과를 확인합니다.
               </p>
