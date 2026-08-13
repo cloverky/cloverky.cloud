@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChefHat, Clock, Loader2, RefreshCw, ThumbsDown, ThumbsUp, Utensils, Sunrise, Sun, Moon } from "lucide-react";
+import { toast } from "sonner";
 import { CloverIcon } from "@/components/clover-icon";
 import { BottomRightExtras } from "@/components/bottom-right-extras-context";
 import { Footer } from "@/components/footer";
@@ -20,6 +21,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fetchInventory } from "@/lib/inventory-api";
 import {
+  clearRecipeFeedback,
   fetchRecipeFeedback,
   putRecipeFeedback,
   type Verdict,
@@ -49,33 +51,42 @@ function RecipeVote({
       // 행 클릭은 레시피 상세를 여는 동작이라 여기서 멈춘다.
       onClick={(e) => e.stopPropagation()}
     >
+      {/* 색만 바꾸면 작은 아이콘에서는 눌렸는지 알아보기 어렵다.
+          배경 칩을 깔고 아이콘 속을 채워 상태를 분명히 드러낸다. */}
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        aria-label="이 레시피 좋아요"
+        aria-label={verdict === "up" ? "좋아요 취소" : "이 레시피 좋아요"}
         aria-pressed={verdict === "up"}
+        title={verdict === "up" ? "좋아요 취소" : "좋아요"}
         className={cn(
           "h-8 px-2 text-muted-foreground hover:text-accent",
-          verdict === "up" && "text-accent",
+          verdict === "up" && "bg-accent/15 text-accent hover:bg-accent/20",
         )}
         onClick={() => onRate("up")}
       >
-        <ThumbsUp className="h-4 w-4" />
+        <ThumbsUp className={cn("h-4 w-4", verdict === "up" && "fill-current")} />
       </Button>
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        aria-label="이 레시피 싫어요 — 추천에서 제외"
+        aria-label={
+          verdict === "down" ? "싫어요 취소" : "이 레시피 싫어요 — 추천에서 제외"
+        }
         aria-pressed={verdict === "down"}
+        title={verdict === "down" ? "싫어요 취소" : "싫어요 — 추천에서 제외"}
         className={cn(
           "h-8 px-2 text-muted-foreground hover:text-destructive",
-          verdict === "down" && "text-destructive",
+          verdict === "down" &&
+            "bg-destructive/15 text-destructive hover:bg-destructive/20",
         )}
         onClick={() => onRate("down")}
       >
-        <ThumbsDown className="h-4 w-4" />
+        <ThumbsDown
+          className={cn("h-4 w-4", verdict === "down" && "fill-current")}
+        />
       </Button>
     </span>
   );
@@ -221,6 +232,25 @@ export function RecipeFeaturePage() {
       .catch(() => undefined);
   }, [user]);
 
+  /** 평가를 지운다. 토스트의 "되돌리기" 처럼 현재 상태를 몰라도 되는 경우에 쓴다. */
+  const clearVote = useCallback(
+    async (recipeName: string) => {
+      const email = user?.email;
+      if (!email) return;
+      setVerdicts((prev) => {
+        const next = { ...prev };
+        delete next[recipeName];
+        return next;
+      });
+      try {
+        await clearRecipeFeedback(email, recipeName);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "되돌리지 못했습니다.");
+      }
+    },
+    [user],
+  );
+
   const rate = useCallback(
     async (recipeName: string, verdict: Verdict) => {
       if (!user?.email) return;
@@ -232,18 +262,29 @@ export function RecipeFeaturePage() {
         else next[recipeName] = verdict;
         return next;
       });
+      const applied = before === verdict ? undefined : verdict;
       try {
         await putRecipeFeedback(user.email, recipeName, verdict);
-      } catch {
+        // 싫어요를 주면 그 줄이 목록에서 사라진다. 어디로 갔는지, 어떻게
+        // 되돌리는지 알려 주지 않으면 사용자는 없어진 이유를 알 수 없다.
+        if (applied === "down") {
+          toast(`${recipeName} 을(를) 추천에서 뺐습니다.`, {
+            description: "취향 화면에서도 되돌릴 수 있어요.",
+            action: { label: "되돌리기", onClick: () => void clearVote(recipeName) },
+          });
+        }
+      } catch (e) {
         setVerdicts((prev) => {
           const next = { ...prev };
           if (before) next[recipeName] = before;
           else delete next[recipeName];
           return next;
         });
+        // 조용히 되돌리면 "눌러도 아무 일이 없다" 로 보인다.
+        toast.error(e instanceof Error ? e.message : "평가를 저장하지 못했습니다.");
       }
     },
-    [user, verdicts],
+    [user, verdicts, clearVote],
   );
 
   const openDetail = async (name: string) => {
