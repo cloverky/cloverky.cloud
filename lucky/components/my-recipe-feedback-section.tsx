@@ -103,7 +103,12 @@ function FeedbackGroup({
 }
 
 /** 취향 화면에서 지금까지 레시피에 남긴 좋아요·싫어요를 모아 본다. */
-export function MyRecipeFeedbackSection() {
+export function MyRecipeFeedbackSection({
+  /** 남긴 평가가 있는지 바깥에 알린다. 안내 카드를 감출지 판단하는 데 쓴다. */
+  onHasFeedbackChange,
+}: {
+  onHasFeedbackChange?: (hasFeedback: boolean) => void;
+} = {}) {
   const { user, isReady } = useAuth();
   const openLogin = useOpenLogin();
   const [state, setState] = useState<State>({ kind: "loading" });
@@ -127,6 +132,22 @@ export function MyRecipeFeedbackSection() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [user, load]);
+
+  // 평가가 있는지 바깥에 알린다. 마지막 항목을 지우면 다시 false 가 되어
+  // 안내 카드가 돌아온다. 못 불러왔을 때는 감추지 않는 쪽(false)으로 둔다.
+  useEffect(() => {
+    if (!onHasFeedbackChange || !isReady) return;
+    if (!user?.email) {
+      onHasFeedbackChange(false);
+      return;
+    }
+    if (state.kind === "success") {
+      const { liked, disliked } = state.feedback;
+      onHasFeedbackChange(liked.length + disliked.length > 0);
+    } else if (state.kind === "error") {
+      onHasFeedbackChange(false);
+    }
+  }, [isReady, user, state, onHasFeedbackChange]);
 
   const remove = useCallback(
     async (name: string) => {

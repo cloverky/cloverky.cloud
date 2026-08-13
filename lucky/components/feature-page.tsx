@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { BottomRightExtras } from "@/components/bottom-right-extras-context";
@@ -168,8 +169,19 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
     return <ShoppingFeaturePage />;
   }
 
+  return <GenericFeaturePage slug={slug} />;
+}
+
+function GenericFeaturePage({ slug }: { slug: FeatureSlug }) {
   const config = FEATURE_PAGES[slug];
   const Icon = config.icon;
+
+  // 취향 화면의 설명 카드는 기능을 아직 모르는 사람에게 필요한 안내다.
+  // 이미 평가를 남겼다면 자리만 차지하므로 감춘다.
+  // null 은 "아직 모름" — 확인 전에 보여 줬다가 지우면 화면이 덜컹거린다.
+  const [hasFeedback, setHasFeedback] = useState<boolean | null>(null);
+  const showHighlights =
+    slug === "personalization" ? hasFeedback === false : true;
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -222,18 +234,20 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
           </div>
         ) : null}
 
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {config.highlights.map((h) => (
-            <Card key={h.title}>
-              <CardHeader>
-                <CardTitle className="text-base">{h.title}</CardTitle>
-                <CardDescription className="text-sm leading-relaxed">
-                  {h.description}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
+        {showHighlights ? (
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {config.highlights.map((h) => (
+              <Card key={h.title}>
+                <CardHeader>
+                  <CardTitle className="text-base">{h.title}</CardTitle>
+                  <CardDescription className="text-sm leading-relaxed">
+                    {h.description}
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        ) : null}
 
         {config.sections.length > 0 ? (
           <div className="mt-12 space-y-8">
@@ -253,7 +267,7 @@ export function FeaturePage({ slug }: { slug: FeatureSlug }) {
         {/* 취향 화면의 "피드백 학습"은 레시피 평가가 실제 데이터다. */}
         {slug === "personalization" ? (
           <div className="mt-12">
-            <MyRecipeFeedbackSection />
+            <MyRecipeFeedbackSection onHasFeedbackChange={setHasFeedback} />
           </div>
         ) : null}
 
