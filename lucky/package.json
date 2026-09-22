@@ -65,6 +65,9 @@
     "vaul": "^1.1.2",
     "zod": "^3.24.1"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@prisma/client", "@prisma/engines", "prisma"]
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.0",
     "@types/node": "^22",
