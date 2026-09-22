@@ -1,8 +1,3 @@
-/** access_token 세션 수명 관리 — 갱신과 만료 통지를 한곳에서 맡는다. */
-const AUTH_BASE = (process.env.NEXT_PUBLIC_AUTH_URL ?? "https://auth.cloverky.cloud").replace(
-  /\/$/,
-  "",
-);
 
 /** 갱신까지 실패했을 때 AuthProvider가 받아 로그아웃 처리하는 이벤트. */
 export const SESSION_EXPIRED_EVENT = "cloverky:session-expired";
@@ -11,7 +6,7 @@ let inFlight: Promise<boolean> | null = null;
 
 async function requestRefresh(): Promise<boolean> {
   try {
-    const res = await fetch(`${AUTH_BASE}/auth/refresh`, {
+    const res = await fetch(`/api/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

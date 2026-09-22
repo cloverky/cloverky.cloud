@@ -1,7 +1,6 @@
 import { connectionErrorMessage } from "@/lib/api-errors";
 import { notifySessionExpired, refreshAccessToken } from "@/lib/auth-session";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
 
 type FastApiErrorBody = { detail?: string | { msg?: string }[] };
 
@@ -78,7 +77,7 @@ export async function fetchExpiryEstimate(
   });
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}/api/fridge/inventory/estimate-expiry?${params}`);
+    res = await fetch(`/api/fridge/inventory/estimate-expiry?${params}`);
   } catch {
     throw new Error(connectionErrorMessage());
   }
@@ -95,7 +94,7 @@ async function request<T>(
   init?: RequestInit,
 ): Promise<T> {
   const send = () =>
-    fetch(`${API_BASE}${path}`, {
+    fetch(path, {
       ...init,
       // access_token 쿠키(.cloverky.cloud)를 함께 보낸다.
       credentials: "include",
@@ -273,7 +272,7 @@ export async function uploadReceiptImage(
   if (displayName?.trim()) {
     form.append("display_name", displayName.trim());
   }
-  const res = await fetch(`${API_BASE}/api/receipts/images`, {
+  const res = await fetch(`/api/receipts/images`, {
     method: "POST",
     credentials: "include",
     headers: { "X-User-Email": email },

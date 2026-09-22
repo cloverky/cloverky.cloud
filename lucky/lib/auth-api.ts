@@ -1,7 +1,3 @@
-/** FastAPI 인증 API */
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
-/** JWT 발급은 auth 컨테이너에서만 일어난다 — 로그인은 이쪽으로 보낸다. */
-const AUTH_BASE = (process.env.NEXT_PUBLIC_AUTH_URL ?? "https://auth.cloverky.cloud").replace(/\/$/, "");
 
 import { connectionErrorMessage } from "@/lib/api-errors";
 
@@ -34,7 +30,7 @@ export type SignUpResponse = { message: string; username: string; email: string 
 export async function postSignUp(payload: SignUpPayload): Promise<SignUpResponse> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}/signup`, {
+    res = await fetch(`/api/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -74,7 +70,7 @@ export async function checkUsername(username: string): Promise<UsernameCheckResu
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}/signup/check-username?${params}`, {
+    res = await fetch(`/api/signup/check-username?${params}`, {
       signal: controller.signal,
     });
   } catch (e) {
@@ -124,10 +120,9 @@ export async function postLogin(
 
   let res: Response;
   try {
-    res = await fetch(`${AUTH_BASE}/auth/login/password`, {
+    res = await fetch(`/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // 토큰은 httponly 쿠키로 내려온다 — 저장·전송 모두 브라우저가 맡는다.
       credentials: "include",
       body: JSON.stringify({
         email: payload.email,
@@ -172,7 +167,7 @@ export async function updateUsername(
 ): Promise<UpdateUsernameResponse> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}/users/me/username`, {
+    res = await fetch(`/api/users/me/username`, {
       method: "PATCH",
       headers: authHeaders(email),
       body: JSON.stringify({ username }),
@@ -195,7 +190,7 @@ export async function changePassword(
 ): Promise<{ message: string }> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}/users/me/password`, {
+    res = await fetch(`/api/users/me/password`, {
       method: "PATCH",
       headers: authHeaders(email),
       body: JSON.stringify({ currentPassword, newPassword }),

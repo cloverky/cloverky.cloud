@@ -1,6 +1,3 @@
-/** FastAPI 백엔드 GET /weather */
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
-
 const CACHE_KEY = "cloverky-weather-v1";
 
 export type WeatherData = {
@@ -53,7 +50,7 @@ export async function fetchWeather(location: WeatherLocation): Promise<WeatherDa
     location.kind === "coords"
       ? new URLSearchParams({ lat: String(location.lat), lon: String(location.lon) })
       : new URLSearchParams({ city: location.city, country: location.country });
-  const res = await fetch(`${API_BASE}/weather?${params}`, { cache: "no-store" });
+  const res = await fetch(`/api/weather?${params}`, { cache: "no-store" });
   const data = (await res.json()) as WeatherData & FastApiErrorBody;
 
   if (!res.ok) {
