@@ -1,21 +1,19 @@
 #!/bin/bash
-# Qwen2.5-1.5B-Instruct 를 EXAONE 이름으로 서빙 (실제 EXAONE 내려받기 전 임시 대체).
-# RTX 3050 8GB: Windows 데스크탑이 ~1GB 상주하므로 util 0.95 + 짧은 컨텍스트로
-# KV 캐시 공간을 확보한다. 값을 낮추면 "No available memory for the cache blocks" 로 죽는다.
-# systemd user 유닛(exaone.service)에서 실행되므로 절대경로만 쓴다.
-#
-# 데스크탑 배치 위치: /home/hi/start_exaone.sh
+# EXAONE-3.5-7.8B-Instruct-AWQ 서빙. 모델은 C 여유 공간 때문에 D 드라이브에 둔다
+# (/mnt/d 읽기가 느려 기동 시 적재가 1~3분 더 걸린다).
+# RTX 3050 8GB에 가중치만 ~5.3GB라 컨텍스트·동시 요청을 최소로 잡는다.
+# 되돌리기: start_exaone.qwen.sh 를 start_exaone.sh 로 복사 후 systemctl --user restart exaone
 set -euo pipefail
 
-MODEL=/home/hi/.cache/huggingface/hub/models--Qwen--Qwen2.5-1.5B-Instruct/snapshots/989aa7980e4cf806f80c7fef2b1adb7bc71aa306
+MODEL=/mnt/d/models/EXAONE-3.5-7.8B-Instruct-AWQ
 
 exec /home/hi/miniconda3/envs/vllm/bin/vllm serve "$MODEL" \
   --served-model-name exaone \
   --port 8001 \
   --max-model-len 2048 \
   --gpu-memory-utilization 0.95 \
-  --max-num-seqs 4 \
-  --max-num-batched-tokens 1024 \
+  --max-num-seqs 2 \
+  --max-num-batched-tokens 2048 \
   --swap-space 1 \
   --enforce-eager \
   --dtype float16
