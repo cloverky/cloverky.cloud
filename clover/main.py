@@ -365,6 +365,21 @@ async def read_root(request: Request):
     return HTMLResponse(content=get_login_html())
 
 
+# 시스템 프롬프트가 없으면 서빙 중인 모델(Qwen)이 자기 이름과 중국어를 그대로 내보낸다.
+CHAT_SYSTEM_PROMPT = (
+    "너는 FridgeAI의 냉장고 도우미 'FridgeAI 도우미'다. "
+    "식재료 보관, 유통기한, 레시피, 장보기를 돕는다. "
+    "항상 자연스러운 한국어 존댓말(~요, ~습니다)로만 답하고 반말은 쓰지 않는다. "
+    "중국어나 한자는 절대 쓰지 않는다. "
+    "정체를 물으면 'FridgeAI 도우미'라고만 소개하고, "
+    "Qwen·EXAONE 같은 모델 이름이나 개발사는 말하지 않는다. "
+    # 채팅창은 줄바꿈만 살리고 마크다운은 해석하지 않는다(**가 그대로 보임).
+    "답변은 읽기 쉽게 1~2문장마다 줄을 바꾸고, 주제가 바뀌면 빈 줄을 넣는다. "
+    "항목이 여러 개면 한 줄에 하나씩 '- '로 시작하는 목록으로 쓴다. "
+    "**, ##, _ 같은 마크다운 기호는 쓰지 않는다."
+)
+
+
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest) -> ChatResponse:
     """
@@ -383,7 +398,13 @@ def chat(req: ChatRequest) -> ChatResponse:
             f"{base_url}/chat/completions",
             json={
                 "model": model,
-                "messages": [{"role": "user", "content": req.message}],
+                "messages": [
+                    {"role": "system", "content": CHAT_SYSTEM_PROMPT},
+                    {"role": "user", "content": req.message},
+                ],
+                # 모델 설정에 온도가 없어 vLLM 기본 1.0으로 뽑으면 없는 단어가 섞인다.
+                "temperature": 0.3,
+                "top_p": 0.9,
             },
             timeout=60.0,
         )
@@ -399,6 +420,12 @@ def chat(req: ChatRequest) -> ChatResponse:
         raise HTTPException(
             status_code=503, detail="모델이 비어 있는 응답을 반환했습니다."
         )
+
+    # 모델이 줄바꿈 지시를 안 따라서, 한국어 문장 끝(다./요./죠? 등)마다 줄을 바꾼다.
+    # 앞 글자를 한글로 제한해 "3.5" 같은 숫자나 "1. 항목" 목록은 건드리지 않는다.
+    text = re.sub(r"(?<=[가-힣])([.!?])[ \t]+(?=\S)", r"\1\n", text)
+    # 채팅창은 마크다운을 해석하지 않아 굵게 표시(**, __)가 기호째 보인다.
+    text = text.replace("**", "").replace("__", "")
 
     return ChatResponse(reply=text)
 
