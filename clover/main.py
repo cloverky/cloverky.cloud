@@ -301,6 +301,8 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "https://cloverky.cloud",
         "https://www.cloverky.cloud",
+        # 2026-09-03 FridgeAI 가 서브도메인으로 옮겨 갔다.
+        "https://fridge.cloverky.cloud",
     ],
     allow_credentials=True,
     allow_methods=["*"],
