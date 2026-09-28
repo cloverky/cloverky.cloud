@@ -14,9 +14,10 @@ from core.matrix.keymaker_api import get_keymaker
 # presigned URL 이 글로벌 호스트(bucket.s3.amazonaws.com)로 만들어지면 S3 가 리전
 # 엔드포인트로 307 리다이렉트를 보내면서 서명이 깨진다. 서명 방식과 주소 형식을
 # 명시해 리전 호스트로 고정한다.
+# S3 호환 저장소(Supabase Storage)는 경로 방식(endpoint/bucket/key)만 받는다.
 _S3_CLIENT_CONFIG = Config(
     signature_version="s3v4",
-    s3={"addressing_style": "virtual"},
+    s3={"addressing_style": "path" if os.getenv("S3_ENDPOINT_URL") else "virtual"},
 )
 
 
@@ -40,7 +41,7 @@ class S3Manager:
                 aws_access_key_id=access_key or None,
                 aws_secret_access_key=secret_key or None,
                 region_name=self._keymaker.get_aws_default_region(),
-                # 비우면 AWS S3, 채우면 S3 호환 저장소(Cloudflare R2)로 붙는다.
+                # 비우면 AWS S3, 채우면 S3 호환 저장소(Supabase Storage)로 붙는다.
                 endpoint_url=os.getenv("S3_ENDPOINT_URL") or None,
                 config=_S3_CLIENT_CONFIG,
             )

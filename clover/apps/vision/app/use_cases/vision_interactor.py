@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 
 import boto3
+from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
 from vision.app.ports.input.vision_use_case import VisionUseCase
@@ -17,6 +18,11 @@ S3_BUCKET = os.getenv("S3_BUCKET", "cloverky.cloud-219366469305-ap-northeast-2-a
 S3_REGION = os.getenv("AWS_DEFAULT_REGION", "ap-northeast-2")
 
 
+def _addressing_style() -> str:
+    # S3 호환 저장소(Supabase Storage)는 경로 방식 주소만 받는다.
+    return "path" if os.getenv("S3_ENDPOINT_URL") else "auto"
+
+
 class VisionInteractor(VisionUseCase):
     def __init__(self, repository: VisionPort) -> None:
         self._repository = repository
@@ -24,6 +30,7 @@ class VisionInteractor(VisionUseCase):
             "s3",
             region_name=S3_REGION,
             endpoint_url=os.getenv("S3_ENDPOINT_URL") or None,
+            config=Config(s3={"addressing_style": _addressing_style()}),
         )
 
     async def introduce_myself(self, query):

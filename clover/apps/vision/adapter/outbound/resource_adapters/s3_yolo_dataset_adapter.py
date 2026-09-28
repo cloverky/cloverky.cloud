@@ -5,11 +5,17 @@ import tempfile
 from pathlib import Path
 
 import boto3
+from botocore.config import Config
 
 from vision.app.ports.output.face_dataset_port import FaceDatasetPort
 
 S3_BUCKET = os.getenv("S3_BUCKET", "cloverky.cloud-219366469305-ap-northeast-2-an")
 S3_REGION = os.getenv("AWS_DEFAULT_REGION", "ap-northeast-2")
+
+
+def _addressing_style() -> str:
+    # S3 호환 저장소(Supabase Storage)는 경로 방식 주소만 받는다.
+    return "path" if os.getenv("S3_ENDPOINT_URL") else "auto"
 
 
 class S3YoloDatasetAdapter(FaceDatasetPort):
@@ -21,6 +27,7 @@ class S3YoloDatasetAdapter(FaceDatasetPort):
             "s3",
             region_name=S3_REGION,
             endpoint_url=os.getenv("S3_ENDPOINT_URL") or None,
+            config=Config(s3={"addressing_style": _addressing_style()}),
         )
 
     def get_dataset_config_path(self) -> str:
