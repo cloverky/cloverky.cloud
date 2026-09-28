@@ -64,7 +64,12 @@ class ReceiptImageStorageGateway(ReceiptImageStoragePort):
         logger.info(
             "[ReceiptsLedger] S3 업로드 완료 — bucket=%s key=%s", self._bucket, key
         )
-        url = f"https://{self._bucket}.s3.{client.meta.region_name}.amazonaws.com/{key}"
+        endpoint = os.getenv("S3_ENDPOINT_URL")
+        url = (
+            f"{endpoint.rstrip('/')}/{self._bucket}/{key}"
+            if endpoint
+            else f"https://{self._bucket}.s3.{client.meta.region_name}.amazonaws.com/{key}"
+        )
         return ReceiptImageStorageResult(bucket=self._bucket, key=key, url=url)
 
     async def delete(self, key: str) -> None:

@@ -20,7 +20,11 @@ S3_REGION = os.getenv("AWS_DEFAULT_REGION", "ap-northeast-2")
 class VisionInteractor(VisionUseCase):
     def __init__(self, repository: VisionPort) -> None:
         self._repository = repository
-        self._s3 = boto3.client("s3", region_name=S3_REGION)
+        self._s3 = boto3.client(
+            "s3",
+            region_name=S3_REGION,
+            endpoint_url=os.getenv("S3_ENDPOINT_URL") or None,
+        )
 
     async def introduce_myself(self, query):
         pass

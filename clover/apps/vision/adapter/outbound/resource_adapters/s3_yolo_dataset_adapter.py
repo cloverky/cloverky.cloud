@@ -17,7 +17,11 @@ class S3YoloDatasetAdapter(FaceDatasetPort):
 
     def __init__(self, s3_prefix: str = "datasets/yolo_train/") -> None:
         self._s3_prefix = s3_prefix
-        self._s3 = boto3.client("s3", region_name=S3_REGION)
+        self._s3 = boto3.client(
+            "s3",
+            region_name=S3_REGION,
+            endpoint_url=os.getenv("S3_ENDPOINT_URL") or None,
+        )
 
     def get_dataset_config_path(self) -> str:
         tmp_dir = Path(tempfile.mkdtemp(prefix="yolo_dataset_"))

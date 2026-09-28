@@ -19,7 +19,11 @@ class S3ReceiptImageReader(ReceiptImageReaderPort):
         import boto3
         from botocore.exceptions import ClientError
 
-        client = boto3.client("s3", region_name=_S3_REGION)
+        client = boto3.client(
+            "s3",
+            region_name=_S3_REGION,
+            endpoint_url=os.getenv("S3_ENDPOINT_URL") or None,
+        )
         try:
             obj = client.get_object(Bucket=bucket, Key=key)
         except ClientError as e:

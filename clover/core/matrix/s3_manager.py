@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from typing import Any
 
@@ -39,6 +40,8 @@ class S3Manager:
                 aws_access_key_id=access_key or None,
                 aws_secret_access_key=secret_key or None,
                 region_name=self._keymaker.get_aws_default_region(),
+                # 비우면 AWS S3, 채우면 S3 호환 저장소(Cloudflare R2)로 붙는다.
+                endpoint_url=os.getenv("S3_ENDPOINT_URL") or None,
                 config=_S3_CLIENT_CONFIG,
             )
         return self._client
