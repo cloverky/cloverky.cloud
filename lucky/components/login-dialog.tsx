@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Refrigerator } from "lucide-react";
+import { Eye, EyeOff, Loader2, Refrigerator } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -66,6 +66,7 @@ export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDial
   const { login: authLogin } = useAuth();
   const openSignUp = useOpenSignUp();
   const [form, setForm] = useState<LoginFormState>(INITIAL_FORM_STATE);
+  const [showPassword, setShowPassword] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const slowHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -219,18 +220,29 @@ export function LoginDialog({ open, onOpenChange, initialEmail = "" }: LoginDial
                 비밀번호 찾기
               </button>
             </div>
-            <Input
-              id="login-password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              placeholder="비밀번호 입력"
-              value={form.password}
-              onChange={(e) => patchForm({ password: e.target.value })}
-              required
-              minLength={8}
-              className="border-border bg-background text-foreground placeholder:text-muted-foreground"
-            />
+            <div className="relative">
+              <Input
+                id="login-password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="비밀번호 입력"
+                value={form.password}
+                onChange={(e) => patchForm({ password: e.target.value })}
+                required
+                minLength={8}
+                className="border-border bg-background pr-10 text-foreground placeholder:text-muted-foreground"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-accent"
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
