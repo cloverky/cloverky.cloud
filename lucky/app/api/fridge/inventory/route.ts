@@ -2,47 +2,8 @@ import type { NextRequest} from "next/server";
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/jwt";
 import { prisma } from "@/lib/db";
-
-function toItem(row: {
-  id: number;
-  name: string;
-  quantity: number;
-  unit: string;
-  quantityLabel: string;
-  expiryDate: Date | null;
-  purchasedDate: Date | null;
-  expiryIsEstimated: boolean;
-  shelfLifeDays: number | null;
-  storage: string;
-  minQuantity: number;
-  status: string;
-}) {
-  return {
-    id: row.id,
-    name: row.name,
-    quantity: row.quantity,
-    unit: row.unit,
-    quantity_label: row.quantityLabel,
-    expiry_date: row.expiryDate?.toISOString().split("T")[0] ?? null,
-    purchased_date: row.purchasedDate?.toISOString().split("T")[0] ?? null,
-    expiry_is_estimated: row.expiryIsEstimated,
-    shelf_life_days: row.shelfLifeDays,
-    storage: row.storage,
-    min_quantity: row.minQuantity,
-    status: computeStatus(row),
-  };
-}
-
-function computeStatus(row: { expiryDate: Date | null; quantity: number; minQuantity: number }): string {
-  const today = new Date();
-  if (row.expiryDate) {
-    const daysLeft = Math.ceil((row.expiryDate.getTime() - today.getTime()) / 86400000);
-    if (daysLeft <= 0) return "만료";
-    if (daysLeft <= 3) return "임박";
-  }
-  if (row.minQuantity > 0 && row.quantity <= row.minQuantity) return "부족";
-  return "정상";
-}
+import { toItem } from "@/lib/inventory-item";
+import { addDays, estimateShelfLife } from "@/lib/shelf-life";
 
 export async function GET() {
   const user = await getSessionUser();
@@ -53,7 +14,10 @@ export async function GET() {
     orderBy: [{ expiryDate: "asc" }, { createdAt: "desc" }],
   });
 
-  const mapped = items.map(toItem);
+  // 유통기한이 추정값일 수 있어 DB 정렬 대신 계산된 날짜로 다시 정렬한다 (없는 건 뒤로).
+  const mapped = items
+    .map(toItem)
+    .sort((a, b) => (a.expiry_date ?? "9999").localeCompare(b.expiry_date ?? "9999"));
   const expiringSoon = mapped.filter((i) => i.status === "임박" || i.status === "만료").length;
   const lowStock = mapped.filter((i) => i.status === "부족").length;
 
@@ -77,15 +41,27 @@ export async function POST(req: NextRequest) {
     min_quantity?: number;
   };
 
+  const storage = body.storage ?? "냉장";
+  const purchasedDate = body.purchased_date ? new Date(body.purchased_date) : null;
+  // 유통기한 없이 구매일만 오면(영수증 스캔) 구매일 + 보관 기간으로 추정해 저장한다.
+  const shelfLifeDays =
+    !body.expiry_date && purchasedDate ? estimateShelfLife(body.name, storage) : null;
+
   const item = await prisma.inventoryItem.create({
     data: {
       userId: parseInt(user.sub),
       name: body.name,
       quantity: body.quantity,
       unit: body.unit,
-      expiryDate: body.expiry_date ? new Date(body.expiry_date) : null,
-      purchasedDate: body.purchased_date ? new Date(body.purchased_date) : null,
-      storage: body.storage ?? "냉장",
+      expiryDate: body.expiry_date
+        ? new Date(body.expiry_date)
+        : purchasedDate && shelfLifeDays !== null
+          ? addDays(purchasedDate, shelfLifeDays)
+          : null,
+      expiryIsEstimated: shelfLifeDays !== null,
+      shelfLifeDays,
+      purchasedDate,
+      storage,
       minQuantity: body.min_quantity ?? 0,
     },
   });

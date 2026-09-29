@@ -2,45 +2,7 @@ import type { NextRequest} from "next/server";
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/jwt";
 import { prisma } from "@/lib/db";
-
-function toItem(row: {
-  id: number;
-  name: string;
-  quantity: number;
-  unit: string;
-  quantityLabel: string;
-  expiryDate: Date | null;
-  purchasedDate: Date | null;
-  expiryIsEstimated: boolean;
-  shelfLifeDays: number | null;
-  storage: string;
-  minQuantity: number;
-  status: string;
-}) {
-  const today = new Date();
-  let computedStatus = row.status;
-  if (row.expiryDate) {
-    const daysLeft = Math.ceil((row.expiryDate.getTime() - today.getTime()) / 86400000);
-    if (daysLeft <= 0) computedStatus = "만료";
-    else if (daysLeft <= 3) computedStatus = "임박";
-  }
-  if (row.minQuantity > 0 && row.quantity <= row.minQuantity) computedStatus = "부족";
-
-  return {
-    id: row.id,
-    name: row.name,
-    quantity: row.quantity,
-    unit: row.unit,
-    quantity_label: row.quantityLabel,
-    expiry_date: row.expiryDate?.toISOString().split("T")[0] ?? null,
-    purchased_date: row.purchasedDate?.toISOString().split("T")[0] ?? null,
-    expiry_is_estimated: row.expiryIsEstimated,
-    shelf_life_days: row.shelfLifeDays,
-    storage: row.storage,
-    min_quantity: row.minQuantity,
-    status: computedStatus,
-  };
-}
+import { toItem } from "@/lib/inventory-item";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getSessionUser();
