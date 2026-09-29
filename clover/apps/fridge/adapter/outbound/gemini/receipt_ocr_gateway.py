@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from datetime import date
@@ -23,6 +24,11 @@ _PROMPT = """이 영수증 이미지에서 구매 정보를 추출하세요.
   ]
 }
 quantity는 1 이상 정수, unit은 개·팩·봉·통·g·ml 중 하나. 읽을 수 없는 품목은 제외."""
+
+
+logger = logging.getLogger(__name__)
+
+_FALLBACK_MODEL = "gemini-flash-lite-latest"
 
 
 def _model_name() -> str:
@@ -95,17 +101,32 @@ class ReceiptOcrGateway(ReceiptOcrEnginePort):
             raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다.")
 
         client = keymaker.get_gemini_client()
-        try:
-            response = await client.aio.models.generate_content(
-                model=_model_name(),
-                contents=[
-                    genai_types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-                    _PROMPT,
-                ],
-            )
-            raw = (response.text or "").strip()
-        except Exception as e:
-            raise ValueError(f"영수증 인식 실패: {e!s}") from e
+        contents = [
+            genai_types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+            _PROMPT,
+        ]
+        # 무료 키는 모델별 하루 한도(429)가 작다. 한도가 모델마다 따로라 lite 로 한 번 더 시도한다.
+        models = [_model_name(), _FALLBACK_MODEL]
+        raw = ""
+        for i, model in enumerate(models):
+            try:
+                response = await client.aio.models.generate_content(
+                    model=model, contents=contents
+                )
+                raw = (response.text or "").strip()
+                break
+            except Exception as e:
+                logger.warning("영수증 인식 실패 (model=%s): %s", model, e)
+                if "429" in str(e) and i < len(models) - 1:
+                    continue
+                if "429" in str(e):
+                    raise ValueError(
+                        "오늘 AI 영수증 인식 사용량을 다 썼어요. "
+                        "내일 다시 시도하거나 직접 입력해 주세요."
+                    ) from e
+                raise ValueError(
+                    "영수증을 인식하지 못했어요. 잠시 후 다시 시도해 주세요."
+                ) from e
 
         if not raw:
             raise ValueError("영수증에서 텍스트를 읽지 못했습니다.")
