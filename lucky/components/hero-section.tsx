@@ -13,6 +13,11 @@ export function HeroSection() {
   const { user } = useAuth();
   return (
     <section className="relative flex min-h-[100dvh] flex-col overflow-x-hidden pb-8 md:pb-20">
+      {/* 오른쪽에 실제 냉장고 사진을 희미하게 깔고 제목 쪽으로 사라지게 한다 (Pexels, assets/attribution.md) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-0 hidden w-[62%] bg-[url('/hero-fridge.jpg')] bg-cover bg-center opacity-[0.14] [mask-image:linear-gradient(to_left,black_35%,transparent)] md:block dark:opacity-[0.07]"
+      />
       {/* Background glow effect */}
       <div className="absolute top-0 right-0 h-[600px] w-[600px] -translate-y-1/4 translate-x-1/4 rounded-full bg-accent/20 blur-[120px]" />
       
