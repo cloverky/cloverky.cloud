@@ -28,12 +28,20 @@ import { ShoppingFeaturePage } from "@/components/shopping-feature-page";
 import { MyExpiryAlertsSection } from "@/components/my-expiry-alerts-section";
 import { MyReceiptsSection } from "@/components/my-receipts-section";
 import { MyRecipeFeedbackSection } from "@/components/my-recipe-feedback-section";
+import { PageBackdrop } from "@/components/page-backdrop";
 import {
   FEATURE_PAGES,
   type FeatureSection,
   type FeatureSlug,
 } from "@/lib/feature-pages";
 import { cn } from "@/lib/utils";
+
+// 페이지 성격에 맞는 배경 사진 (Pexels, assets/attribution.md)
+const BACKDROP_BY_SLUG: Partial<Record<FeatureSlug, string>> = {
+  alerts: "/bg-alerts.jpg",
+  analytics: "/bg-analytics.jpg",
+  personalization: "/bg-personalization.jpg",
+};
 
 const STATUS_VALUES = ["양호", "임박", "부족", "긴급", "보통", "정보"] as const;
 
@@ -186,6 +194,7 @@ function GenericFeaturePage({ slug }: { slug: FeatureSlug }) {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
+      {BACKDROP_BY_SLUG[slug] ? <PageBackdrop src={BACKDROP_BY_SLUG[slug]} /> : null}
       <div className="absolute top-0 right-0 h-[400px] w-[400px] -translate-y-1/4 translate-x-1/4 rounded-full bg-accent/15 blur-[100px]" />
 
       <div className="relative mx-auto max-w-5xl px-6 pt-28 pb-16">

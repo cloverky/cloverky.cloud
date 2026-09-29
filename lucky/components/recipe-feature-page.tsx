@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { PageBackdrop } from "@/components/page-backdrop";
 import { fetchInventory } from "@/lib/inventory-api";
 import {
   clearRecipeFeedback,
@@ -314,6 +315,7 @@ export function RecipeFeaturePage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
+      <PageBackdrop src="/bg-recipes.jpg" />
       <div className="absolute top-0 right-0 h-[400px] w-[400px] -translate-y-1/4 translate-x-1/4 rounded-full bg-accent/15 blur-[100px]" />
 
       <div className="relative mx-auto max-w-5xl px-6 pt-28 pb-16">

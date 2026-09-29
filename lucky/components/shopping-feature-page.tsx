@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PageBackdrop } from "@/components/page-backdrop";
 import { fetchInventory, type InventoryItem } from "@/lib/inventory-api";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(
@@ -274,6 +275,7 @@ export function ShoppingFeaturePage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
+      <PageBackdrop src="/bg-shopping.jpg" />
       <div className="absolute top-0 right-0 h-[400px] w-[400px] -translate-y-1/4 translate-x-1/4 rounded-full bg-accent/15 blur-[100px]" />
 
       <div className="relative mx-auto max-w-5xl px-6 pt-28 pb-16">
