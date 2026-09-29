@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Refrigerator } from "lucide-react";
+import { PasswordInput } from "@/components/password-input";
 import type { SignUpPrefill } from "@/components/sign-up-dialog-context";
 import {
   SocialLoginButtons,
@@ -343,10 +344,9 @@ export function SignUpDialog({
             <Label htmlFor="password" className="text-foreground">
               비밀번호
             </Label>
-            <Input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               placeholder="8자 이상 입력"
               value={form.password}
               onChange={(e) => patchForm({ password: e.target.value })}
@@ -360,10 +360,9 @@ export function SignUpDialog({
             <Label htmlFor="confirmPassword" className="text-foreground">
               비밀번호 확인
             </Label>
-            <Input
+            <PasswordInput
               id="confirmPassword"
               name="confirmPassword"
-              type="password"
               placeholder="비밀번호 재입력"
               value={form.confirmPassword}
               onChange={(e) => patchForm({ confirmPassword: e.target.value })}
