@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, ChefHat, Clock, Loader2, RefreshCw, ThumbsDown, ThumbsUp, Utensils, Sunrise, Sun, Moon } from "lucide-react";
+import { ChefHat, Clock, Loader2, RefreshCw, ThumbsDown, ThumbsUp, Utensils, Sunrise, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
 import { CloverIcon } from "@/components/clover-icon";
 import { BottomRightExtras } from "@/components/bottom-right-extras-context";
@@ -319,22 +318,16 @@ export function RecipeFeaturePage() {
       <div className="absolute top-0 right-0 h-[400px] w-[400px] -translate-y-1/4 translate-x-1/4 rounded-full bg-accent/15 blur-[100px]" />
 
       <div className="relative mx-auto max-w-5xl px-6 pt-28 pb-16">
-        <Link
-          href="/#features"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          주요 기능으로
-        </Link>
-
-        <div className="mt-8 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="max-w-2xl">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card">
-              <ChefHat className="h-7 w-7 text-accent" />
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-border bg-card">
+                <ChefHat className="h-7 w-7 text-accent" />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+                {mode === "meal" ? "오늘 뭐 먹지?" : "맞춤형 레시피 추천"}
+              </h1>
             </div>
-            <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">
-              {mode === "meal" ? "오늘 뭐 먹지?" : "맞춤형 레시피 추천"}
-            </h1>
             <p className="mt-2 text-lg text-muted-foreground">
               {mode === "meal"
                 ? `냉장고가 비었네요. ${currentMeal()} 메뉴를 AI가 추천해 드릴게요.`
@@ -350,9 +343,6 @@ export function RecipeFeaturePage() {
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
               다시 추천받기
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/">홈으로</Link>
             </Button>
           </div>
         </div>

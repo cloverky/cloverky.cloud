@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Camera,
   Loader2,
   Minus,
@@ -418,22 +417,16 @@ export function InventoryFeaturePage() {
       <div className="absolute top-0 right-0 h-[400px] w-[400px] -translate-y-1/4 translate-x-1/4 rounded-full bg-accent/15 blur-[100px]" />
 
       <div className="relative mx-auto max-w-5xl px-6 pt-28 pb-16">
-        <Link
-          href="/#features"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          주요 기능으로
-        </Link>
-
-        <div className="mt-8 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="max-w-2xl">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card">
-              <Package className="h-7 w-7 text-accent" />
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-border bg-card">
+                <Package className="h-7 w-7 text-accent" />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+                {config.title}
+              </h1>
             </div>
-            <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">
-              {config.title}
-            </h1>
             {/* tagline 은 메타 설명 전용 — feature-page.tsx 주석 참고 */}
             <p className="mt-2 text-lg text-muted-foreground">{config.subtitle}</p>
             {user ? (
@@ -442,11 +435,6 @@ export function InventoryFeaturePage() {
                 님의 나만의냉장고에 저장됩니다
               </p>
             ) : null}
-          </div>
-          <div className="flex shrink-0 flex-wrap gap-3">
-            <Button variant="outline" asChild>
-              <Link href="/">홈으로</Link>
-            </Button>
           </div>
         </div>
 
