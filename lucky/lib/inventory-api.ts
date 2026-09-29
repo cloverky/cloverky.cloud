@@ -1,6 +1,11 @@
 import { connectionErrorMessage } from "@/lib/api-errors";
 import { notifySessionExpired, refreshAccessToken } from "@/lib/auth-session";
 
+// 영수증 이미지 저장은 Next API 가 아니라 백엔드(api.cloverky.cloud)가 맡는다.
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(
+  /\/$/,
+  "",
+);
 
 type FastApiErrorBody = { detail?: string | { msg?: string }[] };
 
@@ -272,7 +277,7 @@ export async function uploadReceiptImage(
   if (displayName?.trim()) {
     form.append("display_name", displayName.trim());
   }
-  const res = await fetch(`/api/receipts/images`, {
+  const res = await fetch(`${API_BASE}/api/receipts/images`, {
     method: "POST",
     credentials: "include",
     headers: { "X-User-Email": email },
