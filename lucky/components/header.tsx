@@ -58,14 +58,6 @@ export function Header({ onSignUpClick, onLoginClick, onProfileEditClick }: Head
         </div>
 
         <div className="relative z-10 ml-auto hidden shrink-0 items-center gap-2 md:flex">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 border-border bg-transparent px-3 text-sm text-foreground hover:bg-secondary"
-            asChild
-          >
-            <Link href="/lesson">lesson</Link>
-          </Button>
           {user ? (
             <div className="flex items-center gap-2">
               <span className="max-w-[10rem] truncate text-sm font-medium text-foreground">

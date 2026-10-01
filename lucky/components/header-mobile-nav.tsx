@@ -106,11 +106,6 @@ export function HeaderMobileNav({
             <span className="text-base font-medium text-foreground">화면 테마</span>
             <ThemeToggle className="h-10 w-10 shadow-sm" />
           </div>
-          <Button variant="outline" className="h-12 w-full text-base" asChild>
-            <Link href="/lesson" onClick={close}>
-              lesson
-            </Link>
-          </Button>
           {isAdmin(user) && (
             <Button variant="outline" className="h-12 w-full text-base" asChild>
               <Link href="/admin" onClick={close}>

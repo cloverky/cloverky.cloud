@@ -100,47 +100,58 @@ export function HeroSection() {
                 </div>
               </div>
               
-              {/* Orbiting agents */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 animate-pulse">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card">
-                  <Package className="h-6 w-6 text-foreground" />
+              {/* Orbiting agents — 링(연결선 포함)이 클로버 주위를 돌고, 각 원은 역회전으로 똑바로 선 채 박자를 달리해 둥실거린다
+                  (float 는 translate 속성을 써서 -translate-* 위치 div 안쪽에 둔다) */}
+              <div className="absolute inset-0 motion-safe:animate-orbit">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 motion-safe:animate-counter-orbit">
+                  <div className="motion-safe:animate-float">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card">
+                      <Package className="h-6 w-6 text-foreground" />
+                    </div>
+                    <p className="mt-2 text-center text-xs text-muted-foreground">재고 도우미</p>
+                  </div>
                 </div>
-                <p className="mt-2 text-center text-xs text-muted-foreground">재고 도우미</p>
-              </div>
-              
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 animate-pulse [animation-delay:0.5s]">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card">
-                  <ChefHat className="h-6 w-6 text-foreground" />
+                
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 motion-safe:animate-counter-orbit">
+                  <div className="motion-safe:animate-float motion-safe:[animation-delay:-1.5s]">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card">
+                      <ChefHat className="h-6 w-6 text-foreground" />
+                    </div>
+                    <p className="mt-2 text-center text-xs text-muted-foreground">레시피 도우미</p>
+                  </div>
                 </div>
-                <p className="mt-2 text-center text-xs text-muted-foreground">레시피 도우미</p>
-              </div>
-              
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 animate-pulse [animation-delay:1s]">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card">
-                  <svg className="h-6 w-6 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                  </svg>
+                
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 motion-safe:animate-counter-orbit">
+                  <div className="motion-safe:animate-float motion-safe:[animation-delay:-3s]">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card">
+                      <svg className="h-6 w-6 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                      </svg>
+                    </div>
+                    <p className="mt-2 text-center text-xs text-muted-foreground">장보기 도우미</p>
+                  </div>
                 </div>
-                <p className="mt-2 text-center text-xs text-muted-foreground">장보기 도우미</p>
-              </div>
-              
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 animate-pulse [animation-delay:1.5s]">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card">
-                  <svg className="h-6 w-6 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 6v6l4 2" />
-                  </svg>
+                
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 motion-safe:animate-counter-orbit">
+                  <div className="motion-safe:animate-float motion-safe:[animation-delay:-4.5s]">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card">
+                      <svg className="h-6 w-6 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                      </svg>
+                    </div>
+                    <p className="mt-2 text-center text-xs text-muted-foreground">알림 도우미</p>
+                  </div>
                 </div>
-                <p className="mt-2 text-center text-xs text-muted-foreground">알림 도우미</p>
-              </div>
 
-              {/* Connection lines */}
-              <svg className="absolute inset-0 h-full w-full" style={{ zIndex: -1 }}>
-                <line x1="50%" y1="20%" x2="50%" y2="40%" stroke="currentColor" className="text-border" strokeWidth="1" strokeDasharray="4" />
-                <line x1="80%" y1="50%" x2="60%" y2="50%" stroke="currentColor" className="text-border" strokeWidth="1" strokeDasharray="4" />
-                <line x1="50%" y1="80%" x2="50%" y2="60%" stroke="currentColor" className="text-border" strokeWidth="1" strokeDasharray="4" />
-                <line x1="20%" y1="50%" x2="40%" y2="50%" stroke="currentColor" className="text-border" strokeWidth="1" strokeDasharray="4" />
-              </svg>
+                {/* Connection lines */}
+                <svg className="absolute inset-0 h-full w-full" style={{ zIndex: -1 }}>
+                  <line x1="50%" y1="20%" x2="50%" y2="40%" stroke="currentColor" className="text-border" strokeWidth="1" strokeDasharray="4" />
+                  <line x1="80%" y1="50%" x2="60%" y2="50%" stroke="currentColor" className="text-border" strokeWidth="1" strokeDasharray="4" />
+                  <line x1="50%" y1="80%" x2="50%" y2="60%" stroke="currentColor" className="text-border" strokeWidth="1" strokeDasharray="4" />
+                  <line x1="20%" y1="50%" x2="40%" y2="50%" stroke="currentColor" className="text-border" strokeWidth="1" strokeDasharray="4" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
