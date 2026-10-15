@@ -11,7 +11,7 @@ from users.adapter.user_oauth_account import UserOAuthAccount
 from auth.app.dtos.auth_dto import AuthUserDto, OAuthLinkDto
 from auth.app.ports.output.user_repository import UserRepository
 
-_USERNAME_SANITIZE = re.compile(r"[^a-zA-Z0-9_]")
+_USERNAME_SANITIZE = re.compile(r"[^a-zA-Z0-9_가-힣]")
 
 
 class UserPgRepository(UserRepository):
@@ -32,7 +32,7 @@ class UserPgRepository(UserRepository):
         return self._to_dto(user) if user else None
 
     async def create_oauth_user(self, email: str, name: str) -> AuthUserDto:
-        username = await self._unique_username(email)
+        username = await self._unique_username(name, email)
         user = User(
             username=username,
             name=name,
@@ -93,8 +93,13 @@ class UserPgRepository(UserRepository):
         await self._session.refresh(row)
         return self._to_link_dto(row)
 
-    async def _unique_username(self, email: str) -> str:
-        base = _USERNAME_SANITIZE.sub("", email.split("@")[0])[:16] or "user"
+    async def _unique_username(self, name: str, email: str) -> str:
+        # username이 화면 닉네임이라 소셜 이름을 먼저 쓴다.
+        base = (
+            _USERNAME_SANITIZE.sub("", name)
+            or _USERNAME_SANITIZE.sub("", email.split("@")[0])
+            or "user"
+        )[:16]
         candidate = base
         for _ in range(5):
             exists = await self._session.execute(
