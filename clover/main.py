@@ -43,6 +43,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.sessions import SessionMiddleware
 from users.adapter.user import User, UserRole  # noqa: F401 — create_all 에 테이블 등록
+from users.adapter.user_oauth_account import UserOAuthAccount  # noqa: F401
 from users.db_health_adapter import DbHealthAdapter
 from vision.adapter.inbound.api.v1.vision_router import vision_router
 
